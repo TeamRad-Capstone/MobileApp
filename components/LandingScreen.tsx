@@ -16,7 +16,7 @@ export default LandingScreen;
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: -40,
+        marginTop: '-10%',
         height: '82%',
         borderStyle: 'solid',
         borderTopWidth: 0,

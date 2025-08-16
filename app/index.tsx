@@ -1,5 +1,6 @@
 import {ImageBackground, StyleSheet, Text, View} from "react-native";
 import LandingScreen from "@/components/LandingScreen";
+import Login from "@/components/Login";
 
 export default function Index() {
     return (
@@ -10,6 +11,7 @@ export default function Index() {
                 resizeMode="cover"
             >
                 <LandingScreen>
+                    <Login />
                 </LandingScreen>
             </ImageBackground>
         </View>
