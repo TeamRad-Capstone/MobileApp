@@ -1,18 +1,23 @@
-import {ImageBackground, StyleSheet, Text, View} from "react-native";
+import { ImageBackground, StyleSheet, View } from "react-native";
+import { useState } from "react";
 import LandingScreen from "@/components/LandingScreen";
 import Login from "@/components/Login";
 
 export default function Index() {
+    const [bgLoaded, setBgLoaded] = useState(false);
     return (
         <View style={styles.container}>
             <ImageBackground
                 source={require('@/assets/images/landing.jpg')}
                 style={styles.bgImage}
                 resizeMode="cover"
+                onLoad={() => setBgLoaded(true)}
             >
-                <LandingScreen>
-                    <Login />
-                </LandingScreen>
+                {bgLoaded &&
+                    <LandingScreen>
+                        <Login />
+                    </LandingScreen>
+                }
             </ImageBackground>
         </View>
     );
