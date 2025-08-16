@@ -27,6 +27,10 @@ export default function RootLayout() {
                 name="index"
                 options={{headerShown: false}}
             />
+            <Stack.Screen
+                name="register"
+                options={{headerShown: false}}
+            />
         </Stack>
     )
 }

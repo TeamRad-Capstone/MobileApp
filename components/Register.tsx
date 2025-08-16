@@ -2,59 +2,66 @@ import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useState} from "react";
 import { useRouter } from "expo-router";
 
-const Login = () => {
-    const heading = "Your digital reading companion";
-    const cta = "Don't have an account?";
-    const forgotPassword = "Forgot Password?";
+const Register = () => {
+    const heading = "Create an Account";
 
     const [email, setEmail] = useState("");
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+    const [username, setUsername] = useState("");
+
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
 
     const [emailErrorMsg, setEmailErrorMsg] = useState("");
     const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
+    const [confirmPasswordErrorMsg, setConfirmPasswordErrorMsg] = useState("");
+    const [usernameErrorMsg, setUsernameErrorMsg] = useState("");
 
     const [errorMsg, setErrorMsg] = useState("");
 
     const router = useRouter();
 
-    const handleLogin = () => {
-        let validFields = true;
-      console.log('Attempt to Login');
-
-      if (!email || !emailRegex.test(email)) {
-          setEmailErrorMsg("Please enter a valid email");
-          validFields = false;
-      }
-
-      if (!passwordRegex.test(password)) {
-          setPasswordErrorMsg("Your password must  must contain at least 1 uppercase letter, " +
-              "1 lowercase letter, and 1 number");
-          validFields = false;
-      }
-
-        // call the backend API (FastAPI) to handle logging in if validFields = true.
-        // logging in logic and validation to be done in the back end
-        // send error message back to front end potentially and display as necessary.
-    }
-
     const handleRegister = () => {
-        console.log('Move to Register page');
-        // Use router to push to the register page - once developed
-        router.push("/register")
-    }
+        console.log('Attempt to Register');
+        let validFields = true;
+        setEmailErrorMsg("");
+        setUsernameErrorMsg("");
+        setPasswordErrorMsg("");
+        setConfirmPasswordErrorMsg("");
 
-    const handleForgotPassword = () => {
-        console.log('Forgot Password');
-        // Use the router to push the forgot password page - once developed
+        if (!email || !emailRegex.test(email)) {
+            setEmailErrorMsg("Please enter a valid email address");
+            validFields = false;
+        }
+
+        if (!username) {
+            setUsernameErrorMsg("Please enter a username");
+            validFields = false;
+        }
+
+        if (!password || !passwordRegex.test(password)) {
+            setPasswordErrorMsg("Your password must  must contain at least 1 uppercase letter, " +
+                "1 lowercase letter, and 1 number");
+            validFields = false;
+        }
+
+        if (!confirmPassword || confirmPassword !== password) {
+            setConfirmPasswordErrorMsg("Your password must match");
+            validFields = false;
+        }
+        // Call the backend api to register user into the database if valid fields = true
+        // If successful, push back to login page
+        if (validFields) {
+            router.push("/");
+        }
     }
 
     return (
         <View style={styles.loginContainer}>
             <Text style={styles.heading}>{heading}</Text>
-            <View style={styles.loginForm}>
+            <View style={styles.registerForm}>
                 <Text style={styles.formText}>Email:</Text>
                 <TextInput
                     style={styles.formEntry}
@@ -63,7 +70,16 @@ const Login = () => {
                 />
                 {emailErrorMsg && <Text style={styles.error}>{emailErrorMsg}</Text>}
             </View>
-            <View style={styles.loginForm}>
+            <View style={styles.registerForm}>
+                <Text style={styles.formText}>Username:</Text>
+                <TextInput
+                    style={styles.formEntry}
+                    onChangeText={setUsername}
+                    value={username}
+                />
+                {usernameErrorMsg && <Text style={styles.error}>{usernameErrorMsg}</Text>}
+            </View>
+            <View style={styles.registerForm}>
                 <Text style={styles.formText}>Password:</Text>
                 <TextInput
                     style={styles.formEntry}
@@ -73,16 +89,19 @@ const Login = () => {
                 />
                 {passwordErrorMsg && <Text style={styles.error}>{passwordErrorMsg}</Text>}
             </View>
+            <View style={styles.registerForm}>
+                <Text style={styles.formText}>Confirm Password:</Text>
+                <TextInput
+                    style={styles.formEntry}
+                    onChangeText={setConfirmPassword}
+                    value={confirmPassword}
+                    secureTextEntry={true}
+                />
+                {confirmPasswordErrorMsg && <Text style={styles.error}>{confirmPasswordErrorMsg}</Text>}
+            </View>
             <View style={styles.actionButtons}>
-                <Pressable style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Login</Text>
-                </Pressable>
-                <Text style={styles.prompt}>{cta}</Text>
                 <Pressable style={styles.button} onPress={handleRegister}>
                     <Text style={styles.buttonText}>Register</Text>
-                </Pressable>
-                <Pressable onPress={handleForgotPassword}>
-                    <Text style={styles.prompt}>{forgotPassword}</Text>
                 </Pressable>
                 {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
             </View>
@@ -90,7 +109,7 @@ const Login = () => {
     );
 }
 
-export default Login;
+export default Register;
 
 const styles = StyleSheet.create({
     loginContainer: {
@@ -102,10 +121,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontFamily: 'Agbalumo',
         fontSize: 22,
-        marginBottom: "10%",
+        marginBottom: "5%",
         width: "70%"
     },
-    loginForm: {
+    registerForm: {
         marginHorizontal: "auto",
         width: "80%",
         marginBottom: "5%",
@@ -125,9 +144,10 @@ const styles = StyleSheet.create({
     },
     error: {
         fontFamily: 'Agbalumo',
-        fontSize: 16,
+        fontSize: 14,
         color: "red",
-        textAlign: "center"
+        textAlign: "center",
+        marginBottom: "-7%"
     },
     actionButtons: {
         alignItems: 'center',
