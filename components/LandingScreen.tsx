@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
         paddingTop: 30,
     },
     welcomeText: {
-        fontFamily: 'MPlus-Rounded-Black',
-        fontSize: 30,
+        fontFamily: 'Agbalumo',
+        fontSize: 36,
         paddingTop: 10,
     }
 })
