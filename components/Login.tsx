@@ -18,18 +18,21 @@ const Login = () => {
     const [errorMsg, setErrorMsg] = useState("");
 
     const handleLogin = () => {
+        let validFields = true;
       console.log('Attempt to Login');
 
       if (!email || !emailRegex.test(email)) {
           setEmailErrorMsg("Please enter a valid email");
+          validFields = false;
       }
 
       if (!passwordRegex.test(password)) {
           setPasswordErrorMsg("Your password must  must contain at least 1 uppercase letter, " +
               "1 lowercase letter, and 1 number");
+          validFields = false;
       }
 
-        // call the backend API (FastAPI) to handle logging in.
+        // call the backend API (FastAPI) to handle logging in if validFields = true.
         // logging in logic and validation to be done in the back end
         // send error message back to front end potentially and display as necessary.
     }
