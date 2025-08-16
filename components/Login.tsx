@@ -1,12 +1,37 @@
-import {View, Text, TextInput, Pressable, StyleSheet} from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { useState} from "react";
+
 const Login = () => {
     const heading = "Your digital reading companion";
     const cta = "Don't have an account?";
     const forgotPassword = "Forgot Password?";
 
+    const [email, setEmail] = useState("");
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    const [password, setPassword] = useState("");
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+
+    const [emailErrorMsg, setEmailErrorMsg] = useState("");
+    const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
+
+    const [errorMsg, setErrorMsg] = useState("");
+
     const handleLogin = () => {
-      console.log('Login');
-      // call the backend API (FastAPI) to handle logging in.
+      console.log('Attempt to Login');
+
+      if (!email || !emailRegex.test(email)) {
+          setEmailErrorMsg("Please enter a valid email");
+      }
+
+      if (!passwordRegex.test(password)) {
+          setPasswordErrorMsg("Your password must  must contain at least 1 uppercase letter, " +
+              "1 lowercase letter, and 1 number");
+      }
+
+        // call the backend API (FastAPI) to handle logging in.
+        // logging in logic and validation to be done in the back end
+        // send error message back to front end potentially and display as necessary.
     }
 
     const handleRegister = () => {
@@ -24,11 +49,22 @@ const Login = () => {
             <Text style={styles.heading}>{heading}</Text>
             <View style={styles.loginForm}>
                 <Text style={styles.formText}>Email:</Text>
-                <TextInput style={styles.formEntry} />
+                <TextInput
+                    style={styles.formEntry}
+                    onChangeText={setEmail}
+                    value={email}
+                />
+                {emailErrorMsg && <Text style={styles.error}>{emailErrorMsg}</Text>}
             </View>
             <View style={styles.loginForm}>
                 <Text style={styles.formText}>Password:</Text>
-                <TextInput style={styles.formEntry} />
+                <TextInput
+                    style={styles.formEntry}
+                    onChangeText={setPassword}
+                    value={password}
+                    secureTextEntry={true}
+                />
+                {passwordErrorMsg && <Text style={styles.error}>{passwordErrorMsg}</Text>}
             </View>
             <View style={styles.actionButtons}>
                 <Pressable style={styles.button} onPress={handleLogin}>
@@ -41,6 +77,7 @@ const Login = () => {
                 <Pressable onPress={handleForgotPassword}>
                     <Text style={styles.prompt}>{forgotPassword}</Text>
                 </Pressable>
+                {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
             </View>
         </View>
     );
@@ -78,6 +115,12 @@ const styles = StyleSheet.create({
         color: "white",
         fontFamily: 'Agbalumo',
         fontSize: 18
+    },
+    error: {
+        fontFamily: 'Agbalumo',
+        fontSize: 16,
+        color: "red",
+        textAlign: "center"
     },
     actionButtons: {
         alignItems: 'center',
