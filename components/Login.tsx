@@ -35,6 +35,9 @@ const Login = () => {
           validFields = false;
       }
 
+      if (validFields) {
+          router.push("./(tabs)/profile");
+      }
         // call the backend API (FastAPI) to handle logging in if validFields = true.
         // logging in logic and validation to be done in the back end
         // send error message back to front end potentially and display as necessary.
