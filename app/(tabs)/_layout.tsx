@@ -5,23 +5,30 @@ export default function TabLayout() {
     return (
         <Tabs screenOptions={{
             tabBarShowLabel: false,
-            tabBarActiveTintColor: 'blue'
+            tabBarActiveTintColor: '#BE6A53',
+            tabBarStyle: {
+                backgroundColor: '#FDDCB9',
+                borderColor: 'black',
+                borderTopWidth: 3
+            }
         }}>
             <Tabs.Screen
 
                 name="profile"
                 options={{
                     headerShown: false,
-                    title: 'Home',
-                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+                    title: 'Profile',
+                    href: "/(tabs)/profile",
+                    tabBarIcon: ({ color }) => <FontAwesome size={40} name="user" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="search"
                 options={{
                     headerShown: false,
-                    title: 'Settings',
-                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                    title: 'Search',
+                    href: "/(tabs)/search",
+                    tabBarIcon: ({ color }) => <FontAwesome size={40} name="search" color={color} />,
                 }}
             />
             <Tabs.Screen
