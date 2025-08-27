@@ -6,6 +6,7 @@ export default function TabLayout() {
         <Tabs screenOptions={{
             tabBarShowLabel: false,
             tabBarActiveTintColor: '#BE6A53',
+            tabBarInactiveTintColor: 'black',
             tabBarStyle: {
                 backgroundColor: '#FDDCB9',
                 borderColor: 'black',
@@ -19,7 +20,7 @@ export default function TabLayout() {
                     headerShown: false,
                     title: 'Profile',
                     href: "/(tabs)/profile",
-                    tabBarIcon: ({ color }) => <FontAwesome size={40} name="user" color={color} />,
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="user" color={color} />,
                 }}
             />
             <Tabs.Screen
@@ -28,7 +29,7 @@ export default function TabLayout() {
                     headerShown: false,
                     title: 'Search',
                     href: "/(tabs)/search",
-                    tabBarIcon: ({ color }) => <FontAwesome size={40} name="search" color={color} />,
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
                 }}
             />
             <Tabs.Screen
