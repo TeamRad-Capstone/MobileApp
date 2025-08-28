@@ -12,9 +12,15 @@ export default function TabLayout() {
                 borderColor: 'black',
                 borderTopWidth: 3
             }
-        }}>
+        }}
+        >
             <Tabs.Screen
-
+                name="(profile)/edit"
+                options={{
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
                 name="profile"
                 options={{
                     headerShown: false,

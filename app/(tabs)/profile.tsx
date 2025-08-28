@@ -1,20 +1,35 @@
 import {ScrollView, Text, StyleSheet, View, Image, Pressable} from "react-native";
+import {useRouter} from "expo-router";
 
 const Profile = () => {
     // Placeholder username until fetched from API
     const username = "Tester";
+    const router = useRouter();
+
+    const handleLogout = () => {
+        console.log("Attempt to logout");
+    }
+
+    const handleEditProfile = () => {
+        console.log("Attempt to edit Profile");
+        router.push("/(tabs)/(profile)/edit");
+    }
     return (
         <ScrollView style={styles.container}>
             <View style={styles.heading}>
-                <Image
-                    style={styles.icon}
-                    source={require('@/assets/icons/logout.png')}
-                />
+                <Pressable onPress={handleLogout}>
+                    <Image
+                        style={styles.icon}
+                        source={require('@/assets/icons/logout.png')}
+                    />
+                </Pressable>
                 <Text style={styles.title}>Welcome To Rad Reads</Text>
-                <Image
-                    style={styles.icon}
-                    source={require('@/assets/icons/edit.png')}
-                />
+                <Pressable onPress={handleEditProfile}>
+                    <Image
+                        style={styles.icon}
+                        source={require('@/assets/icons/edit.png')}
+                    />
+                </Pressable>
             </View>
 
             <View style={styles.profileDetails}>
@@ -105,7 +120,7 @@ const styles = StyleSheet.create({
         paddingBottom: 15,
     },
     upcomingBooksScroll: {
-        paddingHorizontal: 30
+        marginHorizontal: 30
     },
     upcomingBooksItem: {
         flexDirection: "row",
