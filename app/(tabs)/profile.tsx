@@ -1,10 +1,13 @@
-import {ScrollView, Text, StyleSheet, View, Image, Pressable} from "react-native";
+import {ScrollView, Text, StyleSheet, View, Image, Pressable, Modal} from "react-native";
 import {useRouter} from "expo-router";
+import {useState} from "react";
+import blurViewWeb from "expo-blur/src/BlurView.web";
 
 const Profile = () => {
     // Placeholder username until fetched from API
     const username = "Tester";
     const router = useRouter();
+    const [modalVisible, setModalVisible] = useState(false);
 
     const handleLogout = () => {
         console.log("Attempt to logout");
@@ -14,6 +17,21 @@ const Profile = () => {
         console.log("Attempt to edit Profile");
         router.push("/(tabs)/(profile)/edit");
     }
+
+    const showTransferModal = () => {
+        setModalVisible(true);
+    }
+
+    const handleModalClose = () => {
+        setModalVisible(false);
+    }
+
+    const handleImport = () => {
+        console.log("Attempt to import historical data");
+        // Read the csv file and send to API? Not sure how to implement yet
+        // Accept the file and send to API from there API will parse to DB
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.heading}>
@@ -67,9 +85,26 @@ const Profile = () => {
                     </View>
                 </ScrollView>
 
-                <Pressable style={styles.transferButton}>
+                <Pressable style={styles.transferButton} onPress={showTransferModal}>
                     <Text style={styles.buttonText}>Transfer History</Text>
                 </Pressable>
+
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                >
+                    <Pressable style={styles.modal} onPress={handleModalClose}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalHeader}>Transfer History?</Text>
+                            <Pressable onPress={handleImport}>
+                                <Text style={styles.modalBtn}>Import</Text>
+                            </Pressable>
+                            <Text style={styles.modalText}>Note:</Text>
+                            <Text style={styles.modalText}>Goodreads csv file accepted</Text>
+                        </View>
+                    </Pressable>
+                </Modal>
             </View>
         </ScrollView>
     );
@@ -140,5 +175,36 @@ const styles = StyleSheet.create({
     buttonText: {
         fontFamily: "Agbalumo",
         fontSize: 18,
+    },
+    modal: {
+        flex: 1,
+    },
+    modalContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#BE6A53",
+        marginHorizontal: "10%",
+        marginVertical: "75%",
+        paddingVertical: 20,
+        borderRadius: 50,
+    },
+    modalHeader: {
+        fontFamily: "Agbalumo",
+        fontSize: 24,
+        marginBottom: 20,
+    },
+    modalBtn: {
+        fontFamily: "Agbalumo",
+        fontSize: 20,
+        marginBottom: 20,
+        backgroundColor: "#FDDCB9",
+        paddingHorizontal: 30,
+        paddingVertical: 4,
+        borderRadius: 20,
+        verticalAlign: "middle",
+    },
+    modalText: {
+        fontFamily: "Agbalumo",
+        fontSize: 20,
     }
 })
