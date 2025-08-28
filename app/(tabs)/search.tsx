@@ -57,5 +57,6 @@ const styles = StyleSheet.create({
         marginRight: 50,
         fontFamily: "Agbalumo",
         fontSize: 16,
+        height: 50
     }
 })
