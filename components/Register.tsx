@@ -140,7 +140,10 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         color: "white",
         fontFamily: 'Agbalumo',
-        fontSize: 18
+        fontSize: 18,
+        height: 50,
+        paddingLeft: 16,
+        paddingRight: 16,
     },
     error: {
         fontFamily: 'Agbalumo',

@@ -160,7 +160,9 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         fontFamily: "Agbalumo",
         fontSize: 16,
-        paddingLeft: 10
+        height: 46,
+        paddingLeft: 10,
+        paddingRight: 10,
     },
     buttonText: {
         textAlign: "center",
