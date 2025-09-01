@@ -8,9 +8,20 @@ const Profile = () => {
     const username = "Tester";
     const router = useRouter();
     const [modalVisible, setModalVisible] = useState(false);
+    const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
     const handleLogout = () => {
         console.log("Attempt to logout");
+        setLogoutModalVisible(true);
+    }
+
+    const handleConfirmLogout = () => {
+        // do something with backend API and authentication to cancel user and hide info / session details.
+        console.log("Logout confirmed");
+    }
+
+    const handleCancelLogout = () => {
+        setLogoutModalVisible(false);
     }
 
     const handleEditProfile = () => {
@@ -50,6 +61,24 @@ const Profile = () => {
                 </Pressable>
             </View>
 
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={logoutModalVisible}
+            >
+                <View style={styles.logoutModalView}>
+                    <Text style={styles.logoutText}>Logout?</Text>
+                    <View style={{flexDirection: "row", gap: "20%"}}>
+                        <Pressable onPress={handleConfirmLogout}>
+                            <Text style={styles.logoutBtn}>Yes</Text>
+                        </Pressable>
+                        <Pressable onPress={handleCancelLogout}>
+                            <Text style={styles.logoutBtn}>No</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
+
             <View style={styles.profileDetails}>
                 <Image
                     style={styles.profileImage}
@@ -64,7 +93,7 @@ const Profile = () => {
                     horizontal={true}
                     style={styles.upcomingBooksScroll}
                 >
-                    {/* To be replaced by books as set up in database for each user based on upcoming preference*/}
+                    {/* To be replaced by books (interactive w/ modal) as set up in database for each user based on upcoming preference*/}
                     <View style={styles.upcomingBooksItem}>
                         <Image
                             style={styles.bookItemImg}
@@ -206,5 +235,29 @@ const styles = StyleSheet.create({
     modalText: {
         fontFamily: "Agbalumo",
         fontSize: 20,
+    },
+    logoutModalView: {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(10, 10, 10, 0.8)",
+        marginHorizontal: "10%",
+        marginVertical: "75%",
+        paddingVertical: 20,
+        borderRadius: 50,
+    },
+    logoutText: {
+        fontFamily: "Agbalumo",
+        fontSize: 22,
+        color: "white",
+        marginBottom: 20,
+    },
+    logoutBtn: {
+        fontFamily: "Agbalumo",
+        fontSize: 22,
+        color: "black",
+        backgroundColor: "#E3E3E3",
+        paddingHorizontal: 28,
+        paddingVertical: 10,
+        borderRadius: 20,
     }
 })
