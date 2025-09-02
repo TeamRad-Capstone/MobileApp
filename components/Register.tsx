@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useState} from "react";
 import { useRouter } from "expo-router";
+import { createUser } from "@/services/api";
 
 const Register = () => {
     const heading = "Create an Account";
@@ -54,6 +55,9 @@ const Register = () => {
         // Call the backend api to register user into the database if valid fields = true
         // If successful, push back to login page
         if (validFields) {
+            console.log("Fields are valid");
+            createUser(email, username, password).then(r => console.log("API Call successfully registered: " + r));
+            // Push to the login page
             router.push("/");
         }
     }
