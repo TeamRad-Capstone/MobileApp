@@ -1,7 +1,7 @@
 import {ScrollView, Text, StyleSheet, View, Image, Pressable, Modal} from "react-native";
 import {useRouter} from "expo-router";
 import {useState} from "react";
-import blurViewWeb from "expo-blur/src/BlurView.web";
+import UpcomingBook from "@/components/UpcomingBook"
 
 const Profile = () => {
     // Placeholder username until fetched from API
@@ -18,6 +18,10 @@ const Profile = () => {
     const handleConfirmLogout = () => {
         // do something with backend API and authentication to cancel user and hide info / session details.
         console.log("Logout confirmed");
+        setLogoutModalVisible(false);
+
+        // Placeholder until backend API is implemented
+        router.push("/");
     }
 
     const handleCancelLogout = () => {
@@ -43,6 +47,16 @@ const Profile = () => {
         // Accept the file and send to API from there API will parse to DB
     }
 
+    const upcomingBookData = [
+        {title: "Lord of The Rings", author: "J.R.R Tolkien", coverUrl: "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg"},
+        {title: "To Kill a Mockingbird", author: "Harper Lee", coverUrl: ""},
+        {title: "Funny Story", author: "Emily Henry", coverUrl: "https://covers.openlibrary.org/b/olid/OL57586063M-L.jpg"},
+        {title: "Love Hypothesis", author: "Ali Hazelwood", coverUrl: "https://covers.openlibrary.org/b/olid/OL57520854M-L.jpg"},
+        {title: "The Wedding People", author: "Alison Espach", coverUrl: "https://covers.openlibrary.org/b/olid/OL51587376M-L.jpg"},
+        {title: "Weyward", author: "Emilia Hart", coverUrl: "https://ia601909.us.archive.org/view_archive.php?archive=/31/items/l_covers_0013/l_covers_0013_19.zip&file=0013194003-L.jpg"},
+        {title: "The Bear and The Nightingale", author: "Katherine Arden", coverUrl: "https://covers.openlibrary.org/b/olid/OL28632654M-L.jpg"},
+    ];
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.heading}>
@@ -61,6 +75,7 @@ const Profile = () => {
                 </Pressable>
             </View>
 
+            {/* Logout Modal */}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -93,24 +108,15 @@ const Profile = () => {
                     horizontal={true}
                     style={styles.upcomingBooksScroll}
                 >
-                    {/* To be replaced by books (interactive w/ modal) as set up in database for each user based on upcoming preference*/}
                     <View style={styles.upcomingBooksItem}>
-                        <Image
-                            style={styles.bookItemImg}
-                            source={require('@/assets/images/books/missing-you.jpg')}
-                        />
-                        <Image
-                            style={styles.bookItemImg}
-                            source={require('@/assets/images/books/missing-you.jpg')}
-                        />
-                        <Image
-                            style={styles.bookItemImg}
-                            source={require('@/assets/images/books/missing-you.jpg')}
-                        />
-                        <Image
-                            style={styles.bookItemImg}
-                            source={require('@/assets/images/books/missing-you.jpg')}
-                        />
+                        {upcomingBookData.map((book, index) => (
+                            <UpcomingBook
+                                key={index}
+                                title={book.title}
+                                author={book.author}
+                                coverUrl={book.coverUrl}
+                            />
+                        ))}
                     </View>
                 </ScrollView>
 

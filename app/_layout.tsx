@@ -27,22 +27,29 @@ export default function RootLayout() {
                 name="index"
                 options={{
                     headerShown: false,
-                    gestureEnabled: false,
+                    gestureEnabled: true,
             }}
             />
             <Stack.Screen
                 name="register"
                 options={{
                     headerShown: false,
-                    gestureEnabled: false,
+                    gestureEnabled: true,
+            }}
+            />
+            <Stack.Screen
+                name="forgot"
+                options={{
+                    headerShown: false,
+                    gestureEnabled: true,
             }}
             />
             <Stack.Screen
                 name="(tabs)"
                 options={{
                     headerShown: false,
-                    gestureEnabled: false,
-            }}
+                    gestureEnabled: true,
+                }}
             />
         </Stack>
     )
