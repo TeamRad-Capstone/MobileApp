@@ -24,13 +24,26 @@ const Register = () => {
 
     const router = useRouter();
 
+    const handleFormCleanUp = () => {
+        setEmail("");
+        setUsername("");
+        setPassword("");
+        setConfirmPassword("");
+        handleErrorCleanUp();
+    }
+
+    const handleErrorCleanUp = () => {
+        setEmailErrorMsg("");
+        setPasswordErrorMsg("");
+        setConfirmPasswordErrorMsg("");
+        setUsernameErrorMsg("");
+        setErrorMsg("");
+    }
+
     const handleRegister = () => {
         console.log('Attempt to Register');
         let validFields = true;
-        setEmailErrorMsg("");
-        setUsernameErrorMsg("");
-        setPasswordErrorMsg("");
-        setConfirmPasswordErrorMsg("");
+        handleErrorCleanUp();
 
         if (!email || !emailRegex.test(email)) {
             setEmailErrorMsg("Please enter a valid email address");
@@ -55,6 +68,7 @@ const Register = () => {
         // Call the backend api to register user into the database if valid fields = true
         // If successful, push back to login page
         if (validFields) {
+            handleFormCleanUp();
             console.log("Fields are valid");
             createUser(email, username, password).then(r => console.log("API Call successfully registered: " + r));
             // Push to the login page
