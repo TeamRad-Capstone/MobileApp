@@ -21,6 +21,14 @@ const Login = () => {
 
     const router = useRouter();
 
+    const handleFormCleanUp = () => {
+        setEmail("");
+        setPassword("");
+        setEmailErrorMsg("");
+        setPasswordErrorMsg("");
+        setErrorMsg("");
+    }
+
     const handleLogin = () => {
         let validFields = true;
       console.log('Attempt to Login');
@@ -37,6 +45,7 @@ const Login = () => {
       }
 
       if (validFields) {
+          handleFormCleanUp();
           router.push("./(tabs)/profile");
       }
       // testConnection()
@@ -48,11 +57,14 @@ const Login = () => {
     const handleRegister = () => {
         console.log('Move to Register page');
         // Use router to push to the register page - once developed
+        handleFormCleanUp();
         router.push("/register")
     }
 
     const handleForgotPassword = () => {
         console.log('Forgot Password');
+        handleFormCleanUp();
+        router.push("/forgot");
         // Use the router to push the forgot password page - once developed
     }
 
