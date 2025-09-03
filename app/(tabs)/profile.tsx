@@ -47,18 +47,14 @@ const Profile = () => {
         // Accept the file and send to API from there API will parse to DB
     }
 
-    const openBook = () => {
-        console.log("Attempt to open book");
-    }
-
     const upcomingBookData = [
-        {title: "Lord of The Rings", author: "J.R.R Tolkien", coverUrl: "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg", triggerOpen: openBook},
-        {title: "To Kill a Mockingbird", author: "Harper Lee", coverUrl: "", triggerOpen: openBook},
-        {title: "Funny Story", author: "Emily Henry", coverUrl: "https://covers.openlibrary.org/b/olid/OL57586063M-L.jpg", triggerOpen: openBook},
-        {title: "Love Hypothesis", author: "Ali Hazelwood", coverUrl: "https://covers.openlibrary.org/b/olid/OL57520854M-L.jpg", triggerOpen: openBook},
-        {title: "The Wedding People", author: "Alison Espach", coverUrl: "https://covers.openlibrary.org/b/olid/OL51587376M-L.jpg", triggerOpen: openBook},
-        {title: "Weyward", author: "Emilia Hart", coverUrl: "https://ia601909.us.archive.org/view_archive.php?archive=/31/items/l_covers_0013/l_covers_0013_19.zip&file=0013194003-L.jpg", triggerOpen: openBook},
-        {title: "The Bear and The Nightingale", author: "Katherine Arden", coverUrl: "https://covers.openlibrary.org/b/olid/OL28632654M-L.jpg", triggerOpen: openBook},
+        {title: "Lord of The Rings", author: "J.R.R Tolkien", coverUrl: "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg"},
+        {title: "To Kill a Mockingbird", author: "Harper Lee", coverUrl: ""},
+        {title: "Funny Story", author: "Emily Henry", coverUrl: "https://covers.openlibrary.org/b/olid/OL57586063M-L.jpg"},
+        {title: "Love Hypothesis", author: "Ali Hazelwood", coverUrl: "https://covers.openlibrary.org/b/olid/OL57520854M-L.jpg"},
+        {title: "The Wedding People", author: "Alison Espach", coverUrl: "https://covers.openlibrary.org/b/olid/OL51587376M-L.jpg"},
+        {title: "Weyward", author: "Emilia Hart", coverUrl: "https://ia601909.us.archive.org/view_archive.php?archive=/31/items/l_covers_0013/l_covers_0013_19.zip&file=0013194003-L.jpg"},
+        {title: "The Bear and The Nightingale", author: "Katherine Arden", coverUrl: "https://covers.openlibrary.org/b/olid/OL28632654M-L.jpg"},
     ];
 
     return (
@@ -119,7 +115,6 @@ const Profile = () => {
                                 title={book.title}
                                 author={book.author}
                                 coverUrl={book.coverUrl}
-                                triggerOpen={book.triggerOpen}
                             />
                         ))}
                     </View>
