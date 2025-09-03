@@ -1,7 +1,6 @@
 import {ScrollView, Text, StyleSheet, View, Image, Pressable, Modal} from "react-native";
 import {useRouter} from "expo-router";
 import {useState} from "react";
-import blurViewWeb from "expo-blur/src/BlurView.web";
 
 const Profile = () => {
     // Placeholder username until fetched from API
@@ -18,6 +17,10 @@ const Profile = () => {
     const handleConfirmLogout = () => {
         // do something with backend API and authentication to cancel user and hide info / session details.
         console.log("Logout confirmed");
+        setLogoutModalVisible(false);
+
+        // Placeholder until backend API is implemented
+        router.push("/");
     }
 
     const handleCancelLogout = () => {
