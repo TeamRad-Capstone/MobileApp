@@ -47,6 +47,11 @@ const Profile = () => {
         // Accept the file and send to API from there API will parse to DB
     }
 
+    const handleStats = () => {
+        console.log("Attempt to import stats");
+        router.push("/(tabs)/(profile)/stats")
+    }
+
     const upcomingBookData = [
         {title: "Lord of The Rings", author: "J.R.R Tolkien", coverUrl: "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg"},
         {title: "To Kill a Mockingbird", author: "Harper Lee", coverUrl: ""},
@@ -121,6 +126,10 @@ const Profile = () => {
                             ))}
                         </View>
                     </ScrollView>
+
+                    <Pressable style={styles.transferButton} onPress={handleStats}>
+                        <Text style={styles.buttonText}>Stats</Text>
+                    </Pressable>
 
                     <Pressable style={styles.transferButton} onPress={showTransferModal}>
                         <Text style={styles.buttonText}>Transfer History</Text>
