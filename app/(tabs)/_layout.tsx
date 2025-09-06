@@ -22,6 +22,13 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
+                name="(profile)/stats"
+                options={{
+                    headerShown: false,
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
                 name="profile"
                 options={{
                     headerShown: false,
