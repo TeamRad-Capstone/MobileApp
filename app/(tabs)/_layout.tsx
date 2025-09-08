@@ -29,6 +29,13 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
+                name="(profile)/transferred"
+                options={{
+                    headerShown: false,
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
                 name="profile"
                 options={{
                     headerShown: false,
