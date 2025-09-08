@@ -1,64 +1,30 @@
-import { useState } from "react";
+import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const Goals = () => {
-  const [selected, setSelected] = useState<null | "past" | "current">(null);
+// This page is the main goals page. It links to Current and Past goals.
 
-  const pastGoals = [
-    "Read 20 books in 2024",
-    "Read 5 books I've never heard of before",
-    "Read 3 books reccomended to me",
-  ];
-  const currentGoals = ["Can I read horror books?", "Out of my comfort zone"];
+const Goals = () => {
+  const router = useRouter();
+
+  const goToPastGoals = () => {
+    router.push("/goals/current");
+  };
+
+  const goToCurrentGoals = () => {
+    router.push("/goals/current");
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.headingText}>Reading Goals</Text>
-
-      {selected === null && (
-        <View style={styles.mainView}>
-          <Pressable onPress={() => setSelected("past")}>
-            <Text style={styles.blocks}>Past Goals</Text>
-          </Pressable>
-          <Pressable onPress={() => setSelected("current")}>
-            <Text style={styles.blocks}>Current Goals</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {selected === "past" && (
-        <View style={styles.pageView}>
-          <Text style={styles.headingText}>Past Goals Page</Text>
-          <Pressable onPress={() => setSelected(null)}>
-            <Text style={styles.backButton}>←</Text>
-          </Pressable>
-          <View>
-            <View>
-              {pastGoals.map((goal, index) => (
-                <Text key={index} style={styles.blocks}>
-                  {goal}
-                </Text>
-              ))}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {selected === "current" && (
-        <View style={styles.pageView}>
-          <Text style={styles.headingText}>Current Goals Page</Text>
-          <Pressable onPress={() => setSelected(null)}>
-            <Text style={styles.backButton}>←</Text>
-          </Pressable>
-          <View>
-            {currentGoals.map((goal, index) => (
-              <Text key={index} style={styles.blocks}>
-                {goal}
-              </Text>
-            ))}
-          </View>
-        </View>
-      )}
+      <View style={styles.mainView}>
+        <Pressable onPress={() => goToPastGoals()}>
+          <Text style={styles.goalCategoryButton}>Past Goals</Text>
+        </Pressable>
+        <Pressable onPress={() => goToCurrentGoals()}>
+          <Text style={styles.goalCategoryButton}>Current Goals</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -68,43 +34,26 @@ export default Goals;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 50,
     backgroundColor: "#FDDCB9",
-    paddingTop: 60,
+    alignItems: "center",
   },
   headingText: {
-    fontFamily: "Agbalumo",
     fontSize: 24,
-    textAlign: "center",
-  },
-  headerView: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    borderRadius: 20,
-    marginHorizontal: 25,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  blocks: {
-    fontFamily: "Agbalumo",
-    fontSize: 25,
-    padding: 20,
-    width: 300,
-    textAlign: "center",
-    backgroundColor: "brown",
-    borderRadius: 20,
-    color: "white",
+    fontWeight: "bold",
+    marginBottom: 20,
   },
   mainView: {
-    flex: 1,
-    justifyContent: "space-evenly",
     alignItems: "center",
+    marginTop: 20,
   },
-  pageView: {
-    flex: 1,
-    justifyContent: "center",
+  goalCategoryButton: {
+    backgroundColor: "#BE6A53",
+    padding: 15,
+    borderRadius: 20,
+    marginVertical: 10,
+    width: 350,
     alignItems: "center",
-  },
-  backButton: {
-    fontSize: 40,
+    fontSize: 20,
   },
 });
