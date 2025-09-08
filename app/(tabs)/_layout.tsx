@@ -1,19 +1,20 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Tabs } from "expo-router";
 
 export default function TabLayout() {
-    return (
-        <Tabs screenOptions={{
-            tabBarShowLabel: false,
-            tabBarActiveTintColor: '#BE6A53',
-            tabBarInactiveTintColor: 'black',
-            tabBarStyle: {
-                backgroundColor: '#FDDCB9',
-                borderColor: 'black',
-                borderTopWidth: 3
-            }
-        }}
-        >
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: "#BE6A53",
+        tabBarInactiveTintColor: "black",
+        tabBarStyle: {
+          backgroundColor: "#FDDCB9",
+          borderColor: "black",
+          borderTopWidth: 3,
+        },
+      }}
+    >
             <Tabs.Screen
                 name="(profile)/edit"
                 options={{
@@ -70,13 +71,15 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="goals"
-                options={{
-                    headerShown: false,
-                    title: 'Settings',
-                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
-                }}
+              name="goals"
+              options={{
+                headerShown: false,
+                title: "Goals",
+                tabBarIcon: ({ color }) => (
+                  <FontAwesome size={28} name="check" color={color} />
+                ),
+              }}
             />
-        </Tabs>
-    );
+          </Tabs>
+        );
 }
