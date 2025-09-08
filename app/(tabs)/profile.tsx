@@ -2,6 +2,7 @@ import {ScrollView, Text, StyleSheet, View, Image, Pressable, Modal} from "react
 import {useRouter} from "expo-router";
 import {useState} from "react";
 import UpcomingBook from "@/components/UpcomingBook"
+import * as DocumentPicker from 'expo-document-picker';
 
 const Profile = () => {
     // Placeholder username until fetched from API
@@ -45,6 +46,22 @@ const Profile = () => {
         console.log("Attempt to import historical data");
         // Read the csv file and send to API? Not sure how to implement yet
         // Accept the file and send to API from there API will parse to DB
+        DocumentPicker.getDocumentAsync({}).then((doc) => {
+            if (!doc.canceled) {
+                const file = doc.assets.pop();
+                const fileName = file ? file.name : "";
+                console.log(fileName);
+                handleModalClose();
+                router.push("/(tabs)/(profile)/transferred");
+            } else {
+                console.log("No file picked")
+            }
+        })
+    }
+
+    const handleStats = () => {
+        console.log("Attempt to import stats");
+        router.push("/(tabs)/(profile)/stats")
     }
 
     const upcomingBookData = [
@@ -58,7 +75,7 @@ const Profile = () => {
     ];
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.heading}>
                 <Pressable onPress={handleLogout}>
                     <Image
@@ -75,73 +92,81 @@ const Profile = () => {
                 </Pressable>
             </View>
 
-            {/* Logout Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={logoutModalVisible}
-            >
-                <View style={styles.logoutModalView}>
-                    <Text style={styles.logoutText}>Logout?</Text>
-                    <View style={{flexDirection: "row", gap: "20%"}}>
-                        <Pressable onPress={handleConfirmLogout}>
-                            <Text style={styles.logoutBtn}>Yes</Text>
-                        </Pressable>
-                        <Pressable onPress={handleCancelLogout}>
-                            <Text style={styles.logoutBtn}>No</Text>
-                        </Pressable>
-                    </View>
-                </View>
-            </Modal>
+            <ScrollView>
 
-            <View style={styles.profileDetails}>
-                <Image
-                    style={styles.profileImage}
-                    source={require('@/assets/images/profileImg.jpg')}
-                />
-                <Text style={styles.profileName}>{username}</Text>
-            </View>
-
-            <View style={styles.upcomingBooks}>
-                <Text style={styles.upcomingBooksTitle}>Upcoming Books</Text>
-                <ScrollView
-                    horizontal={true}
-                    style={styles.upcomingBooksScroll}
-                >
-                    <View style={styles.upcomingBooksItem}>
-                        {upcomingBookData.map((book, index) => (
-                            <UpcomingBook
-                                key={index}
-                                title={book.title}
-                                author={book.author}
-                                coverUrl={book.coverUrl}
-                            />
-                        ))}
-                    </View>
-                </ScrollView>
-
-                <Pressable style={styles.transferButton} onPress={showTransferModal}>
-                    <Text style={styles.buttonText}>Transfer History</Text>
-                </Pressable>
-
+                {/* Logout Modal */}
                 <Modal
                     animationType="slide"
                     transparent={true}
-                    visible={modalVisible}
+                    visible={logoutModalVisible}
                 >
-                    <Pressable style={styles.modal} onPress={handleModalClose}>
-                        <View style={styles.modalContainer}>
-                            <Text style={styles.modalHeader}>Transfer History?</Text>
-                            <Pressable onPress={handleImport}>
-                                <Text style={styles.modalBtn}>Import</Text>
+                    <View style={styles.logoutModalView}>
+                        <Text style={styles.logoutText}>Logout?</Text>
+                        <View style={{flexDirection: "row", gap: "20%"}}>
+                            <Pressable onPress={handleConfirmLogout}>
+                                <Text style={styles.logoutBtn}>Yes</Text>
                             </Pressable>
-                            <Text style={styles.modalText}>Note:</Text>
-                            <Text style={styles.modalText}>Goodreads csv file accepted</Text>
+                            <Pressable onPress={handleCancelLogout}>
+                                <Text style={styles.logoutBtn}>No</Text>
+                            </Pressable>
                         </View>
-                    </Pressable>
+                    </View>
                 </Modal>
-            </View>
-        </ScrollView>
+
+                <View style={styles.profileDetails}>
+                    <Image
+                        style={styles.profileImage}
+                        source={require('@/assets/images/profileImg.jpg')}
+                    />
+                    <Text style={styles.profileName}>{username}</Text>
+                </View>
+
+                <View style={styles.upcomingBooks}>
+                    <Text style={styles.upcomingBooksTitle}>Upcoming Books</Text>
+                    <ScrollView
+                        horizontal={true}
+                        style={styles.upcomingBooksScroll}
+                    >
+                        <View style={styles.upcomingBooksItem}>
+                            {upcomingBookData.map((book, index) => (
+                                <UpcomingBook
+                                    key={index}
+                                    title={book.title}
+                                    author={book.author}
+                                    coverUrl={book.coverUrl}
+                                />
+                            ))}
+                        </View>
+                    </ScrollView>
+
+                    <Pressable style={styles.transferButton} onPress={handleStats}>
+                        <Text style={styles.buttonText}>Stats</Text>
+                    </Pressable>
+
+                    <Pressable style={styles.transferButton} onPress={showTransferModal}>
+                        <Text style={styles.buttonText}>Transfer History</Text>
+                    </Pressable>
+
+                    {/* Transfer History Modal */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                    >
+                        <Pressable style={styles.modal} onPress={handleModalClose}>
+                            <View style={styles.modalContainer}>
+                                <Text style={styles.modalHeader}>Transfer History?</Text>
+                                <Pressable onPress={handleImport}>
+                                    <Text style={styles.modalBtn}>Import</Text>
+                                </Pressable>
+                                <Text style={styles.modalText}>Note:</Text>
+                                <Text style={styles.modalText}>Goodreads csv file accepted</Text>
+                            </View>
+                        </Pressable>
+                    </Modal>
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
@@ -182,7 +207,8 @@ const styles = StyleSheet.create({
     },
     upcomingBooks: {
         alignItems: "center",
-        paddingTop: 50
+        paddingTop: 50,
+        marginBottom: 40
     },
     upcomingBooksTitle: {
         fontFamily: "Agbalumo",

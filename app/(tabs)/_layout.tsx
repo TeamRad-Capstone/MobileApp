@@ -15,65 +15,71 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="(profile)/edit"
-        options={{
-          headerShown: false,
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          headerShown: false,
-          title: "Profile",
-          href: "/(tabs)/profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="user" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          headerShown: false,
-          title: "Search",
-          href: "/(tabs)/search",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="search" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="recommednations"
-        options={{
-          headerShown: false,
-          title: "Settings",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="cog" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="shelves"
-        options={{
-          headerShown: false,
-          title: "Settings",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="cog" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="goals"
-        options={{
-          headerShown: false,
-          title: "Goals",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="check" color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+            <Tabs.Screen
+                name="(profile)/edit"
+                options={{
+                    headerShown: false,
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
+                name="(profile)/stats"
+                options={{
+                    headerShown: false,
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
+                name="(profile)/transferred"
+                options={{
+                    headerShown: false,
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    headerShown: false,
+                    title: 'Profile',
+                    href: "/(tabs)/profile",
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="user" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="search"
+                options={{
+                    headerShown: false,
+                    title: 'Search',
+                    href: "/(tabs)/search",
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="recommednations"
+                options={{
+                    headerShown: false,
+                    title: 'Settings',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+                name="shelves"
+                options={{
+                    headerShown: false,
+                    title: 'Settings',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                }}
+            />
+            <Tabs.Screen
+              name="goals"
+              options={{
+                headerShown: false,
+                title: "Goals",
+                tabBarIcon: ({ color }) => (
+                  <FontAwesome size={28} name="check" color={color} />
+                ),
+              }}
+            />
+          </Tabs>
+        );
 }
