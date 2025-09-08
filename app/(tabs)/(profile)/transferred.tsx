@@ -1,5 +1,6 @@
 import {Image, Pressable, StyleSheet, Text, View} from "react-native";
 import {useRouter} from "expo-router";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const Transferred = () => {
     const router = useRouter();
@@ -8,8 +9,8 @@ const Transferred = () => {
         router.push("/(tabs)/profile");
     }
     return (
-        <View style={styles.container}>
-            <View style={{flexDirection: "row", position: "fixed" }}>
+        <SafeAreaView style={styles.container}>
+            <View>
                 <View style={styles.back}>
                     <Pressable onPress={handleBackButton}>
                         <Image
@@ -22,7 +23,7 @@ const Transferred = () => {
                     <Text style={styles.headerText}>Transferred History</Text>
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     )
 }
 
@@ -32,7 +33,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#FDDCB9",
-        paddingTop: 60,
     },
     header: {
         marginHorizontal: "auto"
