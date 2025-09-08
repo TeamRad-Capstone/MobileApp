@@ -2,6 +2,7 @@ import {ScrollView, Text, StyleSheet, View, Image, Pressable, Modal} from "react
 import {useRouter} from "expo-router";
 import {useState} from "react";
 import UpcomingBook from "@/components/UpcomingBook"
+import * as DocumentPicker from 'expo-document-picker';
 
 const Profile = () => {
     // Placeholder username until fetched from API
@@ -45,6 +46,17 @@ const Profile = () => {
         console.log("Attempt to import historical data");
         // Read the csv file and send to API? Not sure how to implement yet
         // Accept the file and send to API from there API will parse to DB
+        DocumentPicker.getDocumentAsync({}).then((doc) => {
+            if (!doc.canceled) {
+                const file = doc.assets.pop();
+                const fileName = file ? file.name : "";
+                console.log(fileName);
+                handleModalClose();
+                router.push("/(tabs)/(profile)/transferred");
+            } else {
+                console.log("No file picked")
+            }
+        })
     }
 
     const handleStats = () => {
