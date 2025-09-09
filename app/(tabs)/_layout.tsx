@@ -78,6 +78,13 @@ export default function TabLayout() {
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="check" color={color} />
                 }}
             />
+            <Tabs.Screen
+                name="(goals)/current"
+                options={{
+                    headerShown: false,
+                    href: null
+                }}
+            />
           </Tabs>
         );
 }

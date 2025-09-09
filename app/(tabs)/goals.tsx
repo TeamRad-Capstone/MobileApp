@@ -8,12 +8,12 @@ const Goals = () => {
 
   const goToPastGoals = () => {
     console.log("Navigating to Current Goals");
-    router.push("/goals/current");
+    router.push("/(tabs)/(goals)/current");
   };
 
   const goToCurrentGoals = () => {
     console.log("Navigating to Current Goals");
-    router.push("/goals/current");
+    router.push("/(tabs)/(goals)/current");
   };
 
   return (
