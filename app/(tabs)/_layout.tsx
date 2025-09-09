@@ -66,19 +66,17 @@ export default function TabLayout() {
                 name="shelves"
                 options={{
                     headerShown: false,
-                    title: 'Settings',
-                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                    title: 'Shelves',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="book" color={color} />,
                 }}
             />
             <Tabs.Screen
-              name="goals"
-              options={{
-                headerShown: false,
-                title: "Goals",
-                tabBarIcon: ({ color }) => (
-                  <FontAwesome size={28} name="check" color={color} />
-                ),
-              }}
+                name="goals"
+                options={{
+                    headerShown: false,
+                    title: "Goals",
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="check" color={color} />
+                }}
             />
           </Tabs>
         );
