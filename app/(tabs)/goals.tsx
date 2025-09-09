@@ -7,22 +7,24 @@ const Goals = () => {
   const router = useRouter();
 
   const goToPastGoals = () => {
+    console.log("Navigating to Current Goals");
     router.push("/goals/current");
   };
 
   const goToCurrentGoals = () => {
+    console.log("Navigating to Current Goals");
     router.push("/goals/current");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headingText}>Reading Goals</Text>
+      <Text style={styles.heading}>Reading Goals</Text>
       <View style={styles.mainView}>
-        <Pressable onPress={() => goToPastGoals()}>
-          <Text style={styles.goalCategoryButton}>Past Goals</Text>
+        <Pressable onPress={goToPastGoals} style={styles.goalCategoryButton}>
+          <Text style={styles.goalCategoryText}>Past Goals</Text>
         </Pressable>
-        <Pressable onPress={() => goToCurrentGoals()}>
-          <Text style={styles.goalCategoryButton}>Current Goals</Text>
+        <Pressable onPress={goToCurrentGoals} style={styles.goalCategoryButton}>
+          <Text style={styles.goalCategoryText}>Current Goals</Text>
         </Pressable>
       </View>
     </View>
@@ -38,10 +40,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FDDCB9",
     alignItems: "center",
   },
-  headingText: {
+  heading: {
     fontSize: 24,
-    fontWeight: "bold",
     marginBottom: 20,
+    fontFamily: "Agbalumo",
   },
   mainView: {
     alignItems: "center",
@@ -54,6 +56,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     width: 350,
     alignItems: "center",
+  },
+  goalCategoryText: {
     fontSize: 20,
+    fontFamily: "Agbalumo",
+    textAlign: "center",
   },
 });

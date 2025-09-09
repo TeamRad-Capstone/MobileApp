@@ -1,15 +1,22 @@
+import Book from "@/components/Book";
 import { ScrollView } from "react-native";
-import Book from "./Book";
+
+// This component displays a shelf of books. It takes in an array of book objects and renders them using the Book component.
 
 type ShelfProps = {
-  books: { coverUrl: string }[];
+  books: { title: string; author: string; coverUrl: string }[];
 };
 
 const Shelf = ({ books }: ShelfProps) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {books.map((book, index) => (
-        <Book key={index} coverUrl={book.coverUrl} />
+        <Book
+          key={index}
+          title={book.title}
+          author={book.author}
+          coverUrl={book.coverUrl}
+        />
       ))}
     </ScrollView>
   );
