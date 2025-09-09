@@ -3,6 +3,7 @@ import {useRouter} from "expo-router";
 import {useState} from "react";
 import UpcomingBook from "@/components/UpcomingBook"
 import * as DocumentPicker from 'expo-document-picker';
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const Profile = () => {
     // Placeholder username until fetched from API
@@ -75,7 +76,7 @@ const Profile = () => {
     ];
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.heading}>
                 <Pressable onPress={handleLogout}>
                     <Image
@@ -166,7 +167,7 @@ const Profile = () => {
                     </Modal>
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -176,7 +177,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FDDCB9',
-        paddingTop: 60,
     },
     heading: {
         flexDirection: "row",

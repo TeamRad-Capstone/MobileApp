@@ -1,11 +1,12 @@
 import {View, StyleSheet, Text, Image, ScrollView, TextInput} from "react-native";
 import {useState} from "react";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const Search = () => {
     const [searchParam, setSearchParams] = useState("");
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Text style={styles.headingText}>Search</Text>
             <View style={styles.headerView}>
                 <Image
@@ -23,7 +24,7 @@ const Search = () => {
                 Send search params to backend API and do retrieval from OpenBooks API
                 for data to parse in the app. */}
             </ScrollView>
-        </View>
+        </SafeAreaView>
     )
 }
 
@@ -33,7 +34,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FDDCB9',
-        paddingTop: 60,
     },
     headingText: {
         fontFamily: "Agbalumo",
