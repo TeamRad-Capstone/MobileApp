@@ -17,12 +17,14 @@ type SearchBookType = {
 const Search = () => {
     const [searchParam, setSearchParams] = useState("");
     const [returnedBooks, setReturnedBooks] = useState<SearchBookType[]>([]);
-    const [queryType, setQueryType] = useState(null);
+
     const queryTypeData = [
         {label: "Default", value: "Default"},
         {label: "Title", value: "title"},
         {label: "Author", value: "author"},
     ];
+    const [queryType, setQueryType] = useState(queryTypeData[0].label);
+
 
     const searchInAPI = async () => {
         setReturnedBooks([])
@@ -33,7 +35,7 @@ const Search = () => {
         try {
             const searched = searchParam.split(" ").join("+");
             let type = (queryType === "Default") ? `` : `+in${queryType}:` + searched
-            // const searchQuery = searched.join("+");
+
             const response = await fetch(volumeQueryUrl + searched + type + maxResults +
                 "&key=" + process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
             );
@@ -90,6 +92,7 @@ const Search = () => {
                             setQueryType(item.value);
                         }}
                         value={queryType}
+                        placeholder={queryType}
                     />
                 </View>
             </View>
