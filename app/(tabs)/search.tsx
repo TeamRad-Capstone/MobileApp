@@ -2,6 +2,7 @@ import {View, StyleSheet, Text, Image, ScrollView, TextInput} from "react-native
 import {useState} from "react";
 import {SafeAreaView} from "react-native-safe-area-context";
 import SearchBook from "@/components/SearchBook";
+import {Dropdown} from "react-native-element-dropdown";
 
 type SearchBookType = {
     coverUrl: string;
@@ -16,18 +17,24 @@ type SearchBookType = {
 const Search = () => {
     const [searchParam, setSearchParams] = useState("");
     const [returnedBooks, setReturnedBooks] = useState<SearchBookType[]>([]);
-    // const [queryType, setQueryType] = useState("title");
+    const [queryType, setQueryType] = useState(null);
+    const queryTypeData = [
+        {label: "Default", value: "Default"},
+        {label: "Title", value: "title"},
+        {label: "Author", value: "author"},
+    ];
 
     const searchInAPI = async () => {
         setReturnedBooks([])
 
         let volumeQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=";
         let maxResults = "&maxResults=20";
-        let type = "title";
-        let queryType = `&in${type}= ` + searchParam;
 
         try {
-            const response = await fetch(volumeQueryUrl + searchParam + queryType+ maxResults +
+            const searched = searchParam.split(" ").join("+");
+            let type = (queryType === "Default") ? `` : `+in${queryType}:` + searched
+            // const searchQuery = searched.join("+");
+            const response = await fetch(volumeQueryUrl + searched + type + maxResults +
                 "&key=" + process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
             );
             if (!response.ok) {
@@ -48,7 +55,6 @@ const Search = () => {
                     publishedDate: books.publishedDate,
                 }
                 console.log(newBook);
-                //numOfBooks++;
                 setReturnedBooks(oldBooks => [...oldBooks, newBook])
             }
         } catch (error) {
@@ -59,17 +65,33 @@ const Search = () => {
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.headingText}>Search</Text>
-            <View style={styles.headerView}>
-                <Image
-                    style={styles.searchIcon}
-                    source={require('@/assets/icons/search.png')}
-                />
-                <TextInput
-                    style={styles.searchInput}
-                    value={searchParam}
-                    onChangeText={setSearchParams}
-                    onSubmitEditing={searchInAPI}
-                />
+            <View style={{flexDirection: "row"}}>
+                <View style={styles.headerView}>
+                    <Image
+                        style={styles.searchIcon}
+                        source={require('@/assets/icons/search.png')}
+                    />
+                    <TextInput
+                        style={styles.searchInput}
+                        value={searchParam}
+                        onChangeText={setSearchParams}
+                        onSubmitEditing={searchInAPI}
+                    />
+                </View>
+                <View style={styles.queryChoice}>
+                    <Dropdown
+                        style={{width: 90, marginLeft: 10}}
+                        data={queryTypeData}
+                        fontFamily={"Agbalumo"}
+                        labelField={"label"}
+                        valueField={"value"}
+                        onChange={item => {
+                            console.log('Selected:', item.value);
+                            setQueryType(item.value);
+                        }}
+                        value={queryType}
+                    />
+                </View>
             </View>
             <ScrollView>
             {/* Add a way to load books from searching through API
@@ -108,10 +130,28 @@ const styles = StyleSheet.create({
     headerView: {
         flexDirection: 'row',
         backgroundColor: 'white',
-        borderRadius: 20,
-        marginHorizontal: 25,
+        marginLeft: 25,
         alignItems: 'center',
-        marginTop: 10
+        marginTop: 10,
+        width: "65%",
+        borderBottomLeftRadius: 20,
+        borderTopLeftRadius: 20,
+        borderRightColor: "black",
+        borderRightWidth: 2,
+    },
+    queryChoice: {
+        flexDirection: 'row',
+        backgroundColor: 'white',
+        marginTop: 10,
+        borderTopRightRadius: 20,
+        borderBottomRightRadius: 20,
+        height: 50,
+    },
+    typeText: {
+        fontFamily: "Agbalumo",
+        fontSize: 16,
+        marginLeft: 10,
+        marginRight: 10
     },
     searchIcon: {
         height: 30,
@@ -123,5 +163,9 @@ const styles = StyleSheet.create({
         fontFamily: "Agbalumo",
         fontSize: 16,
         height: 50
+    },
+    dropdownIcon: {
+        width: 20,
+        height: 20,
     }
 })
