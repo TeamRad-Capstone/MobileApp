@@ -1,5 +1,7 @@
-import {StyleSheet, View, Image, Text, Pressable, ScrollView} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import {StyleSheet, View, Image, Text, Pressable, ScrollView, Alert} from "react-native";
+import {Dropdown} from "react-native-element-dropdown";
+import {useState} from "react";
+import {Link} from "expo-router";
 
 type SearchBookProps = {
     coverUrl: string;
@@ -13,12 +15,41 @@ type SearchBookProps = {
 }
 
 const SearchBook = ({coverUrl, title, authors, description, numOfPages, mainCategory, categories, publishedDate}: SearchBookProps) => {
+    const shelves = [
+        {label: "Want to Read", value: 1},
+        {label: "Currently Reading", value: 2},
+        {label: "Dropped", value: 3},
+        {label: "Absolute Favourites", value: 4},
+        {label: "I really wanted to like...but did not", value: 5},
+    ]
+    const [chosenShelf, setChosenShelf] = useState(shelves[0].label);
+
+    const handleAdd = (shelf: string) => {
+        alert("Added to shelf: " + shelf);
+    }
+
     return (
         <View style={styles.container}>
-            <Image
-                style={styles.bookCover}
-                source={{uri: coverUrl}}
-            />
+            <Link href={{
+                pathname: "/(tabs)/(search)/[book]",
+                params: {
+                    book: title,
+                    coverUrl: coverUrl,
+                    title: title,
+                    authors: authors,
+                    description: description,
+                    numOfPages: numOfPages,
+                    mainCategory: mainCategory,
+                    categories: categories,
+                    publishedDate: publishedDate
+                    }
+            }
+            }>
+                <Image
+                    style={styles.bookCover}
+                    source={{uri: coverUrl}}
+                />
+            </Link>
             <View style={styles.book}>
                 <View>
                     <Text
@@ -34,14 +65,23 @@ const SearchBook = ({coverUrl, title, authors, description, numOfPages, mainCate
                         {authors?.map((author) => author+"\n")}
                     </Text>
                 </View>
-                <Pressable style={styles.button}>
-                    <Image
-                        style={styles.icon}
-                        source={require("@/assets/icons/plus.png")}
-                    />
-                    <Text style={styles.buttonText}>Add to Shelf</Text>
-                </Pressable>
+                <Dropdown
+                    maxHeight={60}
+                    iconColor={"black"}
+                    style={{width: 150, marginLeft: 10}}
+                    data={shelves}
+                    fontFamily={"Agbalumo"}
+                    labelField={"label"}
+                    valueField={"value"}
+                    onChange={item => {
+                        console.log('Added to:', item.label);
+                        handleAdd(item.value);
+                    }}
+                    value={chosenShelf}
+                    placeholder={chosenShelf}
+                />
             </View>
+
         </View>
     )
 
@@ -58,7 +98,8 @@ const styles = StyleSheet.create({
     },
     bookCover: {
         width: 175,
-        height: 275
+        height: 275,
+        borderRadius: 30,
     },
     book: {
         flex: 1,
