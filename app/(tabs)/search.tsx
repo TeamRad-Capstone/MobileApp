@@ -1,4 +1,4 @@
-import {View, StyleSheet, Text, Image, ScrollView, TextInput} from "react-native";
+import {View, StyleSheet, Text, Image, ScrollView, TextInput, Pressable, Button} from "react-native";
 import {useState} from "react";
 import {SafeAreaView} from "react-native-safe-area-context";
 import SearchBook from "@/components/SearchBook";
@@ -10,7 +10,6 @@ type SearchBookType = {
     authors: string[];
     description: string;
     numOfPages: number;
-    mainCategory: string;
     categories: string[];
     publishedDate: string;
 }
@@ -25,16 +24,19 @@ const Search = () => {
     ];
     const [queryType, setQueryType] = useState(queryTypeData[0].label);
 
+    const [buttonHidden, setButtonHidden] = useState(true);
 
     const searchInAPI = async () => {
-        setReturnedBooks([])
+        setReturnedBooks([]);
+        let amount = 20;
 
         let volumeQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=";
-        let maxResults = "&maxResults=20";
+        let maxResults = `&maxResults=${amount}`;
 
         try {
             const searched = searchParam.split(" ").join("+");
             let type = (queryType === "Default") ? `` : `+in${queryType}:` + searched
+            let querySearch = (queryType !== "Default") ? "" : searched;
 
             const response = await fetch(volumeQueryUrl + searched + type + maxResults +
                 "&key=" + process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
@@ -44,26 +46,73 @@ const Search = () => {
             }
 
             const data = await response.json();
-            console.log("Query Search: " + searchParam);
+            let numOfBooks = data.items.length;
             for (const books of data.items) {
                 let newBook = {
                     coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
                     title: books.volumeInfo.title,
                     authors: books.volumeInfo.authors,
-                    description: books.description,
-                    numOfPages: books.numOfPages,
-                    mainCategory: books.mainCategory,
-                    categories: books.categories,
+                    description: books.volumeInfo.description,
+                    numOfPages: books.volumeInfo.pageCount,
+                    categories: books.volumeInfo.categories,
                     publishedDate: books.publishedDate,
                 }
-                console.log(newBook);
                 setReturnedBooks(oldBooks => [...oldBooks, newBook])
+            }
+            if (numOfBooks >= 20) {
+                setButtonHidden(false);
             }
         } catch (error) {
             console.error(error);
         }
     }
 
+    // Refactor to include in original function for searching in API
+    const addToSearch = async () => {
+        let amount = 40;
+        let volumeQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=";
+        let maxResults = `&maxResults=${amount}`;
+
+        try {
+            const searched = searchParam.split(" ").join("+");
+            let type = (queryType === "Default") ? `` : `+in${queryType}:` + searched
+            let querySearch = (queryType !== "Default") ? "" : searched;
+
+            const response = await fetch(volumeQueryUrl + querySearch + type + maxResults +
+                "&key=" + process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
+            );
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            let numOfBooks = 0;
+            for (const books of data.items) {
+                if (numOfBooks >= 20) {
+                    let newBook = {
+                        coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+                        title: books.volumeInfo.title,
+                        authors: books.volumeInfo.authors,
+                        description: books.volumeInfo.description,
+                        numOfPages: books.volumeInfo.pageCount,
+                        // mainCategory: books.mainCategory,
+                        categories: books.volumeInfo.categories,
+                        publishedDate: books.publishedDate,
+                    }
+                    setReturnedBooks(oldBooks => [...oldBooks, newBook])
+                } else {
+                    numOfBooks++;
+                }
+            }
+            setButtonHidden(true)
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleLoadMore = () => {
+        addToSearch();
+    }
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.headingText}>Search</Text>
@@ -88,7 +137,6 @@ const Search = () => {
                         labelField={"label"}
                         valueField={"value"}
                         onChange={item => {
-                            console.log('Selected:', item.value);
                             setQueryType(item.value);
                         }}
                         value={queryType}
@@ -108,11 +156,17 @@ const Search = () => {
                         authors={book.authors}
                         description={book.description}
                         numOfPages={book.numOfPages}
-                        mainCategory={book.mainCategory}
+                        // mainCategory={book.mainCategory}
                         categories={book.categories}
                         publishedDate={book.publishedDate}
                     />
                 ))}
+
+                {!buttonHidden && (
+                    <Pressable  style={styles.button} onPress={handleLoadMore}>
+                        <Text style={styles.buttonText}>Load More</Text>
+                    </Pressable>
+                )}
             </ScrollView>
         </SafeAreaView>
     )
@@ -170,5 +224,17 @@ const styles = StyleSheet.create({
     dropdownIcon: {
         width: 20,
         height: 20,
+    },
+    button: {
+        marginHorizontal: "auto",
+        backgroundColor: "#BE6A53",
+        paddingHorizontal: 30,
+        paddingVertical: 10,
+        marginVertical: 20,
+        borderRadius: 30,
+    },
+    buttonText: {
+        fontFamily: "Agbalumo",
+        fontSize: 16,
     }
 })
