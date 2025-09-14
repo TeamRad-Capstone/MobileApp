@@ -9,12 +9,12 @@ type SearchBookProps = {
     authors: string[];
     description: string;
     numOfPages: number;
-    mainCategory: string;
+    // mainCategory: string;
     categories: string[];
     publishedDate: string;
 }
 
-const SearchBook = ({coverUrl, title, authors, description, numOfPages, mainCategory, categories, publishedDate}: SearchBookProps) => {
+const SearchBook = ({coverUrl, title, authors, description, numOfPages, categories, publishedDate}: SearchBookProps) => {
     const shelves = [
         {label: "Want to Read", value: 1},
         {label: "Currently Reading", value: 2},
@@ -39,7 +39,6 @@ const SearchBook = ({coverUrl, title, authors, description, numOfPages, mainCate
                     authors: authors,
                     description: description,
                     numOfPages: numOfPages,
-                    mainCategory: mainCategory,
                     categories: categories,
                     publishedDate: publishedDate
                     }
@@ -74,7 +73,6 @@ const SearchBook = ({coverUrl, title, authors, description, numOfPages, mainCate
                     labelField={"label"}
                     valueField={"value"}
                     onChange={item => {
-                        console.log('Added to:', item.label);
                         handleAdd(item.value);
                     }}
                     value={chosenShelf}
