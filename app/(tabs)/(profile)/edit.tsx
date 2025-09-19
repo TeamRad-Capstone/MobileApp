@@ -1,177 +1,327 @@
-import {StyleSheet, View, Text, Image, Pressable, ScrollView, TextInput} from "react-native";
-import {useRouter} from "expo-router";
-import {useState} from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  Pressable,
+  ScrollView,
+  TextInput,
+  ImageBackground,
+  Modal,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as DocumentPicker from "expo-document-picker";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { stringToUUID } from "@expo/metro-config/build/serializer/debugId";
 
 const Edit = () => {
-    const router  = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
 
-    const userEmail = "test@test.com";
-    const username = "BookLovah";
-    const [usernameChange, setUsernameChange] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const router = useRouter();
 
-    const handleBackButton = () => {
-        console.log("Back button clicked");
-        console.log("Confirm exit prior to saving changes");
-        router.push("/(tabs)/profile");
+  const [usernameVisible, setUsernameVisible] = useState(false);
+  const [username, setUsername] = useState("BookLovah");
+  const [usernameChange, setUsernameChange] = useState("");
+
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const [accountVisible, setAccountVisible] = useState(false);
+
+  const handleProfileImg = () => {
+    console.log("Changing Profile Image");
+    // Make a request to backend API to retrieve options
+    // Once options have been retrieved, user makes a choice and choice is saved locally prior to handling Save
+  };
+
+  const handleTransfer = () => {
+    console.log("Attempt to import historical data");
+    // Read the csv file and send to API? Not sure how to implement yet
+    // Accept the file and send to API from there API will parse to DB
+    DocumentPicker.getDocumentAsync({}).then((doc) => {
+      if (!doc.canceled) {
+        const file = doc.assets.pop();
+        const fileName = file ? file.name : "";
+        console.log(fileName);
+        router.push("/(tabs)/(profile)/transferred");
+      } else {
+        console.log("No file picked");
+      }
+    });
+  };
+
+  const handleUsernameSave = () => {
+    console.log("Username Save button clicked");
+    setUsername(usernameChange);
+    setUsernameVisible(false);
+    // Initiate call to backend API to save changes to username, password and image if applicable
+  };
+
+  const handlePasswordSave = () => {
+    console.log("Password Save button clicked");
+    setPasswordError("");
+    let validFields = true;
+
+    if (!newPassword || !passwordRegex.test(newPassword)) {
+      setPasswordError(
+        "Your password must  must contain at least 1 uppercase letter, " +
+          "1 lowercase letter, and 1 number",
+      );
+      validFields = false;
     }
 
-    const handleImageChange = () => {
-        console.log("Image change attempted");
-        // Make a request to backend API to retrieve options
-        // Once options have been retrieved, user makes a choice and choice is saved locally prior to handling Save
+    if (!confirmNewPassword || confirmNewPassword !== newPassword) {
+      setPasswordError("Your password must match");
+      validFields = false;
     }
 
-    const handleSave = () => {
-        console.log("Save button clicked");
-        // Initiate call to backend API to save changes to username, password and image if applicable
+    if (validFields) {
+      setPasswordVisible(false);
+      // Save changes to database via Backend API
     }
+  };
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Pressable onPress={handleBackButton}>
-                    <Image
-                        style={styles.headerIcon}
-                        source={require("@/assets/icons/back-arrow.png")}
-                    />
-                </Pressable>
-                <Text style={styles.headerText}>Edit Profile</Text>
-            </View>
-            <Text style={styles.userEmailText}>{userEmail}</Text>
+  const handleAccountDeletion = () => {
+    console.log("Account deletion button clicked");
+    setAccountVisible(false);
+  }
 
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Pressable style={styles.changeImgPressable} onPress={handleImageChange}>
-                    <Image
-                        style={styles.profileImg}
-                        source={require("@/assets/images/profileImg.jpg")}
-                    />
-                    <Text style={styles.editPhotoPrompt}>Change profile photo</Text>
-                </Pressable>
+  const handleLogout = () => {
+    console.log("Logout button clicked");
+    router.push("/");
+  };
 
-                <View style={styles.formView}>
-                    <Text style={styles.formText}>Current Username</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={username}
-                        editable={false}
-                    />
-                </View>
-
-                <View style={styles.formView}>
-                    <Text style={styles.formText}>New Username</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={usernameChange}
-                        onChangeText={setUsernameChange}
-                    />
-                </View>
-
-                <View style={styles.formView}>
-                    <Text style={styles.formText}>Current Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={"*************"}
-                        editable={false}
-                    />
-                </View>
-
-                <View style={styles.formView}>
-                    <Text style={styles.formText}>New Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                    />
-                </View>
-
-                <View style={styles.formView}>
-                    <Text style={styles.formText}>Confirm New Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={confirmNewPassword}
-                        onChangeText={setConfirmNewPassword}
-                    />
-                </View>
-
-                <Pressable onPress={handleSave}>
-                    <Text style={styles.buttonText}>Save</Text>
-                </Pressable>
-            </ScrollView>
+  return (
+    <SafeAreaView
+      style={{
+        paddingBottom: tabBarHeight,
+        flex: 1,
+        backgroundColor: "#F4F4E6",
+      }}
+    >
+      <Pressable onPress={handleLogout}>
+        <Image
+          style={styles.icon}
+          source={require("@/assets/icons/logout.png")}
+        />
+      </Pressable>
+      <ScrollView>
+        <Pressable onLongPress={handleProfileImg}>
+          <Image
+            style={styles.profileImage}
+            source={require("@/assets/images/profileImg.jpg")}
+          />
+        </Pressable>
+        <View style={styles.usernameView}>
+          <Text style={styles.usernameText}>{username}</Text>
         </View>
-    )
-}
+        <Pressable style={styles.buttons} onPress={handleTransfer}>
+          <Text style={styles.buttonText}>Transfer History</Text>
+        </Pressable>
+        <Pressable
+          style={styles.buttons}
+          onPress={() => setUsernameVisible(true)}
+        >
+          <Text style={styles.buttonText}>Change Username</Text>
+        </Pressable>
+        <Pressable
+          style={styles.buttons}
+          onPress={() => setPasswordVisible(true)}
+        >
+          <Text style={styles.buttonText}>Change Password</Text>
+        </Pressable>
+        <Pressable style={styles.buttons}>
+          <Text style={styles.buttonText}>Settings</Text>
+        </Pressable>
+        <Pressable
+          style={styles.deleteButton}
+          onPress={() => setAccountVisible(true)}
+        >
+          <Text style={styles.deleteBtnText}>Delete Account</Text>
+        </Pressable>
+      </ScrollView>
+
+      {/*  Modal for Changing Username */}
+      <Modal transparent={true} visible={usernameVisible}>
+        <View style={styles.modalContainer}>
+          <View>
+            <Text style={styles.modalText}>Current Username</Text>
+            <TextInput style={styles.input} value={username} editable={false} />
+            <Text style={styles.modalText}>New Username</Text>
+            <TextInput style={styles.input} onChangeText={setUsernameChange} />
+          </View>
+          <Pressable style={styles.saveBtn} onPress={handleUsernameSave}>
+            <Text style={styles.btnText}>Save</Text>
+          </Pressable>
+          <Pressable
+            style={styles.cancelBtn}
+            onPress={() => setUsernameVisible(false)}
+          >
+            <Text style={styles.btnText}>Cancel</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
+      {/*  Modal for Changing Password*/}
+      <Modal transparent={true} visible={passwordVisible}>
+        <View style={styles.modalContainer}>
+          <View>
+            <Text style={styles.modalText}>Current Password</Text>
+            <TextInput
+              style={styles.input}
+              value={"************"}
+              editable={false}
+            />
+            <Text style={styles.modalText}>New Password</Text>
+            <TextInput style={styles.input} onChangeText={setNewPassword} />
+            <Text style={styles.modalText}>Confirm New Password</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setConfirmNewPassword}
+            />
+          </View>
+          {passwordError && (
+            <Text style={styles.errorText}>{passwordError}</Text>
+          )}
+          <Pressable style={styles.saveBtn} onPress={handlePasswordSave}>
+            <Text style={styles.btnText}>Save</Text>
+          </Pressable>
+          <Pressable
+            style={styles.cancelBtn}
+            onPress={() => setPasswordVisible(false)}
+          >
+            <Text style={styles.btnText}>Cancel</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
+      {/*  Delete Account Modal */}
+      <Modal transparent={true} visible={accountVisible}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalText}>Confirm Delete?</Text>
+          <Pressable style={styles.saveBtn} onPress={handleAccountDeletion}>
+            <Text style={styles.btnText}>Delete</Text>
+          </Pressable>
+          <Pressable style={styles.cancelBtn} onPress={() => setAccountVisible(false)}>
+            <Text style={styles.btnText}>Cancel</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+};
 
 export default Edit;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FDDCB9',
-        paddingTop: 60,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: "25%"
-    },
-    headerIcon: {
-        width: 30,
-        height: 30,
-        marginLeft: 20,
-    },
-    headerText: {
-        fontFamily: "Agbalumo",
-        fontSize: 24,
-    },
-    userEmailText: {
-        fontFamily: "Agbalumo",
-        fontSize: 16,
-        textAlign: "center"
-    },
-    scrollContainer: {
-        marginTop: 30,
-        gap: 20
-    },
-    changeImgPressable: {
-      alignItems: "center",
-    },
-    profileImg: {
-        height: 250,
-        width: 250,
-        borderRadius: 250
-    },
-    editPhotoPrompt: {
-        fontFamily: "Agbalumo",
-        fontSize: 16,
-        textAlign: "center",
-        marginTop: 6
-    },
-    formView: {
-        marginHorizontal: 40,
-    },
-    formText: {
-        fontFamily: "Agbalumo",
-        fontSize: 16,
-    },
-    input: {
-        backgroundColor: "white",
-        borderRadius: 20,
-        fontFamily: "Agbalumo",
-        fontSize: 16,
-        height: 46,
-        paddingLeft: 10,
-        paddingRight: 10,
-    },
-    buttonText: {
-        textAlign: "center",
-        fontFamily: "Agbalumo",
-        fontSize: 18,
-        backgroundColor: "#BE6A53",
-        marginHorizontal: "40%",
-        borderRadius: 20,
-        marginBottom: 50,
-        paddingVertical: 4
-    }
-})
+  icon: {
+    height: 30,
+    width: 30,
+    marginLeft: 30,
+  },
+  profileImage: {
+    width: 250,
+    height: 250,
+    borderRadius: 200,
+    marginTop: 30,
+    marginHorizontal: "auto",
+  },
+  usernameView: {
+    width: "80%",
+    marginHorizontal: "auto",
+  },
+  usernameText: {
+    marginTop: 16,
+    fontFamily: "Agbalumo",
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  buttons: {
+    width: "90%",
+    height: 60,
+    marginBottom: 22,
+    borderRadius: 20,
+    justifyContent: "center",
+    marginHorizontal: "auto",
+    backgroundColor: "#BDB59F",
+  },
+  buttonText: {
+    color: "#4E4837",
+    fontFamily: "Agbalumo",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  deleteButton: {
+    width: "90%",
+    height: 60,
+    marginBottom: 22,
+    borderRadius: 20,
+    justifyContent: "center",
+    marginHorizontal: "auto",
+    backgroundColor: "#B92628",
+  },
+  deleteBtnText: {
+    color: "white",
+    fontFamily: "Agbalumo",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  modalContainer: {
+    justifyContent: "center",
+    backgroundColor: "#BDB59F",
+    marginVertical: "auto",
+    marginHorizontal: "14%",
+    borderRadius: 40,
+    borderWidth: 1,
+  },
+  modalText: {
+    fontFamily: "Agbalumo",
+    fontSize: 18,
+    color: "#4E4837",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  input: {
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+    backgroundColor: "white",
+    borderRadius: 20,
+    marginHorizontal: 20,
+  },
+  saveBtn: {
+    backgroundColor: "#83884E",
+    alignItems: "center",
+    marginHorizontal: "auto",
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 20,
+  },
+  cancelBtn: {
+    backgroundColor: "#B92628",
+    alignItems: "center",
+    marginHorizontal: "auto",
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  btnText: {
+    fontFamily: "Agbalumo",
+    fontSize: 18,
+    color: "white",
+  },
+  errorText: {
+    fontFamily: "Agbalumo",
+    fontSize: 14,
+    color: "red",
+    textAlign: "center",
+  },
+});
