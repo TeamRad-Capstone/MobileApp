@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginHorizontal: "auto",
-    backgroundColor: "#BE6A53",
+    backgroundColor: "#CCB452",
     paddingHorizontal: 30,
     paddingVertical: 10,
     marginVertical: 20,

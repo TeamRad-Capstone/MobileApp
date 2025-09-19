@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   desc: {
     fontFamily: "Agbalumo",
     fontSize: 16,
+    marginRight: 20
   },
   genreScroll: {
     alignItems: "center",
