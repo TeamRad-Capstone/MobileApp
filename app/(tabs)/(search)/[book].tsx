@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 type SearchBookProps = {
   coverUrl: string;
@@ -23,6 +24,7 @@ type SearchBookProps = {
 };
 
 const BookDetails = () => {
+  const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
   const {
     coverUrl,
@@ -49,7 +51,16 @@ const BookDetails = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingLeft: 30,
+        paddingRight: 0,
+        backgroundColor: "#F4F4E6",
+        paddingTop: 10,
+        paddingBottom: tabBarHeight,
+      }}
+    >
       <Pressable
         onPress={() => {
           router.push("/(tabs)/search");
@@ -78,12 +89,11 @@ const BookDetails = () => {
           </ScrollView>
           <Dropdown
             maxHeight={60}
-            iconColor={"black"}
-            style={styles.dropdownContainer}
-            containerStyle={styles.dropdown}
-            placeholderStyle={{ textAlign: "center" }}
-            itemContainerStyle={styles.selectedText}
-            selectedTextStyle={styles.selectedText}
+            iconColor={"white"}
+            style={styles.dropdown}
+            containerStyle={styles.dropdownContainer}
+            placeholderStyle={{textAlign: "center", color: "white"}}
+            itemTextStyle={{textAlign: "center", color: "white"}}
             data={shelves}
             fontFamily={"Agbalumo"}
             labelField={"label"}
@@ -93,14 +103,11 @@ const BookDetails = () => {
             }}
             value={chosenShelf}
             placeholder={"Add to Shelf"}
-            onConfirmSelectItem={(item) => {
-              placeholder;
-            }}
           />
         </View>
       </View>
       <Text style={styles.descriptionHeader}>Description</Text>
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         <Text style={styles.desc}>{description}</Text>
       </ScrollView>
     </SafeAreaView>
@@ -110,12 +117,6 @@ const BookDetails = () => {
 export default BookDetails;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingLeft: 30,
-    backgroundColor: "#FDDCB9",
-    paddingTop: 10,
-  },
   backButton: {
     width: 30,
     height: 30,
@@ -159,6 +160,7 @@ const styles = StyleSheet.create({
   desc: {
     fontFamily: "Agbalumo",
     fontSize: 16,
+    marginRight: 20
   },
   genreScroll: {
     alignItems: "center",
@@ -166,29 +168,23 @@ const styles = StyleSheet.create({
   genre: {
     fontFamily: "Agbalumo",
     fontSize: 16,
-    backgroundColor: "#BE6A53",
+    backgroundColor: "#CCB452",
     borderRadius: 30,
     textAlign: "center",
     paddingHorizontal: 20,
     marginTop: 10,
     paddingVertical: 4,
   },
-  dropdownContainer: {
-    backgroundColor: "#BE6A53",
-    borderRadius: 20,
-    marginTop: 10,
-    textAlign: "center",
-    paddingVertical: 4,
-  },
   dropdown: {
-    margin: 0,
-    backgroundColor: "#BE6A53",
+    backgroundColor: "#725437",
+    borderRadius: 10,
+    paddingHorizontal: 6,
     textAlign: "center",
-    borderColor: "#BE6A53",
+    height: 30
   },
-  selectedText: {
-    textAlign: "center",
-    backgroundColor: "#BE6A53",
-    borderRadius: 20,
+  dropdownContainer: {
+    backgroundColor: "#725437",
+    borderRadius: 10,
+    color: "white",
   },
 });
