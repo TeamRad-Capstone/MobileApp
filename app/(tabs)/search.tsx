@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 type SearchBookType = {
   coverUrl: string;
@@ -22,6 +23,8 @@ type SearchBookType = {
   publishedDate: string;
 };
 const Search = () => {
+  const tabBarHeight = useBottomTabBarHeight();
+
   const [searchParam, setSearchParams] = useState("");
   const [returnedBooks, setReturnedBooks] = useState<SearchBookType[]>([]);
 
@@ -52,7 +55,7 @@ const Search = () => {
           type +
           maxResults +
           "&key=" +
-          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
+          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
       );
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
@@ -97,7 +100,7 @@ const Search = () => {
           type +
           maxResults +
           "&key=" +
-          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY
+          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
       );
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
@@ -132,7 +135,13 @@ const Search = () => {
     addToSearch();
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={{
+        paddingBottom: tabBarHeight,
+        flex: 1,
+        backgroundColor: "#F4F4E6",
+      }}
+    >
       <Text style={styles.headingText}>Search</Text>
       <View style={{ flexDirection: "row" }}>
         <View style={styles.headerView}>
@@ -193,10 +202,6 @@ const Search = () => {
 export default Search;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FDDCB9",
-  },
   headingText: {
     fontFamily: "Agbalumo",
     fontSize: 24,
