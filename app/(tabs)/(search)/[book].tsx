@@ -1,4 +1,4 @@
-import { placeholder } from "@babel/types";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -11,16 +11,16 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 type SearchBookProps = {
-  coverUrl: string;
-  title: string;
-  authors: string[];
-  description: string;
-  numOfPages: number;
-  categories: string[];
-  publishedDate: string;
+  coverUrl?: string;
+  title?: string;
+  authors?: string[];
+  description?: string;
+  numOfPages?: number;
+  categories?: string[];
+  publishedDate?: string;
+  context?: string;
 };
 
 const BookDetails = () => {
@@ -34,6 +34,7 @@ const BookDetails = () => {
     numOfPages,
     categories,
     publishedDate,
+    context,
   } = useLocalSearchParams();
   const authorList = authors.toString().split(",");
 
@@ -48,6 +49,16 @@ const BookDetails = () => {
 
   const handleAdd = (shelf: string) => {
     alert("Added to shelf: " + shelf);
+  };
+
+  const goToLog = () => {
+    router.push({
+      pathname: "/(tabs)/log",
+      params: {
+        title: title,
+        author: authors,
+      },
+    });
   };
 
   return (
@@ -81,6 +92,18 @@ const BookDetails = () => {
             </Text>
           </ScrollView>
           <Text style={styles.bookPageText}>{numOfPages} Pages</Text>
+
+          <Pressable style={styles.logButton} onPress={goToLog}>
+            <Text>Log</Text>
+          </Pressable>
+
+          {context === "goalPage" && (
+            <>
+              <Text style={{ fontSize: 30, color: "#000000ff" }}>
+                {"★".repeat(3) + "☆".repeat(2)}
+              </Text>
+            </>
+          )}
           <ScrollView
             horizontal={true}
             contentContainerStyle={styles.genreScroll}
@@ -92,8 +115,8 @@ const BookDetails = () => {
             iconColor={"white"}
             style={styles.dropdown}
             containerStyle={styles.dropdownContainer}
-            placeholderStyle={{textAlign: "center", color: "white"}}
-            itemTextStyle={{textAlign: "center", color: "white"}}
+            placeholderStyle={{ textAlign: "center", color: "white" }}
+            itemTextStyle={{ textAlign: "center", color: "white" }}
             data={shelves}
             fontFamily={"Agbalumo"}
             labelField={"label"}
@@ -160,7 +183,7 @@ const styles = StyleSheet.create({
   desc: {
     fontFamily: "Agbalumo",
     fontSize: 16,
-    marginRight: 20
+    marginRight: 20,
   },
   genreScroll: {
     alignItems: "center",
@@ -180,11 +203,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 6,
     textAlign: "center",
-    height: 30
+    height: 30,
   },
   dropdownContainer: {
     backgroundColor: "#725437",
     borderRadius: 10,
     color: "white",
+  },
+  logButton: {
+    backgroundColor: "#985325",
+    borderRadius: 10,
+    padding: 5,
+    textAlign: "center",
   },
 });

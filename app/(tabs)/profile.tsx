@@ -1,19 +1,11 @@
-import {
-  ScrollView,
-  Text,
-  StyleSheet,
-  View,
-  Image,
-  Pressable,
-  Modal,
-} from "react-native";
+import CurrentBook from "@/components/CurrentBook";
+import UpcomingBook from "@/components/UpcomingBook";
+import booksData from "@/data/books.json";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import UpcomingBook from "@/components/UpcomingBook";
-import CurrentBook from "@/components/CurrentBook";
-import * as DocumentPicker from "expo-document-picker";
+import { Image, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 const Profile = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -91,41 +83,6 @@ const Profile = () => {
   //   router.push("/(tabs)/(profile)/stats");
   // };
 
-  const upcomingBookData = [
-    // {
-    //   title: "Lord of The Rings",
-    //   author: "J.R.R Tolkien",
-    //   coverUrl: "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg",
-    // },
-    // { title: "To Kill a Mockingbird", author: "Harper Lee", coverUrl: "" },
-    {
-      title: "Funny Story",
-      author: "Emily Henry",
-      coverUrl: "https://covers.openlibrary.org/b/olid/OL57586063M-L.jpg",
-    },
-    {
-      title: "Love Hypothesis",
-      author: "Ali Hazelwood",
-      coverUrl: "https://covers.openlibrary.org/b/olid/OL57520854M-L.jpg",
-    },
-    {
-      title: "The Wedding People",
-      author: "Alison Espach",
-      coverUrl: "https://covers.openlibrary.org/b/olid/OL51587376M-L.jpg",
-    },
-    {
-      title: "Weyward",
-      author: "Emilia Hart",
-      coverUrl:
-        "https://ia601909.us.archive.org/view_archive.php?archive=/31/items/l_covers_0013/l_covers_0013_19.zip&file=0013194003-L.jpg",
-    },
-    {
-      title: "The Bear and The Nightingale",
-      author: "Katherine Arden",
-      coverUrl: "https://covers.openlibrary.org/b/olid/OL28632654M-L.jpg",
-    },
-  ];
-
   return (
     <SafeAreaView
       style={{
@@ -163,16 +120,26 @@ const Profile = () => {
           horizontal={true}
           contentContainerStyle={styles.currentContainer}
         >
-          {upcomingBookData.map((book, index) => (
-            <CurrentBook
-              key={index}
-              title={book.title}
-              author={book.author}
-              coverUrl={book.coverUrl}
-              progress={123}
-              numOfPages={200}
-            />
-          ))}
+          {booksData.shelfBooks
+            .filter((sb) => sb.shelfId === 2)
+            .map((sb) => {
+              const book = booksData.books.find((b) => b.id === sb.bookId);
+              if (!book) return null;
+              return (
+                <CurrentBook
+                  key={book.id}
+                  title={book.title}
+                  author={book.authors}
+                  coverUrl={book.coverUrl}
+                  description={book.description}
+                  numOfPages={book.numOfPages}
+                  category={book.category}
+                  publishedDate={book.publishedDate}
+                  context="currentBook"
+                  progress={70}
+                />
+              );
+            })}
         </ScrollView>
 
         <Text style={styles.headerText}>Upcoming Books</Text>
@@ -180,14 +147,16 @@ const Profile = () => {
           horizontal={true}
           contentContainerStyle={styles.upcomingContainer}
         >
-          {upcomingBookData.map((book, index) => (
-            <UpcomingBook
-              key={index}
-              title={book.title}
-              author={book.author}
-              coverUrl={book.coverUrl}
-            />
-          ))}
+          {booksData.books
+            .filter((book) => !booksData.currentlyReading.includes(book.id))
+            .map((book) => (
+              <UpcomingBook
+                key={book.id}
+                title={book.title}
+                author={book.authors}
+                coverUrl={book.coverUrl}
+              />
+            ))}
         </ScrollView>
       </ScrollView>
     </SafeAreaView>

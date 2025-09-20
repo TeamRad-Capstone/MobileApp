@@ -7,21 +7,19 @@ import {
   View,
 } from "react-native";
 
-// This si the GoalModal component. It is used for adding and editing goals.
-
 type GoalModalProps = {
   visible: boolean;
-  onClose: () => void; // function closes modal
+  onClose: () => void;
   title: string;
-  goalTarget: string;
-  setTitle: (value: string) => void; // function updates title state
-  setGoalTarget: (value: string) => void; // function updates goal target state
-  onSave: () => void; // function saves goal
-  onDelete?: () => void; // function deletes goal
-  buttonText: string; // text for button is either add or save
+  goalTarget?: string;
+  setTitle: (value: string) => void;
+  setGoalTarget?: (value: string) => void;
+  onSave: () => void;
+  onDelete?: () => void;
+  buttonText: string;
+  context?: "goalPage" | "other";
 };
 
-// Modal component for adding and editing goals
 export default function GoalModal({
   visible,
   onClose,
@@ -32,6 +30,7 @@ export default function GoalModal({
   onSave,
   onDelete,
   buttonText,
+  context = "other",
 }: GoalModalProps) {
   return (
     <Modal
@@ -43,23 +42,23 @@ export default function GoalModal({
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
           <TextInput
-            placeholder="Goal Title"
+            placeholder="Title"
             value={title}
             onChangeText={setTitle}
             style={styles.input}
           />
-          <TextInput
-            placeholder="Goal Target"
-            value={goalTarget}
-            onChangeText={setGoalTarget}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-          {/* general button style used for save, delete, cancel */}
+          {context === "readBook" && setGoalTarget && (
+            <TextInput
+              placeholder="Goal Target"
+              value={goalTarget}
+              onChangeText={setGoalTarget}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+          )}
           <Pressable onPress={onSave} style={styles.button}>
             <Text style={styles.buttonText}>{buttonText}</Text>
           </Pressable>
-          {/* if onDelete is passed as a prop then show it */}
           {onDelete && (
             <Pressable onPress={onDelete} style={styles.button}>
               <Text style={styles.buttonText}>Delete</Text>

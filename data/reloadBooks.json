@@ -1,0 +1,114 @@
+{
+  "books": [
+    {
+      "id": 1,
+      "title": "Lord of The Rings",
+      "authors": "J.R.R Tolkien",
+      "coverUrl": "https://covers.openlibrary.org/b/olid/OL51711484M-L.jpg",
+      "description": "An epic fantasy adventure.",
+      "numOfPages": 1216,
+      "category": "Fantasy",
+      "publishedDate": "1954-07-29"
+    },
+    {
+      "id": 2,
+      "title": "To Kill a Mockingbird",
+      "authors": "Harper Lee",
+      "coverUrl": "",
+      "description": "A story of racial injustice.",
+      "numOfPages": 336,
+      "category": "Fiction",
+      "publishedDate": "1960-07-11"
+    },
+    {
+      "id": 3,
+      "title": "Funny Story",
+      "authors": "Emily Henry",
+      "coverUrl": "https://covers.openlibrary.org/b/olid/OL57586063M-L.jpg",
+      "description": "A witty, heartwarming tale.",
+      "numOfPages": 400,
+      "category": "Romance",
+      "publishedDate": "2021-05-18"
+    },
+    {
+      "id": 7,
+      "title": "The Bear and The Nightingale",
+      "authors": "Katherine Arden",
+      "coverUrl": "https://covers.openlibrary.org/b/olid/OL28632654M-L.jpg",
+      "description": "A magical Russian-inspired folklore story.",
+      "numOfPages": 448,
+      "category": "Fantasy",
+      "publishedDate": "2017-01-10"
+    }
+  ],
+  "currentGoals": [
+    {
+      "id": 1,
+      "title": "Read 365 Books in 2025",
+      "target": 365,
+      "progress": 100,
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "title": "Read 5 Horror Books",
+      "target": 5,
+      "progress": 3,
+      "status": "active"
+    }
+  ],
+  "completedGoals": [
+    {
+      "id": 3,
+      "title": "Read 365 Books in 2003",
+      "target": 365,
+      "progress": 365,
+      "status": "completed"
+    },
+    {
+      "id": 4,
+      "title": "Read 5 Romance Books",
+      "target": 5,
+      "progress": 5,
+      "status": "completed"
+    }
+  ],
+  "goalBooks": [
+    { "id": 1, "goal_id": 1, "book_id": 1 },
+    { "id": 2, "goal_id": 1, "book_id": 2 },
+    { "id": 3, "goal_id": 1, "book_id": 3 },
+    { "id": 4, "goal_id": 3, "book_id": 7 },
+    { "id": 5, "goal_id": 3, "book_id": 2 },
+    { "id": 6, "goal_id": 3, "book_id": 3 }
+  ],
+  "currentlyReading": [1, 3],
+  "upcomingBooks": [2, 2, 3, 3],
+  "defaultShelves": [
+    { "id": 1, "name": "Want to Read" },
+    { "id": 2, "name": "Currently Reading" },
+    { "id": 3, "name": "Dropped Books" },
+    { "id": 4, "name": "Read Books" }
+  ],
+  "customShelves": [
+    { "id": 5, "name": "Absolute Favourites" },
+    { "id": 6, "name": "I really wanted to like...but did not" },
+    { "id": 7, "name": "Test 1" },
+    { "id": 8, "name": "Test 2" }
+  ],
+  "shelfBooks": [
+    { "shelfId": 1, "bookId": 1 },
+    { "shelfId": 1, "bookId": 2 },
+    { "shelfId": 1, "bookId": 3 },
+
+    { "shelfId": 2, "bookId": 1 },
+    { "shelfId": 2, "bookId": 7 },
+
+    { "shelfId": 3, "bookId": 2 },
+
+    { "shelfId": 4, "bookId": 1 },
+    { "shelfId": 4, "bookId": 3 },
+
+    { "shelfId": 5, "bookId": 1 },
+    { "shelfId": 5, "bookId": 7 }
+  ]
+}
