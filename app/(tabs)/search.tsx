@@ -1,4 +1,5 @@
 import SearchBook from "@/components/SearchBook";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useState } from "react";
 import {
   Image,
@@ -11,7 +12,6 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 type SearchBookType = {
   coverUrl: string;

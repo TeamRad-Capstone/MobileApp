@@ -45,8 +45,20 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
-    "typescript": "~5.8.3",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "description": "This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TeamRad-Capstone/MobileApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TeamRad-Capstone/MobileApp/issues"
+  },
+  "homepage": "https://github.com/TeamRad-Capstone/MobileApp#readme"
 }

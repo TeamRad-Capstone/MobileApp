@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 type ProgressBarProps = {
   progress: number;
   target: number;
-  title: string;
+  title?: string;
 };
 
 const ProgressBar = ({ progress, target, title }: ProgressBarProps) => {
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "#351515ff",
+    backgroundColor: "#ffffff",
     borderRadius: 20,
   },
   progressFill: {
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     height: "100%",
-    backgroundColor: "#BE6A53",
+    backgroundColor: "#797D49",
     borderRadius: 20,
   },
   textOverlay: {
@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
   goalText: {
     fontSize: 18,
     fontFamily: "Agbalumo",
-    color: "#fff",
+    color: "#292c0eff",
   },
 });

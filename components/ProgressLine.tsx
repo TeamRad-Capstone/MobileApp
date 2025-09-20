@@ -23,10 +23,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#BDBDBD",
     borderRadius: 10,
     height: 6,
+    width: "100%",
   },
   progressFill: {
     backgroundColor: "#A65926",
     borderRadius: 10,
     height: 6,
-  }
+  },
 });
