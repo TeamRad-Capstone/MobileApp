@@ -100,7 +100,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(goals)/current"
+        name="(shelf)/[bookinfo]"
+        options={{
+          headerShown: false,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="log"
         options={{
           headerShown: false,
           href: null,
