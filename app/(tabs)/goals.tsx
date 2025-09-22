@@ -24,13 +24,16 @@ export default function Goal() {
   const completedGoals = booksData.goals.filter((g) => !g.active);
   const goalsToShow = showCompleted ? completedGoals : activeGoals;
 
+  const calculateProgress = (goalId: number) => {
+    return booksData.goalBooks.filter((gb) => gb.goal_id === goalId).length;
+  };
+
   const handleAddGoal = () => {
     if (!newGoalTitle || !newGoalTarget) return;
     const newGoal = {
       id: Date.now(),
       title: newGoalTitle,
       target: parseInt(newGoalTarget),
-      progress: 0,
       active: true,
     };
     booksData.goals.push(newGoal);
@@ -68,18 +71,26 @@ export default function Goal() {
       </Text>
 
       {!selectedGoal && (
-        <View style={{ flexDirection: "row", marginBottom: 10 }}>
+        <View style={styles.tabContainer}>
           <Pressable
-            style={styles.tabButton}
+            style={[styles.tabButton, !showCompleted && styles.activeTab]}
             onPress={() => setShowCompleted(false)}
           >
-            <Text style={styles.tabText}>Current Goals</Text>
+            <Text
+              style={[styles.tabText, !showCompleted && styles.activeTabText]}
+            >
+              Current
+            </Text>
           </Pressable>
           <Pressable
-            style={styles.tabButton}
+            style={[styles.tabButton, showCompleted && styles.activeTab]}
             onPress={() => setShowCompleted(true)}
           >
-            <Text style={styles.tabText}>Completed Goals</Text>
+            <Text
+              style={[styles.tabText, showCompleted && styles.activeTabText]}
+            >
+              Completed
+            </Text>
           </Pressable>
         </View>
       )}
@@ -104,22 +115,21 @@ export default function Goal() {
             <Text style={styles.editButtonText}>Edit</Text>
           </Pressable>
 
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              width: 350,
-              marginBottom: 10,
-            }}
-          >
+          <View style={styles.progressContainer}>
             <View style={{ flex: 1, marginRight: 10 }}>
               <ProgressLine
-                progress={selectedGoal.progress}
+                progress={calculateProgress(selectedGoal.id)}
                 target={selectedGoal.target}
+                title={selectedGoal.title}
               />
             </View>
             <Text style={{ fontFamily: "Agbalumo", fontSize: 14 }}>
-              {selectedGoal.progress}/{selectedGoal.target}
+              {
+                booksData.goalBooks.filter(
+                  (gb) => gb.goal_id === selectedGoal.id
+                ).length
+              }
+              /{selectedGoal.target}
             </Text>
           </View>
 
@@ -143,11 +153,11 @@ export default function Goal() {
           {goalsToShow.map((goal) => (
             <Pressable
               key={goal.id}
-              onPress={() => setSelectedGoal(goal)}
               style={styles.goalButton}
+              onPress={() => setSelectedGoal(goal)}
             >
               <ProgressBar
-                progress={goal.progress}
+                progress={calculateProgress(goal.id)}
                 target={goal.target}
                 title={goal.title}
               />
@@ -159,11 +169,7 @@ export default function Goal() {
               style={styles.addGoalButton}
               onPress={() => setModalVisible(true)}
             >
-              <Text
-                style={{ color: "#fff", fontFamily: "Agbalumo", fontSize: 30 }}
-              >
-                +
-              </Text>
+              <Text style={{ color: "#fff", fontSize: 24 }}>+</Text>
             </Pressable>
           )}
 
@@ -198,17 +204,22 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 20,
     marginVertical: 10,
-    width: 350,
     overflow: "hidden",
+    width: "90%",
   },
+  tabContainer: { flexDirection: "row", marginBottom: 20 },
   tabButton: {
-    backgroundColor: "#8C4E24",
-    paddingHorizontal: 20,
+    width: 165,
     paddingVertical: 10,
-    marginHorizontal: 5,
+    backgroundColor: "#ccc",
+    marginHorizontal: 10,
     borderRadius: 10,
+    alignItems: "center",
   },
-  tabText: { color: "#fff", fontFamily: "Agbalumo" },
+
+  activeTab: { backgroundColor: "#8C4E24" },
+  tabText: { color: "#666" },
+  activeTabText: { color: "#fff", fontFamily: "Agbalumo" },
   addGoalButton: {
     marginTop: 20,
     backgroundColor: "#8C4E24",
@@ -226,4 +237,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   editButtonText: { color: "#fff", fontFamily: "Agbalumo" },
+  progressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    width: "90%",
+    height: 40,
+  },
 });

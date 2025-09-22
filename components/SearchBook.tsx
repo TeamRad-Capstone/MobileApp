@@ -1,15 +1,7 @@
-import {
-  StyleSheet,
-  View,
-  Image,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-} from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
-import { useState } from "react";
 import { Link } from "expo-router";
+import { useState } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 
 type SearchBookProps = {
   coverUrl: string;
@@ -85,8 +77,8 @@ const SearchBook = ({
           iconColor={"white"}
           style={styles.dropdown}
           containerStyle={styles.dropdownContainer}
-          placeholderStyle={{textAlign: "center", color: "white"}}
-          itemTextStyle={{textAlign: "center", color: "white"}}
+          placeholderStyle={{ textAlign: "center", color: "white" }}
+          itemTextStyle={{ textAlign: "center", color: "white" }}
           data={shelves}
           fontFamily={"Agbalumo"}
           labelField={"label"}
@@ -138,14 +130,14 @@ const styles = StyleSheet.create({
     marginRight: "auto",
     paddingHorizontal: 10,
     borderRadius: 10,
-    height: 30
+    height: 30,
   },
   dropdown: {
     backgroundColor: "#725437",
     borderRadius: 10,
     paddingHorizontal: 6,
     textAlign: "center",
-    height: 30
+    height: 30,
   },
   dropdownContainer: {
     backgroundColor: "#725437",
