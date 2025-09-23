@@ -10,11 +10,11 @@ import {
   Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { stringToUUID } from "@expo/metro-config/build/serializer/debugId";
+import { AuthContext } from "@/contexts/AuthContext";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -32,6 +32,8 @@ const Edit = () => {
   const [passwordError, setPasswordError] = useState("");
 
   const [accountVisible, setAccountVisible] = useState(false);
+
+  const { signout } = useContext(AuthContext);
 
   const handleProfileImg = () => {
     console.log("Changing Profile Image");
@@ -91,9 +93,9 @@ const Edit = () => {
     setAccountVisible(false);
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("Logout button clicked");
-    router.push("/");
+    await signout();
   };
 
   return (
