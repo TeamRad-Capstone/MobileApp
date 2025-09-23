@@ -28,9 +28,9 @@ const CurrentBook = ({
   return (
     <Link
       href={{
-        pathname: "/(tabs)/(search)/[book]",
+        pathname: "/(tabs)/(shelf)/[bookinfo]",
         params: {
-          book: title,
+          bookinfo: title,
           coverUrl: coverUrl,
           title: title,
           authors: author,
