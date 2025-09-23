@@ -1,6 +1,6 @@
 import SearchBook from "@/components/SearchBook";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -22,6 +22,7 @@ type SearchBookType = {
   categories: string[];
   publishedDate: string;
 };
+
 const Search = () => {
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -116,7 +117,6 @@ const Search = () => {
             authors: books.volumeInfo.authors,
             description: books.volumeInfo.description,
             numOfPages: books.volumeInfo.pageCount,
-            // mainCategory: books.mainCategory,
             categories: books.volumeInfo.categories,
             publishedDate: books.publishedDate,
           };
@@ -139,7 +139,7 @@ const Search = () => {
       style={{
         paddingBottom: tabBarHeight,
         flex: 1,
-        backgroundColor: "#F4F4E6",
+        backgroundColor: "#F6F2EA",
       }}
     >
       <Text style={styles.headingText}>Search</Text>
@@ -172,9 +172,6 @@ const Search = () => {
         </View>
       </View>
       <ScrollView>
-        {/* Add a way to load books from searching through API
-                Send search params to backend API and do retrieval from OpenBooks API
-                for data to parse in the app. */}
         {returnedBooks.map((book, index) => (
           <SearchBook
             key={index}
@@ -183,12 +180,10 @@ const Search = () => {
             authors={book.authors}
             description={book.description}
             numOfPages={book.numOfPages}
-            // mainCategory={book.mainCategory}
             categories={book.categories}
             publishedDate={book.publishedDate}
           />
         ))}
-
         {!buttonHidden && (
           <Pressable style={styles.button} onPress={handleLoadMore}>
             <Text style={styles.buttonText}>Load More</Text>
