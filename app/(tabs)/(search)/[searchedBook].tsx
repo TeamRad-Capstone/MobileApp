@@ -1,6 +1,6 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -12,18 +12,7 @@ import {
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type SearchBookProps = {
-  coverUrl?: string;
-  title?: string;
-  authors?: string[];
-  description?: string;
-  numOfPages?: number;
-  categories?: string[];
-  publishedDate?: string;
-  context?: string;
-};
-
-const BookDetails = () => {
+const SearchedBookDetails = () => {
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
   const {
@@ -34,32 +23,31 @@ const BookDetails = () => {
     numOfPages,
     categories,
     publishedDate,
-    context,
+    shelves,
   } = useLocalSearchParams();
   const authorList = authors.toString().split(",");
+  const listRegex = /{(.*?)}/;
+  const rgex = /\{[^{}]*\}/;
 
-  const shelves = [
+  // console.log("Shelves:" + shelves.toString());
+  // const shelvesList: string[] = shelves.toString().split(listRegex);
+  // console.log("Searched Book Shelves:" + shelvesList.toString());
+  const shelvesList = JSON.parse(shelves.toString());
+  console.log(shelvesList);
+  // for (let i = 0; i < shelvesList.length; i++) {
+  //   console.log(shelvesList[i]);
+  // }
+
+  const shelves2 = [
     { label: "Want to Read", value: 1 },
     { label: "Currently Reading", value: 2 },
     { label: "Dropped", value: 3 },
-    { label: "Absolute Favourites", value: 4 },
-    { label: "I really wanted to like...but did not", value: 5 },
   ];
-  const [chosenShelf, setChosenShelf] = useState(shelves[0].label);
 
   const handleAdd = (shelf: string) => {
     alert("Added to shelf: " + shelf);
   };
 
-  const goToLog = () => {
-    router.push({
-      pathname: "/(tabs)/log",
-      params: {
-        title: title,
-        author: authors,
-      },
-    });
-  };
 
   return (
     <SafeAreaView
@@ -67,7 +55,7 @@ const BookDetails = () => {
         flex: 1,
         paddingLeft: 30,
         paddingRight: 0,
-        backgroundColor: "#F4F4E6",
+        backgroundColor: "#F6F2EA",
         paddingTop: 10,
         paddingBottom: tabBarHeight,
       }}
@@ -92,18 +80,6 @@ const BookDetails = () => {
             </Text>
           </ScrollView>
           <Text style={styles.bookPageText}>{numOfPages} Pages</Text>
-
-          <Pressable style={styles.logButton} onPress={goToLog}>
-            <Text>Log</Text>
-          </Pressable>
-
-          {context === "goalPage" && (
-            <>
-              <Text style={{ fontSize: 30, color: "#000000ff" }}>
-                {"★".repeat(3) + "☆".repeat(2)}
-              </Text>
-            </>
-          )}
           <ScrollView
             horizontal={true}
             contentContainerStyle={styles.genreScroll}
@@ -117,14 +93,14 @@ const BookDetails = () => {
             containerStyle={styles.dropdownContainer}
             placeholderStyle={{ textAlign: "center", color: "white" }}
             itemTextStyle={{ textAlign: "center", color: "white" }}
-            data={shelves}
+            data={shelvesList}
             fontFamily={"Agbalumo"}
-            labelField={"label"}
-            valueField={"value"}
+            labelField={"shelf_name"}
+            valueField={"shelf_id"}
             onChange={(item) => {
               handleAdd(item.value);
             }}
-            value={chosenShelf}
+            // value={chosenShelf}
             placeholder={"Add to Shelf"}
           />
         </View>
@@ -137,7 +113,7 @@ const BookDetails = () => {
   );
 };
 
-export default BookDetails;
+export default SearchedBookDetails;
 
 const styles = StyleSheet.create({
   backButton: {
