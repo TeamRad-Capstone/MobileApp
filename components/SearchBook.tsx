@@ -1,7 +1,8 @@
 import { Link } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+import { getCustomShelves, getDefaultShelves } from "@/services/api";
 
 type SearchBookProps = {
   coverUrl: string;
@@ -9,7 +10,6 @@ type SearchBookProps = {
   authors: string[];
   description: string;
   numOfPages: number;
-  // mainCategory: string;
   categories: string[];
   publishedDate: string;
 };
@@ -23,26 +23,38 @@ const SearchBook = ({
   categories,
   publishedDate,
 }: SearchBookProps) => {
-  const shelves = [
-    { label: "Want to Read", value: 1 },
-    { label: "Currently Reading", value: 2 },
-    { label: "Dropped", value: 3 },
-    { label: "Absolute Favourites", value: 4 },
-    { label: "I really wanted to like...but did not", value: 5 },
-  ];
-  const [chosenShelf, setChosenShelf] = useState(shelves[0].label);
+  const [shelves, setShelves] = useState([]);
+  const [defaultShelves, setDefaultShelves] = useState([]);
 
-  const handleAdd = (shelf: string) => {
+  useEffect(() => {
+    const loadShelves = async () => {
+      try {
+        const customList = await getCustomShelves();
+        setShelves(customList);
+        const list = await getDefaultShelves();
+        setDefaultShelves(list);
+      } catch (error: any) {
+        console.log("Error while retrieving custom shelves");
+        console.error(error);
+      }
+    };
+    loadShelves();
+  }, []);
+
+  const [chosenShelf, setChosenShelf] = useState(0);
+  const allShelves = [...defaultShelves, ...shelves];
+  const handleAdd = (shelf: number) => {
     alert("Added to shelf: " + shelf);
+    setChosenShelf(shelf);
   };
 
   return (
     <View style={styles.container}>
       <Link
         href={{
-          pathname: "/(tabs)/(search)/[book]",
+          pathname: "/(tabs)/(search)/[searchedBook]",
           params: {
-            book: title,
+            searchedBook: title,
             coverUrl: coverUrl,
             title: title,
             authors: authors,
@@ -50,6 +62,7 @@ const SearchBook = ({
             numOfPages: numOfPages,
             categories: categories,
             publishedDate: publishedDate,
+            shelves: JSON.stringify(allShelves),
           },
         }}
       >
@@ -79,14 +92,17 @@ const SearchBook = ({
           containerStyle={styles.dropdownContainer}
           placeholderStyle={{ textAlign: "center", color: "white" }}
           itemTextStyle={{ textAlign: "center", color: "white" }}
-          data={shelves}
+          selectedTextStyle={{ textAlign: "center", color: "white" }}
+          activeColor={"#725437"}
+          data={allShelves}
           fontFamily={"Agbalumo"}
-          labelField={"label"}
-          valueField={"value"}
+          labelField={"shelf_name"}
+          valueField={"shelf_id"}
           onChange={(item) => {
-            handleAdd(item.value);
+            handleAdd(item.label);
           }}
-          value={chosenShelf}
+          // onConfirmSelectItem={(item => handleAdd(item))}
+          // value={chosenShelf}
           placeholder={"Add to Shelf"}
         />
       </View>
