@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AuthContext } from "@/contexts/AuthContext";
 
 const Login = () => {
   const heading = "Your digital reading companion";
@@ -19,6 +20,7 @@ const Login = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   const router = useRouter();
+  const { signin } = useContext(AuthContext);
 
   const handleFormCleanUp = () => {
     setEmail("");
@@ -28,7 +30,7 @@ const Login = () => {
     setErrorMsg("");
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     let validFields = true;
     console.log("Attempt to Login");
 
@@ -40,26 +42,20 @@ const Login = () => {
     if (!passwordRegex.test(password)) {
       setPasswordErrorMsg(
         "Your password must  must contain at least 1 uppercase letter, " +
-          "1 lowercase letter, and 1 number"
+          "1 lowercase letter, and 1 number",
       );
       validFields = false;
     }
 
     if (validFields) {
       handleFormCleanUp();
-      router.push("./(tabs)/profile");
+      await signin(email, password);
+      router.push("/(tabs)/profile");
     }
-    router.push("./(tabs)/profile");
-
-    // testConnection()
-    // call the backend API (FastAPI) to handle logging in if validFields = true.
-    // logging in logic and validation to be done in the back end
-    // send error message back to front end potentially and display as necessary.
   };
 
   const handleRegister = () => {
     console.log("Move to Register page");
-    // Use router to push to the register page - once developed
     handleFormCleanUp();
     router.push("/register");
   };
@@ -68,7 +64,6 @@ const Login = () => {
     console.log("Forgot Password");
     handleFormCleanUp();
     router.push("/forgot");
-    // Use the router to push the forgot password page - once developed
   };
 
   return (

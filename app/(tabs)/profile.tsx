@@ -6,15 +6,13 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Profile = () => {
   const tabBarHeight = useBottomTabBarHeight();
 
   // Placeholder username until fetched from API
   const username = "TesterUsernameIfItWereToBeHellaLongAndNeverStop";
-
-  // Placeholder streak to be fetched from DB/API
-  const [streak, setStreak] = useState(0);
 
   const router = useRouter();
 
@@ -84,82 +82,82 @@ const Profile = () => {
   // };
 
   return (
-    <SafeAreaView
-      style={{
-        paddingBottom: tabBarHeight,
-        flex: 1,
-        backgroundColor: "#F4F4E6",
-      }}
-    >
-      <ScrollView>
-        <Text style={styles.title}>Welcome to Rad Reads!</Text>
+      <SafeAreaView
+        style={{
+          paddingBottom: tabBarHeight,
+          flex: 1,
+          backgroundColor: "#F4F4E6",
+        }}
+      >
+        <ScrollView>
+          <Text style={styles.title}>Welcome to Rad Reads!</Text>
 
-        <Pressable style={styles.topContainer} onPress={handleProfile}>
-          <Image
-            style={styles.profileImage}
-            source={require("@/assets/images/profileImg.jpg")}
-          />
-          <Text numberOfLines={1} style={styles.textStyle}>
-            {username}
-          </Text>
-        </Pressable>
+          <Pressable style={styles.topContainer} onPress={handleProfile}>
+            <Image
+              style={styles.profileImage}
+              source={require("@/assets/images/profileImg.jpg")}
+            />
+            <Text numberOfLines={1} style={styles.textStyle}>
+              {username}
+            </Text>
+          </Pressable>
 
-        <Pressable
-          style={styles.topContainer}
-          onPress={() => router.push("/(tabs)/(profile)/stats")}
-        >
-          <Image
-            style={styles.profileImage}
-            source={require("@/assets/icons/graph.png")}
-          />
-          <Text style={styles.textStyle}>Statistics</Text>
-        </Pressable>
+          <Pressable
+            style={styles.topContainer}
+            onPress={() => router.push("/(tabs)/(profile)/stats")}
+          >
+            <Image
+              style={styles.profileImage}
+              source={require("@/assets/icons/graph.png")}
+            />
+            <Text style={styles.textStyle}>Statistics</Text>
+          </Pressable>
 
-        <Text style={styles.headerText}>Current Reads</Text>
-        <ScrollView
-          horizontal={true}
-          contentContainerStyle={styles.currentContainer}
-        >
-          {booksData.shelfBooks
-            .filter((sb) => sb.shelfId === 2)
-            .map((sb) => {
-              const book = booksData.books.find((b) => b.id === sb.bookId);
-              if (!book) return null;
-              return (
-                <CurrentBook
+          <Text style={styles.headerText}>Current Reads</Text>
+          <ScrollView
+            horizontal={true}
+            contentContainerStyle={styles.currentContainer}
+          >
+            {booksData.shelfBooks
+              .filter((sb) => sb.shelfId === 2)
+              .map((sb) => {
+                const book = booksData.books.find((b) => b.id === sb.bookId);
+                if (!book) return null;
+                return (
+                  <CurrentBook
+                    key={book.id}
+                    title={book.title}
+                    author={book.authors}
+                    coverUrl={book.coverUrl}
+                    description={book.description}
+                    numOfPages={book.numOfPages}
+                    category={book.category}
+                    publishedDate={book.publishedDate}
+                    context="currentBook"
+                    progress={70}
+                  />
+                );
+              })}
+          </ScrollView>
+
+          <Text style={styles.headerText}>Upcoming Books</Text>
+          <ScrollView
+            horizontal={true}
+            contentContainerStyle={styles.upcomingContainer}
+          >
+            {booksData.books
+              .filter((book) => !booksData.currentlyReading.includes(book.id))
+              .map((book) => (
+                <UpcomingBook
                   key={book.id}
                   title={book.title}
                   author={book.authors}
                   coverUrl={book.coverUrl}
-                  description={book.description}
-                  numOfPages={book.numOfPages}
-                  category={book.category}
-                  publishedDate={book.publishedDate}
-                  context="currentBook"
-                  progress={70}
                 />
-              );
-            })}
+              ))}
+          </ScrollView>
         </ScrollView>
-
-        <Text style={styles.headerText}>Upcoming Books</Text>
-        <ScrollView
-          horizontal={true}
-          contentContainerStyle={styles.upcomingContainer}
-        >
-          {booksData.books
-            .filter((book) => !booksData.currentlyReading.includes(book.id))
-            .map((book) => (
-              <UpcomingBook
-                key={book.id}
-                title={book.title}
-                author={book.authors}
-                coverUrl={book.coverUrl}
-              />
-            ))}
-        </ScrollView>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 
