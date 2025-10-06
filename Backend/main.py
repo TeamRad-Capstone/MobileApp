@@ -75,3 +75,21 @@ def read_all_default_shelves(
                crud.get_current_shelf(db, current_user.end_user_id),
                crud.get_read_shelf(db, current_user.end_user_id)]
     return shelves
+
+
+@app.post("/shelves/tbr")
+def add_book_to_tbr_shelf(
+        book_in: models.Book,
+        shelf_in: models.To_Read_Shelf,
+        db: Session = Depends(database.get_session),
+):
+    crud.add_book_to_tbr_shelf(db, book_in, shelf_in)
+
+
+@app.post("/shelves/dropped")
+def add_book_to_tbr_shelf(
+        book_in: models.Book,
+        shelf_in: models.Dropped_Shelf,
+        db: Session = Depends(database.get_session),
+):
+    crud.add_book_to_dropped_shelf(db, book_in, shelf_in)
