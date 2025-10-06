@@ -1,7 +1,8 @@
-from typing import Optional
-from sqlmodel import SQLModel, Field
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship, Column, ARRAY, String, UniqueConstraint
 from pydantic import EmailStr
 from datetime import datetime
+from enum import Enum
 
 class Token(SQLModel):
     access_token: str
@@ -12,9 +13,15 @@ class Image_Url(SQLModel, table=True):
     image_url_id: int | None = Field(default=None, primary_key=True)
     url: str
 
+
+class Goal_Label(Enum):
+    COMPLETE = 'Completed'
+    INCOMPLETE = 'Ongoing'
+
+
 class Goal_Status(SQLModel, table=True):
     goal_status_id: int | None = Field(default=None, primary_key=True)
-    label: str
+    label: Goal_Label = Field(Goal_Label.INCOMPLETE)
 
 
 class Transfer_History(SQLModel, table=True):
@@ -69,15 +76,17 @@ class CustomShelfBase(SQLModel):
 class Custom_Shelf(CustomShelfBase, table=True):
     shelf_id: Optional[int] = Field(default=None, primary_key=True)
     end_user_id: Optional[int] = Field(default=None, foreign_key="end_user.end_user_id")
+    shelf_book_id: int = Field(default=None, foreign_key="read_shelf_book.bookshelf_id")
+    shelf_book: Optional["Read_Shelf_Book"] = Relationship(back_populates="custom_shelves")
 
 class CustomShelfCreate(CustomShelfBase):
     pass
 
-class CustomShelfRead(Custom_Shelf):
-    shelf_id: int
-
-    class Config:
-        from_attributes = True
+# class CustomShelfRead(Custom_Shelf):
+#     shelf_id: int
+#
+#     class Config:
+#         from_attributes = True
 
 
 class CustomShelfUpdate(CustomShelfBase):
@@ -108,26 +117,54 @@ class Read_Shelf(SQLModel, table=True):
     shelf_name: str = Field(default="Read")
 
 
-class Upcoming_Books(SQLModel, table=True):
-    upcoming_book_id: int | None = Field(default=None, primary_key=True)
-    end_user_id: int | None = Field(default=None, foreign_key="end_user.end_user_id")
-
-
 class Book(SQLModel, table=True):
-    book_id: int | None = Field(default=None, primary_key=True)
-    google_book_id: int
+    book_id: Optional[int] = Field(default=None, primary_key=True)
+    google_book_id: str = Field(unique=True)
     title: str
-    author: str | None
+    authors: List[str] | None = Field(sa_column=Column(ARRAY(String)), default_factory=list)
     description: str
     number_of_pages: int
-    category: str
-    published_date: str
+    categories: List[str] | None = Field(sa_column=Column(ARRAY(String)), default_factory=list)
+    published_date: str | None
+    # date_read: datetime
+    # rating: float | None
+
+
+class Read_Shelf_Book(SQLModel, table=True):
+    bookshelf_id: int | None = Field(default=None, primary_key=True)
+    read_shelf_id: int | None = Field(default=None, foreign_key="read_shelf.shelf_id")
+    custom_shelves: List["Custom_Shelf"] = Relationship(back_populates="shelf_book")
+    book_id: int | None = Field(default=None, foreign_key="book.book_id")
+    reading_goal_id: int | None = Field(default=None, foreign_key="reading_goal.reading_goal_id")
     date_read: datetime
-    rating: float
+    rating: float | None
+    __table_args__ = (UniqueConstraint("book_id", "read_shelf_id", name="unique_read_shelf_book"),)
+
+class To_Read_Shelf_Book(SQLModel, table=True):
+    bookshelf_id: int | None = Field(default=None, primary_key=True)
+    to_read_shelf_id: int | None = Field(default=None, foreign_key="to_read_shelf.shelf_id")
+    book_id: int | None = Field(default=None, foreign_key="book.book_id")
+    upcoming_book_value: int | None
+    __table_args__ = (UniqueConstraint("book_id", "to_read_shelf_id", name="unique_to_read_shelf_book"),)
+
+
+class Dropped_Shelf_Book(SQLModel, table=True):
+    bookshelf_id: int | None = Field(default=None, primary_key=True)
+    dropped_shelf_id: int = Field(default=None, foreign_key="dropped_shelf.shelf_id")
+    book_id: int | None = Field(default=None, foreign_key="book.book_id")
+    __table_args__ = (UniqueConstraint("book_id", "dropped_shelf_id", name="unique_dropped_shelf_book"),)
+
+
+class Current_Shelf_Book(SQLModel, table=True):
+    bookshelf_id: int | None = Field(default=None, primary_key=True)
+    current_shelf_id: int = Field(default=None, foreign_key="current_shelf.shelf_id")
+    book_id: int | None = Field(default=None, foreign_key="book.book_id")
+    __table_args__ = (UniqueConstraint("book_id", "current_shelf_id", name="unique_current_shelf_book"),)
 
 
 class Imported_Book(SQLModel, table=True):
     imported_book_id: int | None = Field(default=None, primary_key=True)
+    book_id: int | None = Field(default=None, foreign_key="book.book_id", unique=True)
     transfer_history_id: int | None = Field(default=None, foreign_key="transfer_history.transfer_history_id")
     review: str
     date_read: datetime
@@ -142,7 +179,7 @@ class Journal_Entry(SQLModel, table=True):
 
 class Log_Section(SQLModel, table=True):
     log_section_id: int | None = Field(default=None, primary_key=True)
-    journal_entry_id: int | None = Field(default=None, primary_key=True)
+    journal_entry_id: int | None = Field(default=None, foreign_key="journal_entry.journal_entry_id")
     section_name: str
     entry_text: str
     original_date: datetime
