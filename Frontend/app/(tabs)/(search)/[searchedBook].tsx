@@ -29,25 +29,13 @@ const SearchedBookDetails = () => {
   const listRegex = /{(.*?)}/;
   const rgex = /\{[^{}]*\}/;
 
-  // console.log("Shelves:" + shelves.toString());
-  // const shelvesList: string[] = shelves.toString().split(listRegex);
-  // console.log("Searched Book Shelves:" + shelvesList.toString());
   const shelvesList = JSON.parse(shelves.toString());
   console.log(shelvesList);
-  // for (let i = 0; i < shelvesList.length; i++) {
-  //   console.log(shelvesList[i]);
-  // }
-
-  const shelves2 = [
-    { label: "Want to Read", value: 1 },
-    { label: "Currently Reading", value: 2 },
-    { label: "Dropped", value: 3 },
-  ];
 
   const handleAdd = (shelf: string) => {
     alert("Added to shelf: " + shelf);
+    // call to api
   };
-
 
   return (
     <SafeAreaView
