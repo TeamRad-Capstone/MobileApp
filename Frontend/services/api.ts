@@ -55,7 +55,17 @@ export type Shelf = {
   end_user_id: number;
   shelf_id: number;
   shelf_name: string;
-}
+};
+
+export type Book = {
+  google_book_id: string;
+  title: string;
+  authors: string[];
+  description: string;
+  number_of_pages: number;
+  category: string[];
+  published_date: string;
+};
 
 const createShelf = async (name: string) => {
   const endpoint = hostedUrl + "/shelf/";
@@ -70,7 +80,7 @@ const createShelf = async (name: string) => {
     },
     body: JSON.stringify({
       shelf_name: name,
-    })
+    }),
   });
   if (!response.ok) {
     console.log(`Response status: ${response.status}`);
@@ -114,9 +124,148 @@ const getDefaultShelves = async () => {
     console.log(`Response status: ${response.status}`);
   }
   const data = await response.json();
-  console.log(data);
+  // console.log(data);
   return data;
+};
 
-}
+const addToShelf = async ({
+  google_book_id,
+  title,
+  authors,
+  description,
+  number_of_pages,
+  category,
+  published_date,
+}: Book) => {
+  const endpoint = hostedUrl + "/shelves/book";
+  const token = await getToken();
+  if (!token) throw new Error("No token");
 
-export { testConnection, createUser, createShelf, getCustomShelves, getDefaultShelves };
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      google_book_id: google_book_id,
+      title: title,
+      authors: authors,
+      description: description,
+      number_of_pages: number_of_pages,
+      categories: category,
+      published_date: published_date,
+    }),
+  });
+
+  if (!response.ok) {
+    console.log(`Cannot add book`);
+    console.log(`Response status: ${response.status}`);
+  }
+};
+
+const addToToReadShelf = async (
+  {
+    google_book_id,
+    title,
+    authors,
+    description,
+    number_of_pages,
+    category,
+    published_date,
+  }: Book,
+  shelf_id: number,
+  user_id: number,
+  shelf_name: string,
+) => {
+  const endpoint = hostedUrl + "/shelves/tbr";
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({"book_in": {
+        google_book_id: google_book_id,
+        title: title,
+        authors: authors,
+        description: description,
+        number_of_pages: number_of_pages,
+        categories: category,
+        published_date: published_date,
+      },
+      "shelf_in": {
+        shelf_id: shelf_id,
+        end_user_id: user_id,
+        shelf_name: shelf_name,
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    console.log(`Cannot add book to TBR Shelf`);
+    console.log(`Response status: ${response.status}`);
+  }
+};
+
+
+const addToDroppedShelf = async (
+  {
+    google_book_id,
+    title,
+    authors,
+    description,
+    number_of_pages,
+    category,
+    published_date,
+  }: Book,
+  shelf_id: number,
+  user_id: number,
+  shelf_name: string,
+) => {
+  const endpoint = hostedUrl + "/shelves/dropped";
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({"book_in": {
+        google_book_id: google_book_id,
+        title: title,
+        authors: authors,
+        description: description,
+        number_of_pages: number_of_pages,
+        categories: category,
+        published_date: published_date,
+      },
+      "shelf_in": {
+        shelf_id: shelf_id,
+        end_user_id: user_id,
+        shelf_name: shelf_name,
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    console.log(`Cannot add book to TBR Shelf`);
+    console.log(`Response status: ${response.status}`);
+  }
+};
+
+export {
+  testConnection,
+  createUser,
+  createShelf,
+  getCustomShelves,
+  getDefaultShelves,
+  addToShelf,
+  addToToReadShelf,
+  addToDroppedShelf
+};

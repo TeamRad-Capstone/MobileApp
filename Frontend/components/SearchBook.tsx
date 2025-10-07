@@ -2,10 +2,17 @@ import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { getCustomShelves, getDefaultShelves } from "@/services/api";
+import {
+  addToDroppedShelf,
+  addToShelf, addToToReadShelf,
+  getCustomShelves,
+  getDefaultShelves
+} from "@/services/api";
+import book from "@/components/Book";
 
 type SearchBookProps = {
   coverUrl: string;
+  bookId: string;
   title: string;
   authors: string[];
   description: string;
@@ -16,6 +23,7 @@ type SearchBookProps = {
 
 const SearchBook = ({
   coverUrl,
+  bookId,
   title,
   authors,
   description,
@@ -43,9 +51,36 @@ const SearchBook = ({
 
   const [chosenShelf, setChosenShelf] = useState(0);
   const allShelves = [...defaultShelves, ...shelves];
-  const handleAdd = (shelf: number) => {
-    alert("Added to shelf: " + shelf);
-    setChosenShelf(shelf);
+  const [shelfId, setShelfId] = useState(0);
+
+  const handleAdd = (shelf: any) => {
+    alert("Added to shelf: " + shelf.shelf_name);
+    setChosenShelf(shelf.shelf_id);
+
+    // based on shelf chosen
+    let bookInfo = {google_book_id: bookId,
+      title: title,
+      authors: authors,
+      description: description,
+      number_of_pages: numOfPages,
+      category: categories,
+      published_date: publishedDate }
+    switch (shelf.shelf_name) {
+      case "Want to Read":
+        addToToReadShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+        break;
+      case "Dropped":
+        addToDroppedShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name)
+        break;
+      case "Currently Reading":
+        addToShelf(bookInfo)
+        break;
+      case "Read":
+        addToShelf(bookInfo)
+        break;
+      default: // add to custom
+        break;
+    }
   };
 
   return (
@@ -99,10 +134,13 @@ const SearchBook = ({
           labelField={"shelf_name"}
           valueField={"shelf_id"}
           onChange={(item) => {
-            handleAdd(item.label);
+            handleAdd(item)
           }}
-          // onConfirmSelectItem={(item => handleAdd(item))}
-          // value={chosenShelf}
+          // confirmSelectItem={true}
+          // onConfirmSelectItem={(item) => {
+          //   setShelfId(item.shelf_id);
+          //   console.log("Shelf id = " + item.shelf_id);
+          // }}
           placeholder={"Add to Shelf"}
         />
       </View>

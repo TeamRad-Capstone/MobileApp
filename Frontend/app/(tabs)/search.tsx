@@ -12,9 +12,11 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SearchBar from "@/components/SearchBar";
 
 type SearchBookType = {
   coverUrl: string;
+  bookId: string;
   title: string;
   authors: string[];
   description: string;
@@ -67,6 +69,7 @@ const Search = () => {
       for (const books of data.items) {
         let newBook = {
           coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+          bookId: books.id,
           title: books.volumeInfo.title,
           authors: books.volumeInfo.authors,
           description: books.volumeInfo.description,
@@ -113,12 +116,13 @@ const Search = () => {
         if (numOfBooks >= 20) {
           let newBook = {
             coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+            bookId: books.id,
             title: books.volumeInfo.title,
             authors: books.volumeInfo.authors,
             description: books.volumeInfo.description,
             numOfPages: books.volumeInfo.pageCount,
             categories: books.volumeInfo.categories,
-            publishedDate: books.publishedDate,
+            publishedDate: books.volumeInfo.publishedDate,
           };
           setReturnedBooks((oldBooks) => [...oldBooks, newBook]);
         } else {
@@ -143,39 +147,17 @@ const Search = () => {
       }}
     >
       <Text style={styles.headingText}>Search</Text>
-      <View style={{ flexDirection: "row" }}>
-        <View style={styles.headerView}>
-          <Image
-            style={styles.searchIcon}
-            source={require("@/assets/icons/search.png")}
-          />
-          <TextInput
-            style={styles.searchInput}
-            value={searchParam}
-            onChangeText={setSearchParams}
-            onSubmitEditing={searchInAPI}
-          />
-        </View>
-        <View style={styles.queryChoice}>
-          <Dropdown
-            style={{ width: 90, marginLeft: 10 }}
-            data={queryTypeData}
-            fontFamily={"Agbalumo"}
-            labelField={"label"}
-            valueField={"value"}
-            onChange={(item) => {
-              setQueryType(item.value);
-            }}
-            value={queryType}
-            placeholder={queryType}
-          />
-        </View>
-      </View>
+      <SearchBar
+        searchText={searchParam}
+        setSearchText={setSearchParams}
+        submitSearchText={searchInAPI}
+      />
       <ScrollView>
         {returnedBooks.map((book, index) => (
           <SearchBook
             key={index}
             coverUrl={book.coverUrl}
+            bookId={book.bookId}
             title={book.title}
             authors={book.authors}
             description={book.description}

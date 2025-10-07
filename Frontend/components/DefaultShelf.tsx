@@ -1,18 +1,25 @@
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import { Shelf } from "@/services/api";
-import { useRouter } from "expo-router";
+import { useRouter, Link } from "expo-router";
+import SearchBar from "@/components/SearchBar";
+import { useState } from "react";
+import search from "@/app/(tabs)/search";
 
 const DefaultShelf = ({ end_user_id, shelf_id, shelf_name }: Shelf) => {
-  const router = useRouter();
 
   return (
-    <Pressable
-      style={styles.container}
-      onPress={() => {
-        router.push("/(tabs)/(shelf)/[shelf_book]");
-      }}
-    >
-      <Text style={styles.shelfTitle}>{shelf_name}</Text>
+    <Pressable style={styles.container}>
+      <Link
+        href={{
+          pathname:"/(tabs)/[shelf]",
+          params: {
+            shelf: shelf_id,
+            title: shelf_name,
+          }
+        }}
+      >
+        <Text style={styles.shelfTitle}>{shelf_name}</Text>
+      </Link>
     </Pressable>
   );
 };
