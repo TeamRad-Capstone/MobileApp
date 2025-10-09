@@ -3,10 +3,9 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import {
-  addToDroppedShelf,
-  addToShelf, addToToReadShelf,
+  addToShelf,
   getCustomShelves,
-  getDefaultShelves
+  getDefaultShelves,
 } from "@/services/api";
 import book from "@/components/Book";
 
@@ -53,34 +52,22 @@ const SearchBook = ({
   const allShelves = [...defaultShelves, ...shelves];
   const [shelfId, setShelfId] = useState(0);
 
-  const handleAdd = (shelf: any) => {
+  const handleAdd = async (shelf: any) => {
     alert("Added to shelf: " + shelf.shelf_name);
     setChosenShelf(shelf.shelf_id);
 
     // based on shelf chosen
-    let bookInfo = {google_book_id: bookId,
+    let bookInfo = {
+      google_book_id: bookId,
       title: title,
       authors: authors,
       description: description,
       number_of_pages: numOfPages,
       category: categories,
-      published_date: publishedDate }
-    switch (shelf.shelf_name) {
-      case "Want to Read":
-        addToToReadShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
-        break;
-      case "Dropped":
-        addToDroppedShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name)
-        break;
-      case "Currently Reading":
-        addToShelf(bookInfo)
-        break;
-      case "Read":
-        addToShelf(bookInfo)
-        break;
-      default: // add to custom
-        break;
-    }
+      published_date: publishedDate,
+    };
+
+    await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
   };
 
   return (
@@ -134,7 +121,7 @@ const SearchBook = ({
           labelField={"shelf_name"}
           valueField={"shelf_id"}
           onChange={(item) => {
-            handleAdd(item)
+            handleAdd(item);
           }}
           // confirmSelectItem={true}
           // onConfirmSelectItem={(item) => {
