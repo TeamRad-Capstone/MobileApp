@@ -41,9 +41,9 @@ const Shelves = () => {
     setShelfModalVisible(true);
   };
 
-  const handleShelfCreate = () => {
+  const handleShelfCreate = async () => {
     console.log("Attempt to add shelf to DB table");
-    createShelf(shelfTitle);
+    await createShelf(shelfTitle);
     setShelfModalVisible(false);
     setRefreshShelves(!refreshShelves);
   };

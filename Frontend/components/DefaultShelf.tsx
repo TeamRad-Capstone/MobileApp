@@ -14,6 +14,7 @@ const DefaultShelf = ({ end_user_id, shelf_id, shelf_name }: Shelf) => {
           pathname:"/(tabs)/[shelf]",
           params: {
             shelf: shelf_id,
+            user_id: end_user_id,
             title: shelf_name,
           }
         }}

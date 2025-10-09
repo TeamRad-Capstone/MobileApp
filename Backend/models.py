@@ -73,20 +73,19 @@ class CustomShelfBase(SQLModel):
     shelf_name: str
 
 
+class Custom_Shelf_Book_Link(SQLModel, table=True):
+    custom_shelf_id: Optional[int] = Field(default=None, foreign_key="custom_shelf.shelf_id", primary_key=True)
+    bookshelf_id: Optional[int] = Field(default=None, foreign_key="read_shelf_book.bookshelf_id", primary_key=True)
+
+
 class Custom_Shelf(CustomShelfBase, table=True):
     shelf_id: Optional[int] = Field(default=None, primary_key=True)
     end_user_id: Optional[int] = Field(default=None, foreign_key="end_user.end_user_id")
-    shelf_book_id: int = Field(default=None, foreign_key="read_shelf_book.bookshelf_id")
-    shelf_book: Optional["Read_Shelf_Book"] = Relationship(back_populates="custom_shelves")
+    shelf_books: List["Read_Shelf_Book"] = Relationship(back_populates="custom_shelves", link_model=Custom_Shelf_Book_Link)
+
 
 class CustomShelfCreate(CustomShelfBase):
     pass
-
-# class CustomShelfRead(Custom_Shelf):
-#     shelf_id: int
-#
-#     class Config:
-#         from_attributes = True
 
 
 class CustomShelfUpdate(CustomShelfBase):
@@ -133,7 +132,10 @@ class Book(SQLModel, table=True):
 class Read_Shelf_Book(SQLModel, table=True):
     bookshelf_id: int | None = Field(default=None, primary_key=True)
     read_shelf_id: int | None = Field(default=None, foreign_key="read_shelf.shelf_id")
-    custom_shelves: List["Custom_Shelf"] = Relationship(back_populates="shelf_book")
+    custom_shelves: List["Custom_Shelf"] = Relationship(
+        back_populates="shelf_books",
+        link_model=Custom_Shelf_Book_Link
+    )
     book_id: int | None = Field(default=None, foreign_key="book.book_id")
     reading_goal_id: int | None = Field(default=None, foreign_key="reading_goal.reading_goal_id")
     date_read: datetime

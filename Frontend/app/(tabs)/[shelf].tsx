@@ -12,16 +12,48 @@ import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import SearchBar from "@/components/SearchBar";
+import {
+  Book,
+  getBooksFromShelf,
+  getCustomShelves,
+  getDefaultShelves,
+  Shelf,
+} from "@/services/api";
+import shelf from "@/components/Shelf";
+import SearchBook from "@/components/SearchBook";
+import ShelfBook from "@/components/ShelfBook";
 
 const ShelfDetails = () => {
   const tabBarHeight = useBottomTabBarHeight();
-  const { title, books } = useLocalSearchParams();
+  const { shelf, user_id, title } = useLocalSearchParams();
+  const shelf_id = parseInt(shelf as string);
+  const end_user_id = parseInt(user_id as string);
+  const shelf_name = title as string;
 
   const [searchParam, setSearchParam] = useState("");
 
   const searchInShelf = () => {
     console.log("searching for book in shelf");
   };
+
+  const [books, setBooks] = useState<Book[]>([]);
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        const allBooks = await getBooksFromShelf(
+          shelf_id,
+          end_user_id,
+          shelf_name,
+        );
+        setBooks(allBooks);
+      } catch (error: any) {
+        console.log("Error while retrieving books");
+        console.error(error);
+      }
+    };
+    loadBooks();
+  }, [title, end_user_id, shelf_id]);
 
   return (
     <SafeAreaView
@@ -39,6 +71,22 @@ const ShelfDetails = () => {
         setSearchText={setSearchParam}
         submitSearchText={searchInShelf}
       />
+
+      <ScrollView>
+        {books.map((book, index) => (
+          <ShelfBook
+            key={index}
+            shelf_name={shelf_name}
+            google_book_id={book.google_book_id}
+            title={book.title}
+            authors={book.authors}
+            description={book.description}
+            number_of_pages={book.number_of_pages}
+            category={book.category}
+            published_date={book.published_date}
+          />
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 };

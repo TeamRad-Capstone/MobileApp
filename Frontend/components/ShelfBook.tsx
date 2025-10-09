@@ -3,33 +3,26 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import {
-  addToShelf,
   getCustomShelves,
   getDefaultShelves,
+  Book,
+  Shelf,
 } from "@/services/api";
-import book from "@/components/Book";
 
-type SearchBookProps = {
-  coverUrl: string;
-  bookId: string;
-  title: string;
-  authors: string[];
-  description: string;
-  numOfPages: number;
-  categories: string[];
-  publishedDate: string;
-};
+type ShelfBookProps = {
+  shelf_name: string;
+} & Book;
 
-const SearchBook = ({
-  coverUrl,
-  bookId,
+const ShelfBook = ({
+  shelf_name,
+  google_book_id,
   title,
   authors,
   description,
-  numOfPages,
-  categories,
-  publishedDate,
-}: SearchBookProps) => {
+  number_of_pages,
+  category,
+  published_date,
+}: ShelfBookProps) => {
   const [shelves, setShelves] = useState([]);
   const [defaultShelves, setDefaultShelves] = useState([]);
 
@@ -47,48 +40,31 @@ const SearchBook = ({
     };
     loadShelves();
   }, []);
-
-  const [chosenShelf, setChosenShelf] = useState(0);
   const allShelves = [...defaultShelves, ...shelves];
-  const [shelfId, setShelfId] = useState(0);
 
-  const handleAdd = async (shelf: any) => {
-    alert("Added to shelf: " + shelf.shelf_name);
-    setChosenShelf(shelf.shelf_id);
-
-    // based on shelf chosen
-    let bookInfo = {
-      google_book_id: bookId,
-      title: title,
-      authors: authors,
-      description: description,
-      number_of_pages: numOfPages,
-      category: categories,
-      published_date: publishedDate,
-    };
-
-    await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+  const handleMove = (item: Shelf) => {
+    if (item.shelf_name === shelf_name) {
+      alert("Cannot move book to the same shelf");
+    }
   };
 
   return (
     <View style={styles.container}>
       <Link
         href={{
-          pathname: "/(tabs)/(search)/[searchedBook]",
+          pathname: "/(tabs)/(shelf)/[bookinfo]",
           params: {
-            searchedBook: title,
-            coverUrl: coverUrl,
-            title: title,
-            authors: authors,
-            description: description,
-            numOfPages: numOfPages,
-            categories: categories,
-            publishedDate: publishedDate,
-            shelves: JSON.stringify(allShelves),
+            bookinfo: title,
+            bookId: google_book_id,
           },
         }}
       >
-        <Image style={styles.bookCover} source={{ uri: coverUrl }} />
+        <Image
+          style={styles.bookCover}
+          source={{
+            uri: `https://books.google.com/books?id=${google_book_id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+          }}
+        />
       </Link>
       <View style={styles.book}>
         <View>
@@ -100,11 +76,11 @@ const SearchBook = ({
           </Text>
         </View>
         <Text numberOfLines={1} style={styles.author}>
-          {numOfPages} Pages
+          {number_of_pages} Pages
         </Text>
-        {categories && (
+        {category && (
           <Text numberOfLines={1} style={styles.genre}>
-            {categories[0]}
+            {category[0]}
           </Text>
         )}
         <Dropdown
@@ -121,21 +97,16 @@ const SearchBook = ({
           labelField={"shelf_name"}
           valueField={"shelf_id"}
           onChange={(item) => {
-            handleAdd(item);
+            handleMove(item);
           }}
-          // confirmSelectItem={true}
-          // onConfirmSelectItem={(item) => {
-          //   setShelfId(item.shelf_id);
-          //   console.log("Shelf id = " + item.shelf_id);
-          // }}
-          placeholder={"Add to Shelf"}
+          placeholder={"Move to Shelf"}
         />
       </View>
     </View>
   );
 };
 
-export default SearchBook;
+export default ShelfBook;
 
 const styles = StyleSheet.create({
   container: {
