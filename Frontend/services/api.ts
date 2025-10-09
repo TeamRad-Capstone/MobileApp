@@ -2,6 +2,22 @@ import { getToken, setToken, TokenResponse } from "@/services/auth";
 
 const hostedUrl = "http://10.0.2.2:8000";
 
+export type Shelf = {
+  end_user_id: number;
+  shelf_id: number;
+  shelf_name: string;
+};
+
+export type Book = {
+  google_book_id: string;
+  title: string;
+  authors: string[];
+  description: string;
+  number_of_pages: number;
+  category: string[];
+  published_date: string;
+};
+
 const testConnection = async () => {
   const endpoint = hostedUrl + "/";
 
@@ -49,22 +65,6 @@ const createUser = async (
     console.log("Something is happening");
     console.error(error.message);
   }
-};
-
-export type Shelf = {
-  end_user_id: number;
-  shelf_id: number;
-  shelf_name: string;
-};
-
-export type Book = {
-  google_book_id: string;
-  title: string;
-  authors: string[];
-  description: string;
-  number_of_pages: number;
-  category: string[];
-  published_date: string;
 };
 
 const createShelf = async (name: string) => {
@@ -128,16 +128,39 @@ const getDefaultShelves = async () => {
   return data;
 };
 
-const addToShelf = async ({
-  google_book_id,
-  title,
-  authors,
-  description,
-  number_of_pages,
-  category,
-  published_date,
-}: Book) => {
-  const endpoint = hostedUrl + "/shelves/book";
+const addToShelf = async (
+  {
+    google_book_id,
+    title,
+    authors,
+    description,
+    number_of_pages,
+    category,
+    published_date,
+  }: Book,
+  shelf_id: number,
+  user_id: number,
+  shelf_name: string,
+) => {
+  let endpoint = hostedUrl;
+  switch (shelf_name) {
+    case "Want to Read":
+      endpoint += "/shelves/tbr";
+      break;
+    case "Dropped":
+      endpoint += "/shelves/dropped";
+      break;
+    case "Currently Reading":
+      endpoint += "/shelves/current";
+      break;
+    case "Read":
+      endpoint += "/shelves/read";
+      break;
+    default: // Custom shelf
+      endpoint += "/shelves/custom";
+      break;
+  }
+
   const token = await getToken();
   if (!token) throw new Error("No token");
 
@@ -148,13 +171,20 @@ const addToShelf = async ({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      google_book_id: google_book_id,
-      title: title,
-      authors: authors,
-      description: description,
-      number_of_pages: number_of_pages,
-      categories: category,
-      published_date: published_date,
+      book_in: {
+        google_book_id: google_book_id,
+        title: title,
+        authors: authors,
+        description: description,
+        number_of_pages: number_of_pages,
+        categories: category,
+        published_date: published_date,
+      },
+      shelf_in: {
+        shelf_id: shelf_id,
+        end_user_id: user_id,
+        shelf_name: shelf_name,
+      },
     }),
   });
 
@@ -164,99 +194,50 @@ const addToShelf = async ({
   }
 };
 
-const addToToReadShelf = async (
-  {
-    google_book_id,
-    title,
-    authors,
-    description,
-    number_of_pages,
-    category,
-    published_date,
-  }: Book,
+const getBooksFromShelf = async (
   shelf_id: number,
   user_id: number,
   shelf_name: string,
 ) => {
-  const endpoint = hostedUrl + "/shelves/tbr";
+  let endpoint = hostedUrl;
+  switch (shelf_name) {
+    case "Want to Read":
+      endpoint += "/shelves/tbr";
+      break;
+    case "Dropped":
+      endpoint += "/shelves/dropped";
+      break;
+    case "Currently Reading":
+      endpoint += "/shelves/current";
+      break;
+    case "Read":
+      endpoint += "/shelves/read";
+      break;
+    default: // Custom shelf
+      endpoint += `/shelves/custom/${shelf_name}`;
+      break;
+  }
+
   const token = await getToken();
   if (!token) throw new Error("No token");
 
   const response = await fetch(endpoint, {
-    method: "POST",
+    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({"book_in": {
-        google_book_id: google_book_id,
-        title: title,
-        authors: authors,
-        description: description,
-        number_of_pages: number_of_pages,
-        categories: category,
-        published_date: published_date,
-      },
-      "shelf_in": {
-        shelf_id: shelf_id,
-        end_user_id: user_id,
-        shelf_name: shelf_name,
-      }
-    }),
   });
 
   if (!response.ok) {
-    console.log(`Cannot add book to TBR Shelf`);
+    console.log(`Cannot add book`);
     console.log(`Response status: ${response.status}`);
   }
-};
 
-
-const addToDroppedShelf = async (
-  {
-    google_book_id,
-    title,
-    authors,
-    description,
-    number_of_pages,
-    category,
-    published_date,
-  }: Book,
-  shelf_id: number,
-  user_id: number,
-  shelf_name: string,
-) => {
-  const endpoint = hostedUrl + "/shelves/dropped";
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({"book_in": {
-        google_book_id: google_book_id,
-        title: title,
-        authors: authors,
-        description: description,
-        number_of_pages: number_of_pages,
-        categories: category,
-        published_date: published_date,
-      },
-      "shelf_in": {
-        shelf_id: shelf_id,
-        end_user_id: user_id,
-        shelf_name: shelf_name,
-      }
-    }),
-  });
-
-  if (!response.ok) {
-    console.log(`Cannot add book to TBR Shelf`);
-    console.log(`Response status: ${response.status}`);
-  }
+  console.log("Returning books");
+  const data = await response.json();
+  // console.log(data);
+  return data
 };
 
 export {
@@ -266,6 +247,5 @@ export {
   getCustomShelves,
   getDefaultShelves,
   addToShelf,
-  addToToReadShelf,
-  addToDroppedShelf
+  getBooksFromShelf
 };
