@@ -1,3 +1,4 @@
+"""This module contains the main application functions"""
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session
@@ -10,6 +11,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 def on_startup():
     database.init_db()
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Rad Reads"}
@@ -18,7 +20,7 @@ def read_root():
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(database.get_session),
-) -> models.End_User:
+) -> models.EndUser:
     email = security.decode_access_token(token)
     if not email:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -27,12 +29,14 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
 @app.post("/register/", response_model=models.EndUserRead)
 def register(user_in: models.EndUserCreate, db: Session = Depends(database.get_session)):
     if crud.get_user_by_email(db, user_in.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     user = crud.create_user(db, user_in)
     return user
+
 
 @app.post("/login", response_model=models.Token)
 def login(
@@ -45,42 +49,46 @@ def login(
     token = security.create_access_token(user.email)
     return {"access_token": token, "token_type": "bearer"}
 
+
 @app.get("/users/me", response_model=models.EndUserRead)
-def read_users_me(current_user: models.End_User = Depends(get_current_user)):
+def read_users_me(current_user: models.EndUser = Depends(get_current_user)):
     return current_user
 
-@app.post("/shelf/", response_model=models.Custom_Shelf)
+
+@app.post("/shelf/", response_model=models.CustomShelf)
 def create_shelf(
-    shelf_in: models.CustomShelfCreate,
-    current_user: models.End_User = Depends(get_current_user),
+    shelf_in: models.CustomShelfBase,
+    current_user: models.EndUser = Depends(get_current_user),
     db: Session = Depends(database.get_session),
 ):
     return crud.create_custom_shelf(db, current_user.end_user_id, shelf_in)
 
+
 @app.get("/shelves/me")
 def read_shelves(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user)
+        current_user: models.EndUser = Depends(get_current_user)
 ):
     shelves = crud.get_custom_shelves(db, current_user.end_user_id)
-    return [shelf for shelf in shelves]
+    return list(shelves)
+
 
 @app.get("/defaultShelves/me")
 def read_all_default_shelves(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 ):
-    shelves = [crud.get_tbr_shelf(db, current_user.end_user_id),
-               crud.get_dropped_shelf(db, current_user.end_user_id),
-               crud.get_current_shelf(db, current_user.end_user_id),
-               crud.get_read_shelf(db, current_user.end_user_id)]
+    shelves = [crud.get_shelf(db, current_user.end_user_id, models.ToReadShelf()),
+               crud.get_shelf(db, current_user.end_user_id, models.DroppedShelf()),
+               crud.get_shelf(db, current_user.end_user_id, models.CurrentShelf()),
+               crud.get_shelf(db, current_user.end_user_id, models.ReadShelf())]
     return shelves
 
 
 @app.post("/shelves/tbr")
 def add_book_to_tbr_shelf(
         book_in: models.Book,
-        shelf_in: models.To_Read_Shelf,
+        shelf_in: models.ToReadShelf,
         db: Session = Depends(database.get_session),
 ):
     crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
@@ -89,7 +97,7 @@ def add_book_to_tbr_shelf(
 @app.post("/shelves/dropped")
 def add_book_to_dropped_shelf(
         book_in: models.Book,
-        shelf_in: models.Dropped_Shelf,
+        shelf_in: models.DroppedShelf,
         db: Session = Depends(database.get_session),
 ):
     crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
@@ -98,7 +106,7 @@ def add_book_to_dropped_shelf(
 @app.post("/shelves/current")
 def add_book_to_current_shelf(
         book_in: models.Book,
-        shelf_in: models.Current_Shelf,
+        shelf_in: models.CurrentShelf,
         db: Session = Depends(database.get_session),
 ):
     crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
@@ -107,7 +115,7 @@ def add_book_to_current_shelf(
 @app.post("/shelves/read")
 def add_book_to_read_shelf(
         book_in: models.Book,
-        shelf_in: models.Read_Shelf,
+        shelf_in: models.ReadShelf,
         db: Session = Depends(database.get_session),
 ):
     crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
@@ -116,7 +124,7 @@ def add_book_to_read_shelf(
 @app.post("/shelves/custom")
 def add_book_to_custom_shelf(
         book_in: models.Book,
-        shelf_in: models.Custom_Shelf,
+        shelf_in: models.CustomShelf,
         db: Session = Depends(database.get_session),
 ):
     crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
@@ -125,31 +133,31 @@ def add_book_to_custom_shelf(
 @app.get("/shelves/tbr")
 def get_books_from_current_shelf(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 ):
-    return crud.get_books(db, current_user.end_user_id, models.To_Read_Shelf())
+    return crud.get_books(db, current_user.end_user_id, models.ToReadShelf())
 
 
 @app.get("/shelves/dropped")
 def get_books_from_dropped_shelf(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 ):
-    return crud.get_books(db, current_user.end_user_id, models.Dropped_Shelf())
+    return crud.get_books(db, current_user.end_user_id, models.DroppedShelf())
 
 @app.get("/shelves/read")
 def get_books_from_current_shelf(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 ):
-    return crud.get_books(db, current_user.end_user_id, models.Read_Shelf())
+    return crud.get_books(db, current_user.end_user_id, models.ReadShelf())
 
 
 @app.get("/shelves/custom/{name}")
 def get_books_from_current_shelf(
         name: str,
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 
 ):
     return crud.get_custom_books(db, current_user.end_user_id, name)
@@ -158,6 +166,6 @@ def get_books_from_current_shelf(
 @app.get("/shelves/current")
 def get_books_from_current_shelf(
         db: Session = Depends(database.get_session),
-        current_user: models.End_User = Depends(get_current_user),
+        current_user: models.EndUser = Depends(get_current_user),
 ):
-    return crud.get_books(db, current_user.end_user_id, models.Current_Shelf())
+    return crud.get_books(db, current_user.end_user_id, models.CurrentShelf())
