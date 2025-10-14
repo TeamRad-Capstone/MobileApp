@@ -55,14 +55,31 @@ class EndUserLogin(SQLModel):
     email: EmailStr
     password: str
 
-
+# PROMPT: create SQLModel classes for a reading goal system. make a table model with id, user id, title, target, and active status. a model for creating a goal with title, target, optional progress, and active bool. a model for updating a goal.
 class Reading_Goal(SQLModel, table=True):
-    reading_goal_id: int | None = Field(default=None, primary_key=True)
-    end_user_id: int | None = Field(default=None, foreign_key="end_user.end_user_id")
-    goal_status_id: int | None = Field(default=None, foreign_key="goal_status.goal_status_id")
-    goal_name: str
-    description: str
+    reading_goal_id: Optional[int] = Field(default=None, primary_key=True)
+    end_user_id: int
+    title: str
+    target: int
+    active: bool = False
 
+class ReadingGoalCreate(SQLModel):
+    title: str
+    target: int
+    progress: Optional[int] = 0
+    active: Optional[bool] = True
+
+class ReadingGoalUpdate(SQLModel):
+    title: Optional[str] = None
+    target: Optional[int] = None
+    active: Optional[bool] = None
+
+class ReadingGoalRead(Reading_Goal):
+    reading_goal_id: int
+    end_user_id: int
+
+    class Config:
+        from_attributes = True
 
 class Recommendation(SQLModel, table=True):
     recommendation_id: int | None = Field(default=None, primary_key=True)

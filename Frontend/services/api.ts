@@ -40,7 +40,7 @@ const testConnection = async () => {
 const createUser = async (
   email: string,
   username: string,
-  password: string,
+  password: string
 ) => {
   const endpoint = hostedUrl + "/register/";
 
@@ -140,7 +140,7 @@ const addToShelf = async (
   }: Book,
   shelf_id: number,
   user_id: number,
-  shelf_name: string,
+  shelf_name: string
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -197,7 +197,7 @@ const addToShelf = async (
 const getBooksFromShelf = async (
   shelf_id: number,
   user_id: number,
-  shelf_name: string,
+  shelf_name: string
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -237,7 +237,89 @@ const getBooksFromShelf = async (
   console.log("Returning books");
   const data = await response.json();
   // console.log(data);
-  return data
+  return data;
+};
+
+const createReadingGoal = async (
+  title: string,
+  target: number,
+  description?: string
+) => {
+  const endpoint = hostedUrl + "/goals/";
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      title,
+      target,
+      description,
+    }),
+  });
+
+  if (!response.ok) console.log(`Status: ${response.status}`);
+  return await response.json();
+};
+
+const getMyReadingGoals = async () => {
+  const endpoint = hostedUrl + "/goals/me";
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) console.log(`Status: ${response.status}`);
+  return await response.json();
+};
+
+const updateReadingGoal = async (
+  goal_id: number,
+  title?: string,
+  target?: number
+) => {
+  const endpoint = hostedUrl + `/goals/${goal_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ title, target }),
+  });
+
+  if (!response.ok) console.log(`Status: ${response.status}`);
+  return await response.json();
+};
+
+const deleteReadingGoal = async (goal_id: number) => {
+  const endpoint = hostedUrl + `/goals/${goal_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) console.log(`Status: ${response.status}`);
+  return true;
 };
 
 export {
@@ -247,5 +329,9 @@ export {
   getCustomShelves,
   getDefaultShelves,
   addToShelf,
-  getBooksFromShelf
+  getBooksFromShelf,
+  createReadingGoal,
+  getMyReadingGoals,
+  updateReadingGoal,
+  deleteReadingGoal,
 };
