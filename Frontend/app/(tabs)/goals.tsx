@@ -2,14 +2,19 @@ import GoalModal from "@/components/GoalModal";
 import ProgressBar from "@/components/ProgressBar";
 import ProgressLine from "@/components/ProgressLine";
 import Shelf from "@/components/Shelf";
-import booksData from "@/data/books.json";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { getToken } from "@/services/auth";
+import {
+  createReadingGoal,
+  getMyReadingGoals,
+  updateReadingGoal,
+  deleteReadingGoal,
+} from "@/services/api";
 
 export default function Goal() {
-  const [selectedGoal, setSelectedGoal] = useState<
-    null | (typeof booksData.goals)[0]
-  >(null);
+  const [goals, setGoals] = useState<any[]>([]);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
   const [newGoalTitle, setNewGoalTitle] = useState("");
@@ -20,47 +25,83 @@ export default function Goal() {
   const [editTitle, setEditTitle] = useState("");
   const [editTarget, setEditTarget] = useState("");
 
-  const activeGoals = booksData.goals.filter((g) => g.active);
-  const completedGoals = booksData.goals.filter((g) => !g.active);
+  const fetchGoals = async () => {
+    try {
+      const data = await getMyReadingGoals();
+      setGoals(
+        data.map((g: any) => ({
+          reading_goal_id: g.reading_goal_id,
+          title: g.title,
+          target: g.target,
+          active: g.active,
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchGoals();
+  }, []);
+
+  const activeGoals = goals.filter((g) => g.active);
+  const completedGoals = goals.filter((g) => !g.active);
   const goalsToShow = showCompleted ? completedGoals : activeGoals;
 
   const calculateProgress = (goalId: number) => {
-    return booksData.goalBooks.filter((gb) => gb.goal_id === goalId).length;
+    const goal = goals.find((g) => g.reading_goal_id === goalId);
+    return goal?.books?.length || 0;
   };
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (!newGoalTitle || !newGoalTarget) return;
-    const newGoal = {
-      id: Date.now(),
-      title: newGoalTitle,
-      target: parseInt(newGoalTarget),
-      active: true,
-    };
-    booksData.goals.push(newGoal);
-    setNewGoalTitle("");
-    setNewGoalTarget("");
-    setModalVisible(false);
-  };
-
-  const handleSaveEdit = () => {
-    if (!selectedGoal) return;
-    const idx = booksData.goals.findIndex((g) => g.id === selectedGoal.id);
-    if (idx > -1) {
-      booksData.goals[idx] = {
-        ...booksData.goals[idx],
-        title: editTitle,
-        target: parseInt(editTarget),
-      };
+    try {
+      const newGoal = await createReadingGoal(
+        newGoalTitle,
+        parseInt(newGoalTarget)
+      );
+      setGoals((prev) => [...prev, newGoal]);
+      setNewGoalTitle("");
+      setNewGoalTarget("");
+      setModalVisible(false);
+    } catch (err) {
+      console.error(err);
     }
-    setEditModalVisible(false);
   };
 
-  const handleDeleteGoal = () => {
+  const handleSaveEdit = async () => {
     if (!selectedGoal) return;
-    const idx = booksData.goals.findIndex((g) => g.id === selectedGoal.id);
-    if (idx > -1) booksData.goals.splice(idx, 1);
-    setSelectedGoal(null);
-    setEditModalVisible(false);
+    try {
+      const updatedGoal = await updateReadingGoal(
+        selectedGoal.reading_goal_id,
+        editTitle,
+        parseInt(editTarget)
+      );
+
+      setGoals((prev) =>
+        prev.map((g) =>
+          g.reading_goal_id === updatedGoal.reading_goal_id ? updatedGoal : g
+        )
+      );
+      setEditModalVisible(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteGoal = async () => {
+    if (!selectedGoal) return;
+    try {
+      await deleteReadingGoal(selectedGoal.reading_goal_id);
+      setGoals((prev) =>
+        prev.filter((g) => g.reading_goal_id !== selectedGoal.reading_goal_id)
+      );
+      setSelectedGoal(null);
+      setEditModalVisible(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -118,22 +159,18 @@ export default function Goal() {
           <View style={styles.progressContainer}>
             <View style={{ flex: 1, marginRight: 10 }}>
               <ProgressLine
-                progress={calculateProgress(selectedGoal.id)}
+                progress={calculateProgress(selectedGoal.reading_goal_id)}
                 target={selectedGoal.target}
                 title={selectedGoal.title}
               />
             </View>
             <Text style={{ fontFamily: "Agbalumo", fontSize: 14 }}>
-              {
-                booksData.goalBooks.filter(
-                  (gb) => gb.goal_id === selectedGoal.id
-                ).length
-              }
-              /{selectedGoal.target}
+              {calculateProgress(selectedGoal.reading_goal_id)}/
+              {selectedGoal.target}
             </Text>
           </View>
 
-          <Shelf goalId={selectedGoal.id} context="goalShelf" />
+          <Shelf goalId={selectedGoal.reading_goal_id} context="goalShelf" />
 
           <GoalModal
             visible={editModalVisible}
@@ -152,12 +189,12 @@ export default function Goal() {
         <>
           {goalsToShow.map((goal) => (
             <Pressable
-              key={goal.id}
+              key={goal.reading_goal_id}
               style={styles.goalButton}
               onPress={() => setSelectedGoal(goal)}
             >
               <ProgressBar
-                progress={calculateProgress(goal.id)}
+                progress={calculateProgress(goal.reading_goal_id)}
                 target={goal.target}
                 title={goal.title}
               />
@@ -216,7 +253,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-
   activeTab: { backgroundColor: "#8C4E24" },
   tabText: { color: "#666" },
   activeTabText: { color: "#fff", fontFamily: "Agbalumo" },

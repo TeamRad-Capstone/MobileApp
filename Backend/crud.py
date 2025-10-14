@@ -4,7 +4,7 @@ from sqlmodel import Session, select, update
 import models
 from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
     Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, Read_Shelf_Book, \
-    Current_Shelf_Book, Custom_Shelf_Book_Link
+    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
 from security import get_password_hash
 
 def get_user_by_email(db: Session, email: str) -> End_User | None:
@@ -213,3 +213,52 @@ def get_custom_books(
         )
         books.append(db.exec(second_statement).first())
     return books
+
+# PROMPT: can you make the crud functions for reading goals so i can create, read, update, and delete them for a specific user using sqlmodel?
+def create_reading_goal(db: Session, user_id: int, goal_in: models.ReadingGoalCreate):
+    goal = models.Reading_Goal(
+        end_user_id=user_id,
+        title=goal_in.title,
+        progress=goal_in.progress or 0,
+        target=goal_in.target,
+        active=goal_in.active if hasattr(goal_in, "active") else True
+    )
+    
+    db.add(goal)
+    db.commit()
+    db.refresh(goal)
+    return goal
+
+def get_reading_goals(db: Session, user_id: int):
+    return db.query(models.Reading_Goal).filter(models.Reading_Goal.end_user_id == user_id).all()
+
+def get_active_goals(db: Session, user_id: int):
+    return db.query(models.Reading_Goal).filter(
+        models.Reading_Goal.end_user_id == user_id,
+        models.Reading_Goal.active == True
+    ).all()
+
+def get_active_goals(db: Session, user_id: int):
+    return db.query(models.Reading_Goal).filter(
+        models.Reading_Goal.end_user_id == user_id,
+        models.Reading_Goal.active == True
+    ).all()
+
+def update_reading_goal(db: Session, user_id: int, goal_id: int, goal_in: models.ReadingGoalUpdate):
+    goal = db.get(models.Reading_Goal, goal_id)
+    if not goal or goal.end_user_id != user_id:
+        return None
+    for key, value in goal_in.dict(exclude_unset=True).items():
+        setattr(goal, key, value)
+    db.add(goal)
+    db.commit()
+    db.refresh(goal)
+    return goal
+
+def delete_reading_goal(db: Session, user_id: int, goal_id: int):
+    goal = db.get(models.Reading_Goal, goal_id)
+    if not goal or goal.end_user_id != user_id:
+        return None
+    db.delete(goal)
+    db.commit()
+    return {"message": "Goal deleted"}
