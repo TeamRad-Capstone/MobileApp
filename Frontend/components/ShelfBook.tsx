@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import {
   getCustomShelves,
@@ -20,7 +20,7 @@ const ShelfBook = ({
   authors,
   description,
   number_of_pages,
-  category,
+  categories,
   published_date,
 }: ShelfBookProps) => {
   const [shelves, setShelves] = useState([]);
@@ -48,6 +48,10 @@ const ShelfBook = ({
     }
   };
 
+  {
+    /** Make sure i change how this is used.**/
+  }
+  let id = 0;
   return (
     <View style={styles.container}>
       <Link
@@ -67,40 +71,46 @@ const ShelfBook = ({
         />
       </Link>
       <View style={styles.book}>
-        <View>
-          <Text numberOfLines={3} style={styles.title}>
+        <View style={styles.topBookDetails}>
+          <Text numberOfLines={2} style={styles.title}>
             {title}
           </Text>
-          <Text numberOfLines={3} style={styles.author}>
+          <Text numberOfLines={1} style={styles.author}>
             {authors?.map((author) => author + "\n")}
           </Text>
-        </View>
-        <Text numberOfLines={1} style={styles.author}>
-          {number_of_pages} Pages
-        </Text>
-        {category && (
-          <Text numberOfLines={1} style={styles.genre}>
-            {category[0]}
+          <Text numberOfLines={1} style={styles.author}>
+            {number_of_pages} Pages
           </Text>
-        )}
-        <Dropdown
-          maxHeight={60}
-          iconColor={"white"}
-          style={styles.dropdown}
-          containerStyle={styles.dropdownContainer}
-          placeholderStyle={{ textAlign: "center", color: "white" }}
-          itemTextStyle={{ textAlign: "center", color: "white" }}
-          selectedTextStyle={{ textAlign: "center", color: "white" }}
-          activeColor={"#725437"}
-          data={allShelves}
-          fontFamily={"Agbalumo"}
-          labelField={"shelf_name"}
-          valueField={"shelf_id"}
-          onChange={(item) => {
-            handleMove(item);
-          }}
-          placeholder={"Move to Shelf"}
-        />
+          <Text numberOfLines={1} style={styles.genre}>
+            {categories?.map((category) => (
+              <Text key={++id}>{category}</Text>
+            ))}
+          </Text>
+        </View>
+        <View style={styles.btmBookDetails}>
+          {/*If there exist a progress, add the bar here*/}
+          <Pressable style={styles.removeBtn}>
+            <Text style={styles.removeTxt}>Remove</Text>
+          </Pressable>
+          <Dropdown
+            maxHeight={60}
+            iconColor={"white"}
+            style={styles.dropdown}
+            containerStyle={styles.dropdownContainer}
+            placeholderStyle={{ textAlign: "center", color: "white" }}
+            itemTextStyle={{ textAlign: "center", color: "white" }}
+            selectedTextStyle={{ textAlign: "center", color: "white" }}
+            activeColor={"#725437"}
+            data={allShelves}
+            fontFamily={"Agbalumo"}
+            labelField={"shelf_name"}
+            valueField={"shelf_id"}
+            onChange={(item) => {
+              handleMove(item);
+            }}
+            placeholder={"Move to Shelf"}
+          />
+        </View>
       </View>
     </View>
   );
@@ -156,4 +166,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     color: "white",
   },
+  removeBtn: {
+    backgroundColor: "#9B2426",
+    borderRadius: 10,
+    height: 30,
+  },
+  removeTxt: {
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+    textAlign: "center",
+    color: "white",
+  },
+  btmBookDetails: {
+    gap: 8,
+  },
+  topBookDetails: {
+    gap: 8
+  }
 });

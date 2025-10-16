@@ -11,12 +11,14 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { addToShelf } from "@/services/api";
 
 const SearchedBookDetails = () => {
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
   const {
     coverUrl,
+    bookId,
     title,
     authors,
     description,
@@ -26,15 +28,31 @@ const SearchedBookDetails = () => {
     shelves,
   } = useLocalSearchParams();
   const authorList = authors.toString().split(",");
+  const categoryList = categories.toString().split(",");
   const listRegex = /{(.*?)}/;
   const rgex = /\{[^{}]*\}/;
 
   const shelvesList = JSON.parse(shelves.toString());
   console.log(shelvesList);
 
-  const handleAdd = (shelf: string) => {
-    alert("Added to shelf: " + shelf);
-    // call to api
+  const handleAdd = async (shelf: any) => {
+    // based on shelf chosen
+    let bookInfo = {
+      google_book_id: bookId as string,
+      title: title as string,
+      authors: authorList,
+      description: description as string,
+      number_of_pages: numOfPages as unknown as number,
+      categories: categoryList,
+      published_date: publishedDate as string,
+    };
+
+    try {
+      await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+      alert("Added to shelf: " + shelf.shelf_name);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -86,7 +104,7 @@ const SearchedBookDetails = () => {
             labelField={"shelf_name"}
             valueField={"shelf_id"}
             onChange={(item) => {
-              handleAdd(item.value);
+              handleAdd(item);
             }}
             // value={chosenShelf}
             placeholder={"Add to Shelf"}

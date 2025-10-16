@@ -53,7 +53,7 @@ const SearchBook = ({
   const [shelfId, setShelfId] = useState(0);
 
   const handleAdd = async (shelf: any) => {
-    alert("Added to shelf: " + shelf.shelf_name);
+
     setChosenShelf(shelf.shelf_id);
 
     // based on shelf chosen
@@ -63,11 +63,16 @@ const SearchBook = ({
       authors: authors,
       description: description,
       number_of_pages: numOfPages,
-      category: categories,
+      categories: categories,
       published_date: publishedDate,
     };
 
-    await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+    try {
+      await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+      alert("Added to shelf: " + shelf.shelf_name);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -78,6 +83,7 @@ const SearchBook = ({
           params: {
             searchedBook: title,
             coverUrl: coverUrl,
+            bookId: bookId,
             title: title,
             authors: authors,
             description: description,

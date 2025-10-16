@@ -18,6 +18,7 @@ const Login = () => {
   const [passwordErrorMsg, setPasswordErrorMsg] = useState("");
 
   const [errorMsg, setErrorMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const router = useRouter();
   const { signin } = useContext(AuthContext);
@@ -31,6 +32,9 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
+    setErrorMsg("");
+    setEmailErrorMsg("");
+    setPasswordErrorMsg("");
     let validFields = true;
     console.log("Attempt to Login");
 
@@ -47,10 +51,20 @@ const Login = () => {
       validFields = false;
     }
 
-    if (validFields) {
-      handleFormCleanUp();
+    if (!validFields) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
       await signin(email, password);
       router.push("/(tabs)/profile");
+      handleFormCleanUp();
+    } catch (e: any) {
+      const msg = e?.message || "Login failed. Please check your credentials and try again.";
+      setErrorMsg(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -91,8 +105,12 @@ const Login = () => {
         )}
       </View>
       <View style={styles.actionButtons}>
-        <Pressable style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <Pressable
+          style={[styles.button, submitting && { opacity: 0.7 }]}
+          onPress={handleLogin}
+          disabled={submitting}
+        >
+          <Text style={styles.buttonText}>{submitting ? "Logging in..." : "Login"}</Text>
         </Pressable>
         <Text style={styles.prompt}>{cta}</Text>
         <Pressable style={styles.button} onPress={handleRegister}>

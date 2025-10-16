@@ -21,6 +21,7 @@ const Register = () => {
   const [usernameErrorMsg, setUsernameErrorMsg] = useState("");
 
   const [errorMsg, setErrorMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const router = useRouter();
 
@@ -40,43 +41,49 @@ const Register = () => {
     setErrorMsg("");
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     console.log("Attempt to Register");
-    let validFields = true;
     handleErrorCleanUp();
+    let validFields = true;
 
-    if (!email || !emailRegex.test(email)) {
+    const emailTrim = email.trim();
+    const usernameTrim = username.trim();
+
+    if (!emailTrim || !emailRegex.test(emailTrim)) {
       setEmailErrorMsg("Please enter a valid email address");
       validFields = false;
     }
 
-    if (!username) {
+    if (!usernameTrim) {
       setUsernameErrorMsg("Please enter a username");
       validFields = false;
     }
 
     if (!password || !passwordRegex.test(password)) {
       setPasswordErrorMsg(
-        "Your password must  must contain at least 1 uppercase letter, " +
-          "1 lowercase letter, and 1 number"
+        "Your password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number"
       );
       validFields = false;
     }
 
     if (!confirmPassword || confirmPassword !== password) {
-      setConfirmPasswordErrorMsg("Your password must match");
+      setConfirmPasswordErrorMsg("Passwords do not match");
       validFields = false;
     }
-    // Call the backend api to register user into the database if valid fields = true
-    // If successful, push back to login page
-    if (validFields) {
-      handleFormCleanUp();
-      console.log("Fields are valid");
-      createUser(email, username, password).then((r) =>
-        console.log("API Call successfully registered: " + r)
-      );
-      // Push to the login page
+
+    if (!validFields) return;
+
+    try {
+      setSubmitting(true);
+      const res = await createUser(emailTrim, usernameTrim, password);
+      console.log("API Call successfully registered:", res);
       router.push("/");
+      handleFormCleanUp();
+    } catch (e: any) {
+      const msg = e?.message || "Registration failed. Please try again.";
+      setErrorMsg(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,6 +96,10 @@ const Register = () => {
           style={styles.formEntry}
           onChangeText={setEmail}
           value={email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="emailAddress"
         />
         {emailErrorMsg && <Text style={styles.error}>{emailErrorMsg}</Text>}
       </View>
@@ -98,6 +109,9 @@ const Register = () => {
           style={styles.formEntry}
           onChangeText={setUsername}
           value={username}
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="username"
         />
         {usernameErrorMsg && (
           <Text style={styles.error}>{usernameErrorMsg}</Text>
@@ -110,6 +124,8 @@ const Register = () => {
           onChangeText={setPassword}
           value={password}
           secureTextEntry={true}
+          autoCapitalize="none"
+          textContentType="password"
         />
         {passwordErrorMsg && (
           <Text style={styles.error}>{passwordErrorMsg}</Text>
@@ -122,14 +138,20 @@ const Register = () => {
           onChangeText={setConfirmPassword}
           value={confirmPassword}
           secureTextEntry={true}
+          autoCapitalize="none"
+          textContentType="password"
         />
         {confirmPasswordErrorMsg && (
           <Text style={styles.error}>{confirmPasswordErrorMsg}</Text>
         )}
       </View>
       <View style={styles.actionButtons}>
-        <Pressable style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Register</Text>
+        <Pressable
+          style={[styles.button, submitting && { opacity: 0.7 }]}
+          onPress={handleRegister}
+          disabled={submitting}
+        >
+          <Text style={styles.buttonText}>{submitting ? "Registering..." : "Register"}</Text>
         </Pressable>
         {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
       </View>

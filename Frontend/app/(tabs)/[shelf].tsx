@@ -55,6 +55,18 @@ const ShelfDetails = () => {
     loadBooks();
   }, [title, end_user_id, shelf_id]);
 
+  // Check if shelf name and not a custom shelf from api
+  const checkIfDefaultShelf = () => {
+    if (
+      title === "Want to Read" ||
+      title === "Dropped" ||
+      title === "Currently Reading" ||
+      title === "Read"
+    ) {
+      return true;
+    }
+    return false;
+  };
   return (
     <SafeAreaView
       style={{
@@ -65,7 +77,16 @@ const ShelfDetails = () => {
         paddingBottom: tabBarHeight,
       }}
     >
-      <Text style={styles.shelfTitle}>{title}</Text>
+      <View style={styles.titleView}>
+        <Text style={styles.shelfTitle}>{title}</Text>
+        <Pressable>
+          <Image
+            style={{ height: 20, width: 20 }}
+            source={require("@/assets/icons/edit.png")}
+          />
+        </Pressable>
+      </View>
+
       <SearchBar
         searchText={searchParam}
         setSearchText={setSearchParam}
@@ -82,10 +103,16 @@ const ShelfDetails = () => {
             authors={book.authors}
             description={book.description}
             number_of_pages={book.number_of_pages}
-            category={book.category}
+            categories={book.categories}
             published_date={book.published_date}
           />
         ))}
+
+        {!checkIfDefaultShelf() && (
+          <Pressable style={styles.deleteBtn}>
+            <Text style={styles.deleteBtnText}>Delete Shelf</Text>
+          </Pressable>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -94,9 +121,28 @@ const ShelfDetails = () => {
 export default ShelfDetails;
 
 const styles = StyleSheet.create({
+  titleView: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10
+  },
   shelfTitle: {
     fontFamily: "Agbalumo",
     fontSize: 26,
     textAlign: "center",
+  },
+  deleteBtn: {
+    backgroundColor: "#9B2426",
+    marginVertical: 20,
+    marginHorizontal: "auto",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  deleteBtnText: {
+    fontFamily: "Agbalumo",
+    fontSize: 20,
+    color: "white",
   },
 });
