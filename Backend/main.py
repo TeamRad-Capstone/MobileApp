@@ -80,46 +80,61 @@ def read_all_default_shelves(
 @app.post("/shelves/tbr")
 def add_book_to_tbr_shelf(
         book_in: models.Book,
-        shelf_in: models.To_Read_Shelf,
         db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
 ):
-    crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
+    # Get the user's TBR shelf
+    shelf = crud.get_tbr_shelf(db, current_user.end_user_id)
+    print("BOOK ID ADDING: ", book_in.google_book_id)
+    return crud.add_book_to_chosen_shelf(db, book_in, models.To_Read_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/dropped")
 def add_book_to_dropped_shelf(
         book_in: models.Book,
-        shelf_in: models.Dropped_Shelf,
         db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
 ):
-    crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
+    shelf = crud.get_dropped_shelf(db, current_user.end_user_id)
+    return crud.add_book_to_chosen_shelf(db, book_in, models.Dropped_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/current")
 def add_book_to_current_shelf(
         book_in: models.Book,
-        shelf_in: models.Current_Shelf,
+
         db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
 ):
-    crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
+    shelf = crud.get_current_shelf(db, current_user.end_user_id)
+    return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/read")
 def add_book_to_read_shelf(
         book_in: models.Book,
-        shelf_in: models.Read_Shelf,
         db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
 ):
-    crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
+    # Get the user's TBR shelf
+    shelf = crud.get_read_shelf(db, current_user.end_user_id)
+    return crud.add_book_to_chosen_shelf(db, book_in, models.Read_Shelf(), shelf.shelf_id)
 
 
-@app.post("/shelves/custom")
+@app.post("/shelves/custom/{shelf_name}")
 def add_book_to_custom_shelf(
+        shelf_name: str,
         book_in: models.Book,
-        shelf_in: models.Custom_Shelf,
         db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
 ):
-    crud.add_book_to_chosen_shelf(db, book_in, shelf_in)
+    # Get the user's TBR shelf
+    shelves = crud.get_custom_shelves(db, current_user.end_user_id)
+    for shelf in shelves:
+        if shelf.shelf_name == shelf_name:
+            return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf)
+
+    return None
 
 
 @app.get("/shelves/tbr")
