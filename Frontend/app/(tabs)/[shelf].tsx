@@ -73,7 +73,7 @@ const ShelfDetails = () => {
       />
 
       <ScrollView>
-        {books && books.map((book, index) => (
+        {books.map((book, index) => (
           <ShelfBook
             key={index}
             shelf_name={shelf_name}
@@ -82,7 +82,7 @@ const ShelfDetails = () => {
             authors={book.authors}
             description={book.description}
             number_of_pages={book.number_of_pages}
-            category={book.category}
+            categories={book.categories}
             published_date={book.published_date}
           />
         ))}

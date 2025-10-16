@@ -28,6 +28,7 @@ const SearchedBookDetails = () => {
     shelves,
   } = useLocalSearchParams();
   const authorList = authors.toString().split(",");
+  const categoryList = categories.toString().split(",");
   const listRegex = /{(.*?)}/;
   const rgex = /\{[^{}]*\}/;
 
@@ -42,7 +43,7 @@ const SearchedBookDetails = () => {
       authors: authorList,
       description: description as string,
       number_of_pages: numOfPages as unknown as number,
-      category: categories as string[],
+      categories: categoryList,
       published_date: publishedDate as string,
     };
 

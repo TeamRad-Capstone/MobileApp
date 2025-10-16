@@ -20,7 +20,7 @@ const ShelfBook = ({
   authors,
   description,
   number_of_pages,
-  category,
+  categories,
   published_date,
 }: ShelfBookProps) => {
   const [shelves, setShelves] = useState([]);
@@ -48,6 +48,8 @@ const ShelfBook = ({
     }
   };
 
+  {/** Make sure i change how this is used.**/}
+  let id = 0;
   return (
     <View style={styles.container}>
       <Link
@@ -78,11 +80,13 @@ const ShelfBook = ({
         <Text numberOfLines={1} style={styles.author}>
           {number_of_pages} Pages
         </Text>
-        {category && (
+
           <Text numberOfLines={1} style={styles.genre}>
-            {category[0]}
+            {categories?.map((category) => (
+            <Text key={++id}>{category}</Text>
+              ))}
           </Text>
-        )}
+
         <Dropdown
           maxHeight={60}
           iconColor={"white"}

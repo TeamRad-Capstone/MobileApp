@@ -63,7 +63,7 @@ const SearchBook = ({
       authors: authors,
       description: description,
       number_of_pages: numOfPages,
-      category: categories,
+      categories: categories,
       published_date: publishedDate,
     };
 

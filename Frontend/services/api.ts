@@ -14,7 +14,7 @@ export type Book = {
   authors: string[];
   description: string;
   number_of_pages: number;
-  category: string[];
+  categories: string[];
   published_date: string;
 };
 
@@ -132,7 +132,7 @@ const addToShelf = async (
     authors,
     description,
     number_of_pages,
-    category,
+    categories,
     published_date,
   }: Book,
   shelf_id: number,
@@ -173,7 +173,7 @@ const addToShelf = async (
         authors: authors,
         description: description,
         number_of_pages: number_of_pages,
-        categories: category,
+        categories: categories,
         published_date: published_date,
     }),
   });
