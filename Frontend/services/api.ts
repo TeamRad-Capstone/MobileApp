@@ -26,7 +26,7 @@ const testConnection = async () => {
       method: "GET",
     });
     if (!response.ok) {
-      throw new Error("Failed to fetch reponse");
+      throw new Error("Failed to fetch response");
     }
 
     const result = await response.json();
@@ -44,27 +44,24 @@ const createUser = async (
 ) => {
   const endpoint = hostedUrl + "/register/";
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email,
-        username: username,
-        password: password,
-      }),
-    });
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, username, password }),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log(result);
-  } catch (error: any) {
-    console.log("Something is happening");
-    console.error(error.message);
+  if (!response.ok) {
+    let message = `Response status: ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.detail) message = typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail);
+    } catch {}
+    throw new Error(message);
   }
+
+  const result = await response.json();
+  console.log(result);
+  return result;
 };
 
 const createShelf = async (name: string) => {
@@ -157,7 +154,7 @@ const addToShelf = async (
       endpoint += "/shelves/read";
       break;
     default: // Custom shelf
-      endpoint += "/shelves/custom";
+      endpoint += `/shelves/custom/${shelf_name}`
       break;
   }
 
@@ -171,7 +168,6 @@ const addToShelf = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      book_in: {
         google_book_id: google_book_id,
         title: title,
         authors: authors,
@@ -179,12 +175,6 @@ const addToShelf = async (
         number_of_pages: number_of_pages,
         categories: category,
         published_date: published_date,
-      },
-      shelf_in: {
-        shelf_id: shelf_id,
-        end_user_id: user_id,
-        shelf_name: shelf_name,
-      },
     }),
   });
 
