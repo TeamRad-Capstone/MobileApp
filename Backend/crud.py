@@ -1,8 +1,10 @@
 from typing import Any
+from warnings import catch_warnings
 
 from fastapi import HTTPException
 from pydantic import EmailStr
 from sqlalchemy import Row
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select, update
 
 import models
@@ -90,36 +92,50 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                 to_read_shelf_id=shelf_id,
                 book_id=found_book.book_id
             )
-            db.add(add_book)
-            db.commit()
-            db.refresh(add_book)
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500, detail="This book already exists in this shelf")
         case models.Dropped_Shelf:
             print("This is to be added to the dropped shelf")
             add_book = models.Dropped_Shelf_Book(
                 dropped_shelf_id=shelf_id,
                 book_id=found_book.book_id
             )
-            db.add(add_book)
-            db.commit()
-            db.refresh(add_book)
-        case models.Current_Shelf:
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
             print("This is to be added to the current shelf")
             add_book = models.Current_Shelf_Book(
                 current_shelf_id=shelf_id,
                 book_id=found_book.book_id
             )
-            db.add(add_book)
-            db.commit()
-            db.refresh(add_book)
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
         case models.Read_Shelf:
             print("This is to be added to the read shelf")
             add_book = models.Read_Shelf_Book(
                 read_shelf_id=shelf_id,
                 book_id=found_book.book_id
             )
-            db.add(add_book)
-            db.commit()
-            db.refresh(add_book)
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
         case models.Custom_Shelf:
             print("This is to be added to the custom shelf")
             statement = select(Read_Shelf_Book).where(
@@ -127,19 +143,27 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                 Read_Shelf_Book.read_shelf_id == shelf_id
             )
             book_in_read_shelf = db.exec(statement).first()
-            
+
             # If it is not in the read book shelve
             if not book_in_read_shelf:
                 add_book = models.Read_Shelf_Book(
                     read_shelf_id=shelf_id.shelf_id,
                     book_id=found_book.book_id
                 )
-                db.add(add_book)
-                db.commit()
-                db.refresh(add_book)
-                add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                try:
+                    db.add(add_book)
+                    db.commit()
+                    db.refresh(add_book)
+                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                except IntegrityError as e:
+                    raise HTTPException(status_code=500,
+                                        detail="This book already exists in this shelf")
             else:
-                add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                try:
+                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                except IntegrityError as e:
+                    raise HTTPException(status_code=500,
+                                        detail="This book already exists in this shelf")
         case _:
             raise HTTPException(status_code=400, detail="Unknown shelf type")
 
