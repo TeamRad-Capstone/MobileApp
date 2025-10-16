@@ -181,6 +181,7 @@ const addToShelf = async (
   if (!response.ok) {
     console.log(`Cannot add book`);
     console.log(`Response status: ${response.status}`);
+    throw new Error(`Book is already in shelf: ${shelf_name}`);
   }
 };
 
