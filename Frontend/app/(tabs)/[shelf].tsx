@@ -73,7 +73,7 @@ const ShelfDetails = () => {
       />
 
       <ScrollView>
-        {books.map((book, index) => (
+        {books && books.map((book, index) => (
           <ShelfBook
             key={index}
             shelf_name={shelf_name}
