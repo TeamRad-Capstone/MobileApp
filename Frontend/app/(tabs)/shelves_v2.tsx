@@ -12,6 +12,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useEffect, useState } from "react";
 import { Shelf, getCustomShelves, getDefaultShelves, createShelf } from "@/services/api";
 import DefaultShelf from "@/components/DefaultShelf";
+import { useIsFocused } from "@react-navigation/core";
 
 const Shelves = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -21,20 +22,24 @@ const Shelves = () => {
   const [shelfTitle, setShelfTitle] = useState("");
   const [refreshShelves, setRefreshShelves] = useState(false);
 
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    const loadShelves = async () => {
-      try {
-        const customList = await getCustomShelves();
-        const list = await getDefaultShelves();
-        setDefaultShelves(list);
-        setShelves(customList);
-      } catch (error: any) {
-        console.log("Error while retrieving custom shelves");
-        console.error(error);
-      }
-    };
-    loadShelves();
-  }, [refreshShelves]);
+    if (isFocused) {
+      const loadShelves = async () => {
+        try {
+          const customList = await getCustomShelves();
+          const list = await getDefaultShelves();
+          setDefaultShelves(list);
+          setShelves(customList);
+        } catch (error: any) {
+          console.log("Error while retrieving custom shelves");
+          console.error(error);
+        }
+      };
+      loadShelves();
+    }
+  }, [refreshShelves, isFocused]);
 
   const handleModalOpen = () => {
     setShelfTitle("");
