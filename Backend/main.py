@@ -177,33 +177,49 @@ def get_books_from_current_shelf(
 ):
     return crud.get_books(db, current_user.end_user_id, models.Current_Shelf())
 
+
 # PROMPT: can you make fastapi endpoints for reading goals so i can create, view, update, and delete them for the logged-in user? i also want endpoints for all goals, active goals, and completed goals, using my sqlmodel models readinggoalcreate, readinggoalupdate, and readinggoalread
 @app.post("/goals/", response_model=models.ReadingGoalRead)
 def create_goal(goal_in: models.ReadingGoalCreate, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.create_reading_goal(db, current_user.end_user_id, goal_in)
 
+
 @app.get("/goals/me", response_model=list[models.ReadingGoalRead])
 def get_my_goals(db: Session = Depends(database.get_session),
                  current_user: models.End_User = Depends(get_current_user)):
     return crud.get_reading_goals(db, current_user.end_user_id)
+
 
 @app.get("/goals/active", response_model=list[models.ReadingGoalRead])
 def get_active_goals(db: Session = Depends(database.get_session),
                      current_user: models.End_User = Depends(get_current_user)):
     return crud.get_active_goals(db, current_user.end_user_id)
 
+
 @app.get("/goals/completed", response_model=list[models.ReadingGoalRead])
 def get_completed_goals(db: Session = Depends(database.get_session),
                         current_user: models.End_User = Depends(get_current_user)):
     return crud.get_completed_goals(db, current_user.end_user_id)
+
 
 @app.put("/goals/{goal_id}", response_model=models.ReadingGoalRead)
 def update_goal(goal_id: int, goal_in: models.ReadingGoalUpdate, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.update_reading_goal(db, current_user.end_user_id, goal_id, goal_in)
 
+
 @app.delete("/goals/{goal_id}")
 def delete_goal(goal_id: int, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.delete_reading_goal(db, current_user.end_user_id, goal_id)
+
+
+@app.put("/shelves/custom/{shelf_name}/{new_shelf_name}")
+def update_shelf(
+        shelf_name: str,
+        new_shelf_name: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.update_custom_shelf_name(db, current_user.end_user_id, shelf_name, new_shelf_name)
