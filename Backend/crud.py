@@ -351,3 +351,23 @@ def delete_reading_goal(db: Session, user_id: int, goal_id: int):
     db.delete(goal)
     db.commit()
     return {"message": "Goal deleted"}
+
+
+def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_shelf_name: str):
+    statement = select(Custom_Shelf).where(
+        Custom_Shelf.end_user_id == user_id and
+        Custom_Shelf.shelf_name == shelf_name
+    )
+    shelf = db.exec(statement).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+
+    shelf.shelf_name = new_shelf_name
+    print("SHELF NEW NAME IS :", new_shelf_name)
+    try :
+        db.add(shelf)
+        db.commit()
+        db.refresh(shelf)
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Shelf name already exists for user")
+    return new_shelf_name
