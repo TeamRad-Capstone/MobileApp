@@ -9,11 +9,12 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProgressLine from "@/components/ProgressLine";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Dropdown } from "react-native-element-dropdown";
 import shelfBook from "@/components/ShelfBook";
+import { getBookUpcomingValue } from "@/services/api";
 
 const ShelfBook = () => {
   const {
@@ -29,7 +30,6 @@ const ShelfBook = () => {
     description,
   } = useLocalSearchParams();
   const tabBarHeight = useBottomTabBarHeight();
-  const [ratingAvailable, setRatingAvailable] = useState(false);
 
   const readPages = Number.parseInt(pagesRead as string);
   const numberOfPages = Number.parseInt(numOfPages as string);
@@ -53,6 +53,27 @@ const ShelfBook = () => {
 
   const authorList = authors.toString().split(",");
   console.log(shelvesList);
+
+  const [upcoming, setUpcoming] = useState("Mark as Upcoming");
+
+  useEffect(() => {
+    const getValueOfBook = async() => {
+      const value = await getBookUpcomingValue(shelfBook as string)
+      if (value > 0) {
+        setUpcoming("Upcoming")
+      } else {
+        setUpcoming("Mark as Upcoming")
+      }
+    }
+    getValueOfBook()
+  }, [shelfBook]);
+
+  const handleUpcoming = () =>{
+    if (upcoming === "Mark as Upcoming") {
+      // handle adding an upcoming value to that book
+      console.log("Trying to add an upcoming value to book")
+    }
+  }
   return (
     <SafeAreaView
       style={{
@@ -81,6 +102,11 @@ const ShelfBook = () => {
               <Text>{ratingText}</Text>
             </View>
           )}
+        {shelfName === "Want to Read" && (
+          <Pressable style={styles.upcoming} onPress={handleUpcoming}>
+            <Text style={styles.upcomingText}>{upcoming}</Text>
+          </Pressable>
+        )}
       </View>
       <View style={styles.book}>
         <View style={styles.bookOverview}>
@@ -124,7 +150,6 @@ const ShelfBook = () => {
             onChange={(item) => {
               // handleAdd(item);
             }}
-            // value={chosenShelf}
             placeholder={"Move to Shelf"}
           />
         </View>
@@ -151,7 +176,7 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontFamily: "Agbalumo",
-    fontSize: 14,
+    fontSize: 16,
     color: "white",
     textAlign: "center",
     marginVertical: "auto",
@@ -240,14 +265,19 @@ const styles = StyleSheet.create({
   bookDetailsScroll: {
     height: 115,
   },
-  // bookDetails: {
-  //   flexDirection: "column",
-  //   width: "45%",
-  // },
-  // bookTitle: {
-  //   fontFamily: "Agbalumo",
-  //   fontSize: 24,
-  // },
+  upcoming: {
+    backgroundColor: "#985325",
+    borderRadius: 20,
+    height: 30,
+    width: "40%",
+  },
+  upcomingText:{
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+    color: "white",
+    marginVertical: "auto",
+    textAlign: "center",
+  },
   bookInfoText: {
     fontFamily: "Agbalumo",
     fontSize: 16,
