@@ -80,7 +80,7 @@ const createShelf = async (name: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      shelf_name: name,
+      shelf_name: name.trim()
     }),
   });
   if (!response.ok) {
