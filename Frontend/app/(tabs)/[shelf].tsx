@@ -13,9 +13,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import SearchBar from "@/components/SearchBar";
-import { Book, editShelfName, getBooksFromShelf } from "@/services/api";
+import { Book, deleteCustomShelf, editShelfName, getBooksFromShelf } from "@/services/api";
 import ShelfBook from "@/components/ShelfBook";
 import { router } from "expo-router";
+import { useIsFocused } from "@react-navigation/core";
 
 const ShelfDetails = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -30,6 +31,9 @@ const ShelfDetails = () => {
   const [shelfTitle, setShelfTitle] = useState("");
   const [changedTitle, setChangedTitle] = useState(false);
 
+  // React navigation - core library
+  const isFocused = useIsFocused();
+
   const searchInShelf = () => {
     console.log("searching for book in shelf");
   };
@@ -37,21 +41,23 @@ const ShelfDetails = () => {
   const [books, setBooks] = useState<Book[]>([]);
 
   useEffect(() => {
-    const loadBooks = async () => {
-      try {
-        const allBooks = await getBooksFromShelf(
-          shelf_id,
-          end_user_id,
-          shelf_name,
-        );
-        setBooks(allBooks);
-      } catch (error: any) {
-        console.log("Error while retrieving books");
-        console.error(error);
-      }
-    };
-    loadBooks()
-  }, [end_user_id, shelf_id, shelf_name, title]);
+    if (isFocused) {
+      const loadBooks = async () => {
+        try {
+          const allBooks = await getBooksFromShelf(
+            shelf_id,
+            end_user_id,
+            shelf_name,
+          );
+          setBooks(allBooks);
+        } catch (error: any) {
+          console.log("Error while retrieving books");
+          console.error(error);
+        }
+      };
+      loadBooks()
+    }
+  }, [end_user_id, shelf_id, shelf_name, title, isFocused]);
 
   // Check if shelf name and not a custom shelf from api
   const checkIfDefaultShelf = () => {
@@ -90,6 +96,12 @@ const ShelfDetails = () => {
       setShelfTitle("");
     }
   };
+
+  const handleDeletion = async () => {
+    console.log("Current Shelf Id: ", shelf_id)
+    await deleteCustomShelf(shelf_name)
+    router.replace("/shelves_v2")
+  }
   return (
     <SafeAreaView
       style={{
@@ -134,7 +146,7 @@ const ShelfDetails = () => {
         ))}
 
         {!checkIfDefaultShelf() && (
-          <Pressable style={styles.deleteBtn}>
+          <Pressable style={styles.deleteBtn} onPress={handleDeletion}>
             <Text style={styles.deleteBtnText}>Delete Shelf</Text>
           </Pressable>
         )}

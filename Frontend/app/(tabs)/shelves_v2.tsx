@@ -22,6 +22,7 @@ const Shelves = () => {
   const [shelfTitle, setShelfTitle] = useState("");
   const [refreshShelves, setRefreshShelves] = useState(false);
 
+  // React navigation - core library
   const isFocused = useIsFocused();
 
   useEffect(() => {
