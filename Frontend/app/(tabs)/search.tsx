@@ -65,7 +65,7 @@ const Search = () => {
       }
 
       const data = await response.json();
-      let numOfBooks = data.items.length;
+      let numOfBooks = data.items?.length;
       for (const books of data.items) {
         let newBook = {
           coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
