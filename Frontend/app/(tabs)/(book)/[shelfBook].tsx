@@ -19,7 +19,6 @@ const ShelfBook = () => {
   const {
     shelfName,
     pagesRead,
-    target,
     rating,
     shelfBook,
     title,
@@ -35,8 +34,7 @@ const ShelfBook = () => {
   const readPages = Number.parseInt(pagesRead as string);
   const numberOfPages = Number.parseInt(numOfPages as string);
   console.log("READ PAGES: " + numberOfPages);
-  // const userRating = Number.parseInt(rating as string);
-  let userRating = 2.5;
+  let userRating = Number.parseFloat(rating as string);
   let ratingText = [];
   for (let i = 1; i <= 5; i++) {
     if (userRating - i >= 0) {
@@ -54,14 +52,6 @@ const ShelfBook = () => {
   const shelvesList = JSON.parse(allShelves as string);
 
   const authorList = authors.toString().split(",");
-  // const shelvesList = Array.from(allShelves, (shelf) => {
-  //
-  // })
-  // console.log(shelvesList);
-  // const shelvesList = JSON.parse(allShelves as string);
-  // const shelvesList = Array.from(allShelves, (shelf) => {
-  //
-  // })
   console.log(shelvesList);
   return (
     <SafeAreaView
@@ -73,18 +63,24 @@ const ShelfBook = () => {
         paddingBottom: tabBarHeight,
       }}
     >
-      <View style={{marginHorizontal: 30}}>
-        <ProgressLine progress={readPages} target={numberOfPages} />
-      </View>
+      {(shelfName === "Currently Reading" || shelfName === "Dropped") && (
+        <View style={{ marginHorizontal: 30 }}>
+          <ProgressLine progress={readPages} target={numberOfPages} />
+        </View>
+      )}
       <View style={styles.tagRatingView}>
         <View style={styles.tag}>
           <Text style={styles.nameText} numberOfLines={1}>
             {shelfName}
           </Text>
         </View>
-        <View style={{ flexDirection: "row", gap: 14 }}>
-          <Text>{ratingText}</Text>
-        </View>
+        {shelfName !== "Currently Reading" &&
+          shelfName !== "Dropped" &&
+          shelfName !== "Want to Read" && (
+            <View style={{ flexDirection: "row", gap: 14 }}>
+              <Text>{ratingText}</Text>
+            </View>
+          )}
       </View>
       <View style={styles.book}>
         <View style={styles.bookOverview}>
@@ -109,9 +105,11 @@ const ShelfBook = () => {
           >
             <Text style={styles.genre}>{categories}</Text>
           </ScrollView>
-          <Pressable style={styles.logBtn}>
-            <Text style={styles.logText}>Log</Text>
-          </Pressable>
+          {shelfName !== "Want to Read" && (
+            <Pressable style={styles.logBtn}>
+              <Text style={styles.logText}>Log</Text>
+            </Pressable>
+          )}
           <Dropdown
             maxHeight={60}
             iconColor={"white"}
@@ -132,7 +130,9 @@ const ShelfBook = () => {
         </View>
       </View>
       <Text style={styles.descriptionHeader}>Description</Text>
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 , marginHorizontal: 30}}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 20, marginHorizontal: 30 }}
+      >
         <Text style={styles.desc}>{description}</Text>
       </ScrollView>
     </SafeAreaView>
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   tagRatingView: {
     marginVertical: 20,
     marginHorizontal: 30,
+    width: "100%",
     flexDirection: "row",
     gap: 20,
     alignItems: "center",
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   bookCover: {
-    width: 165,
+    width: 175,
     height: 275,
     borderRadius: 30,
   },
