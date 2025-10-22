@@ -131,20 +131,23 @@ const ShelfDetails = () => {
       />
 
       <ScrollView>
-        {books.map((book, index) => (
-          <ShelfBook
-            key={index}
-            shelf_name={shelf_name}
-            google_book_id={book.google_book_id}
-            title={book.title}
-            authors={book.authors}
-            description={book.description}
-            number_of_pages={book.number_of_pages}
-            categories={book.categories}
-            published_date={book.published_date}
-          />
-        ))}
-
+        {Array.isArray(books) && books.length > 0 ? (
+          books.map((book) => (
+            <ShelfBook
+              key={book.google_book_id}
+              shelf_name={shelf_name}
+              google_book_id={book.google_book_id}
+              title={book.title}
+              authors={book.authors}
+              description={book.description}
+              number_of_pages={book.number_of_pages}
+              categories={book.categories}
+              published_date={book.published_date}
+            />
+          ))
+        ) : (
+          <Text style={styles.emptyShelfTxt}>Empty Shelf</Text>
+        )}
         {!checkIfDefaultShelf() && (
           <Pressable style={styles.deleteBtn} onPress={handleDeletion}>
             <Text style={styles.deleteBtnText}>Delete Shelf</Text>
@@ -251,4 +254,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
   },
+  emptyShelfTxt: {
+    fontFamily: "Agbalumo",
+    fontSize: 20,
+    textAlign: "center",
+
+  }
 });
