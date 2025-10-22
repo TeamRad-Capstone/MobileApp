@@ -337,6 +337,28 @@ const editShelfName = async (shelf_name: string, new_shelf_name: string) => {
   return await response.json();
 };
 
+const deleteCustomShelf = async (shelf_name: string) => {
+  const endpoint = hostedUrl + `/shelves/custom/${shelf_name}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+  console.log('Attempting to delete shelf:', endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return true;
+}
+
 export {
   testConnection,
   createUser,
@@ -349,5 +371,6 @@ export {
   getMyReadingGoals,
   updateReadingGoal,
   deleteReadingGoal,
-  editShelfName
+  editShelfName,
+  deleteCustomShelf
 };
