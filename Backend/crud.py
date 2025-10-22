@@ -284,17 +284,19 @@ def get_books(
 def get_custom_books(
         db: Session,
         owner_id: int,
-        shelf_name
+        shelf_name: str
 ):
     # Find the custom shelf by name and owner
     custom_shelf_statement = select(Custom_Shelf).where(
-        Custom_Shelf.end_user_id == owner_id,
+        # Custom_Shelf.end_user_id == owner_id and
         Custom_Shelf.shelf_name == shelf_name
     )
     custom_shelf = db.exec(custom_shelf_statement).first()
 
     if not custom_shelf:
         raise HTTPException(status_code=404, detail="Custom shelf not found")
+    else:
+        print("Custom shelf found", custom_shelf.shelf_name)
 
     # Get the read shelf books associated with this custom shelf
     read_shelf_books = custom_shelf.shelf_books
@@ -306,7 +308,7 @@ def get_custom_books(
             Book.book_id == book.book_id
         )
         book_to_add = db.exec(statement).first()
-        if book:
+        if book_to_add:
             books.append(book_to_add)
     return books
 
