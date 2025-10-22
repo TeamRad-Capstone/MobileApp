@@ -134,7 +134,7 @@ const ShelfDetails = () => {
         {books.map((book, index) => (
           <ShelfBook
             key={index}
-            shelf_name={currentShelfName}
+            shelf_name={shelf_name}
             google_book_id={book.google_book_id}
             title={book.title}
             authors={book.authors}

@@ -56,10 +56,17 @@ const ShelfBook = ({
     <View style={styles.container}>
       <Link
         href={{
-          pathname: "/(tabs)/(shelf)/[bookinfo]",
+          pathname: "/(tabs)/(book)/[shelfBook]",
           params: {
-            bookinfo: title,
-            bookId: google_book_id,
+            shelfBook: google_book_id,
+            title: title,
+            authors: authors,
+            description: description,
+            numOfPages: number_of_pages,
+            categories: categories,
+            published_date: published_date,
+            shelfName: shelf_name,
+            allShelves: JSON.stringify(allShelves),
           },
         }}
       >
