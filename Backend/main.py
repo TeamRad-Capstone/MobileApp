@@ -1,9 +1,23 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session
+from starlette.middleware.cors import CORSMiddleware
+
 import models, crud, security, database
 
 app = FastAPI()
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @app.on_event("startup")
@@ -131,10 +145,11 @@ def add_book_to_custom_shelf(
     # Get the user's TBR shelf
     shelves = crud.get_custom_shelves(db, current_user.end_user_id)
     for shelf in shelves:
+        print("THIS IS THE SHELF NAME", shelf.shelf_name)
         if shelf.shelf_name == shelf_name:
-            return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf)
+            return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf.shelf_id)
 
-    return None
+    raise HTTPException(status_code=404, detail="Custom shelf not found")
 
 
 @app.get("/shelves/tbr")
@@ -223,3 +238,14 @@ def update_shelf(
         current_user: models.End_User = Depends(get_current_user),
 ):
     return crud.update_custom_shelf_name(db, current_user.end_user_id, shelf_name, new_shelf_name)
+
+
+@app.delete("/shelves/custom/{shelf_name}")
+def delete_custom_shelf(
+        shelf_name: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    print("I AM TRYING TO DELETE A CUSTOM SHELF (delete on an id)")
+
+    return crud.delete_custom_shelf(db, current_user.end_user_id, shelf_name)
