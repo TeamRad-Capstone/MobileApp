@@ -48,10 +48,6 @@ const ShelfBook = ({
     }
   };
 
-  {
-    /** Make sure i change how this is used.**/
-  }
-  let id = 0;
   return (
     <View style={styles.container}>
       <Link
@@ -67,6 +63,8 @@ const ShelfBook = ({
             published_date: published_date,
             shelfName: shelf_name,
             allShelves: JSON.stringify(allShelves),
+            pagesRead: 100,
+            rating: 1.5
           },
         }}
       >
@@ -89,8 +87,8 @@ const ShelfBook = ({
             {number_of_pages} Pages
           </Text>
           <Text numberOfLines={1} style={styles.genre}>
-            {categories?.map((category) => (
-              <Text key={++id}>{category}</Text>
+            {categories?.map((category, index) => (
+              <Text key={index}>{category}</Text>
             ))}
           </Text>
         </View>
