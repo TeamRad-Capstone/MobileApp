@@ -359,6 +359,27 @@ const deleteCustomShelf = async (shelf_name: string) => {
   return true;
 }
 
+const getBookUpcomingValue = async (google_book_id: string) => {
+  console.log('Attempting to get upcoming value for book:', google_book_id);
+  const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  const data = await response.json();
+  console.log('Data: ', data);
+  return data;
+}
 export {
   testConnection,
   createUser,
@@ -372,5 +393,6 @@ export {
   updateReadingGoal,
   deleteReadingGoal,
   editShelfName,
-  deleteCustomShelf
+  deleteCustomShelf,
+  getBookUpcomingValue
 };
