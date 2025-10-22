@@ -146,7 +146,9 @@ def add_book_to_custom_shelf(
     shelves = crud.get_custom_shelves(db, current_user.end_user_id)
     for shelf in shelves:
         print("THIS IS THE SHELF NAME", shelf.shelf_name)
-        if shelf.shelf_name == shelf_name:
+        print("THIS IS THE SHELF NAME TO MATCH", shelf_name)
+        if shelf.shelf_name.strip() == shelf_name.strip():
+            print("SHELF HAS BEEN MATCHED")
             return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf.shelf_id)
 
     raise HTTPException(status_code=404, detail="Custom shelf not found")
@@ -182,7 +184,7 @@ def get_books_from_current_shelf(
         current_user: models.End_User = Depends(get_current_user),
 
 ):
-    return crud.get_custom_books(db, current_user.end_user_id, name)
+    return crud.get_custom_books(db, current_user.end_user_id, name.strip())
 
 
 @app.get("/shelves/current")
