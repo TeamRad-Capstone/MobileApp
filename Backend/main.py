@@ -251,3 +251,12 @@ def delete_custom_shelf(
     print("I AM TRYING TO DELETE A CUSTOM SHELF (delete on an id)")
 
     return crud.delete_custom_shelf(db, current_user.end_user_id, shelf_name)
+
+
+@app.get("/shelves/upcoming/{google_book_id}")
+def get_upcoming_of_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.get_upcoming_value(db, current_user.end_user_id, google_book_id)
