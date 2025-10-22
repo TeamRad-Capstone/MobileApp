@@ -402,3 +402,16 @@ def delete_custom_shelf(db: Session, user_id: int, shelf_name: str):
         raise HTTPException(status_code=404, detail="Shelf not found")
     db.delete(shelf)
     db.commit()
+
+
+def get_upcoming_value(db:Session, user_id:int, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+    statement = select(To_Read_Shelf_Book.upcoming_book_value).where(
+        To_Read_Shelf_Book.book_id == book_id and
+        To_Read_Shelf_Book.end_user_id == user_id
+    )
+    value = db.exec(statement).first()
+    return value
