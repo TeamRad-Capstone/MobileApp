@@ -13,6 +13,10 @@ from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_
     Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
 from security import get_password_hash
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 def get_user_by_email(db: Session, email: str):
     statement = select(End_User).where(End_User.email == email)
     return db.exec(statement).first()
@@ -71,7 +75,7 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
     # Add the book to database if not found
     if not found_book:
         # does it not read the book properly
-        add_book = models.Book(
+        add_to_book = models.Book(
             google_book_id=book.google_book_id,
             title=book.title,
             authors=book.authors,
@@ -80,9 +84,9 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
             categories=book.categories,
             published_date=book.published_date,
         )
-        db.add(add_book)
+        db.add(add_to_book)
         db.commit()
-        db.refresh(add_book)
+        db.refresh(add_to_book)
         found_book = db.exec(found_book_statement).first()
 
     match (type(shelf)):
@@ -138,29 +142,43 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                                     detail="This book already exists in this shelf")
         case models.Custom_Shelf:
             print("This is to be added to the custom shelf")
+
+            find_shelf_id_statement = select(Custom_Shelf.end_user_id).where(
+                Custom_Shelf.shelf_id == shelf_id
+            )
+            read_shelf_statement = select(Read_Shelf.shelf_id).where(
+                Read_Shelf.end_user_id == find_shelf_id_statement
+            )
+            read_shelf_id = db.exec(read_shelf_statement).first()
+
             statement = select(Read_Shelf_Book).where(
                 Read_Shelf_Book.book_id == found_book.book_id and
-                Read_Shelf_Book.read_shelf_id == shelf_id
+                Read_Shelf_Book.read_shelf_id == read_shelf_id
             )
             book_in_read_shelf = db.exec(statement).first()
 
-            # If it is not in the read book shelve
+            # If it is not in the read bookshelf, then
+            # get the shelf id for the user which we are connected to
+            # find_shelf_id_statement = select(Custom_Shelf.end_user_id).where(
+            #     Custom_Shelf.shelf_id == shelf_id
+            # )
+            # read_shelf_id = db.exec(find_shelf_id_statement).first()
             if not book_in_read_shelf:
                 add_book = models.Read_Shelf_Book(
-                    read_shelf_id=shelf_id.shelf_id,
+                    read_shelf_id=read_shelf_id,
                     book_id=found_book.book_id
                 )
-                try:
-                    db.add(add_book)
-                    db.commit()
-                    db.refresh(add_book)
-                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
-                except IntegrityError as e:
-                    raise HTTPException(status_code=500,
-                                        detail="This book already exists in this shelf")
+                # try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+                add_to_custom(db, found_book.book_id, read_shelf_id, shelf_id)
+                # except IntegrityError as e:
+                #     raise HTTPException(status_code=500,
+                #                         detail="This book already exists in this shelf")
             else:
                 try:
-                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                    add_to_custom(db, found_book.book_id, read_shelf_id, shelf_id)
                 except IntegrityError as e:
                     raise HTTPException(status_code=500,
                                         detail="This book already exists in this shelf")
@@ -179,8 +197,7 @@ def add_to_custom(db, book_id, read_shelf_id, custom_shelf):
     print("READ SHELF STMT: ", read_shelf_book_statement)
 
     custom_shelf_statement = select(Custom_Shelf).where(
-        Custom_Shelf.shelf_id == custom_shelf.shelf_id and
-        Custom_Shelf.shelf_name == custom_shelf.shelf_name
+        Custom_Shelf.shelf_id == custom_shelf
     )
 
     print("CUSTOM SHELF STMT: ", custom_shelf_statement)
@@ -371,3 +388,15 @@ def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_she
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Shelf name already exists for user")
     return new_shelf_name
+
+
+def delete_custom_shelf(db: Session, user_id: int, shelf_name: str):
+    statement = select(Custom_Shelf).where(
+        Custom_Shelf.end_user_id == user_id,
+        Custom_Shelf.shelf_name == shelf_name
+    )
+    shelf = db.exec(statement).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    db.delete(shelf)
+    db.commit()
