@@ -260,3 +260,12 @@ def get_upcoming_of_book(
         current_user: models.End_User = Depends(get_current_user),
 ):
     return crud.get_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.post("/shelves/upcoming/{google_book_id}")
+def add_upcoming_of_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.add_upcoming_value(db, current_user.end_user_id, google_book_id)

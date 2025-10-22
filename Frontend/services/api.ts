@@ -380,6 +380,28 @@ const getBookUpcomingValue = async (google_book_id: string) => {
   console.log('Data: ', data);
   return data;
 }
+
+const addBookUpcomingValue = async (google_book_id: string) => {
+  console.log('Attempting to add upcoming value for book:', google_book_id);
+  const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return true;
+}
+
 export {
   testConnection,
   createUser,
@@ -394,5 +416,6 @@ export {
   deleteReadingGoal,
   editShelfName,
   deleteCustomShelf,
-  getBookUpcomingValue
+  getBookUpcomingValue,
+  addBookUpcomingValue,
 };

@@ -409,9 +409,45 @@ def get_upcoming_value(db:Session, user_id:int, google_book_id):
         Book.google_book_id == google_book_id
     )
     book_id = db.exec(book_id_statement).first()
+
     statement = select(To_Read_Shelf_Book.upcoming_book_value).where(
         To_Read_Shelf_Book.book_id == book_id and
         To_Read_Shelf_Book.end_user_id == user_id
     )
     value = db.exec(statement).first()
     return value
+
+
+def add_upcoming_value(db:Session, user_id:int, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+
+    shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
+        To_Read_Shelf.end_user_id == user_id
+    )
+
+    to_read_shelf_id = db.exec(shelf_id_statement).first()
+    statement = select(To_Read_Shelf_Book).where(To_Read_Shelf_Book.to_read_shelf_id == to_read_shelf_id)
+    books = db.exec(statement).all()
+    highest_value = 0
+    for book in books:
+        print("I AM IN BOOK LOOP")
+        print(book.upcoming_book_value)
+        if book.upcoming_book_value is type(None):
+            break
+        elif book.upcoming_book_value is type(int):
+            if book.upcoming_book_value > highest_value:
+                highest_value = book.upcoming_book_value
+
+    find_book_statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.book_id == book_id and
+        To_Read_Shelf_Book.end_user_id == user_id
+    )
+    find_book = db.exec(find_book_statement).first()
+    find_book.upcoming_book_value = highest_value + 1
+    db.add(find_book)
+    db.commit()
+    db.refresh(find_book)
+    return highest_value

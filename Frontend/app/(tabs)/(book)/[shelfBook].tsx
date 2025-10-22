@@ -14,7 +14,7 @@ import ProgressLine from "@/components/ProgressLine";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Dropdown } from "react-native-element-dropdown";
 import shelfBook from "@/components/ShelfBook";
-import { getBookUpcomingValue } from "@/services/api";
+import { addBookUpcomingValue, getBookUpcomingValue } from "@/services/api";
 
 const ShelfBook = () => {
   const {
@@ -68,10 +68,11 @@ const ShelfBook = () => {
     getValueOfBook()
   }, [shelfBook]);
 
-  const handleUpcoming = () =>{
+  const handleUpcoming = async () =>{
     if (upcoming === "Mark as Upcoming") {
       // handle adding an upcoming value to that book
       console.log("Trying to add an upcoming value to book")
+      await addBookUpcomingValue(shelfBook as string)
     }
   }
   return (
