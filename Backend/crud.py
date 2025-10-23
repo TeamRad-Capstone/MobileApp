@@ -13,6 +13,10 @@ from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_
     Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
 from security import get_password_hash
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 def get_user_by_email(db: Session, email: str):
     statement = select(End_User).where(End_User.email == email)
     return db.exec(statement).first()
@@ -71,7 +75,7 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
     # Add the book to database if not found
     if not found_book:
         # does it not read the book properly
-        add_book = models.Book(
+        add_to_book = models.Book(
             google_book_id=book.google_book_id,
             title=book.title,
             authors=book.authors,
@@ -80,9 +84,9 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
             categories=book.categories,
             published_date=book.published_date,
         )
-        db.add(add_book)
+        db.add(add_to_book)
         db.commit()
-        db.refresh(add_book)
+        db.refresh(add_to_book)
         found_book = db.exec(found_book_statement).first()
 
     match (type(shelf)):
@@ -98,6 +102,19 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                 db.refresh(add_book)
             except IntegrityError as e:
                 raise HTTPException(status_code=500, detail="This book already exists in this shelf")
+        case models.Current_Shelf:
+            print("This is to be added to the current shelf")
+            add_book = models.Current_Shelf_Book(
+                current_shelf_id=shelf_id,
+                book_id=found_book.book_id
+            )
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
         case models.Dropped_Shelf:
             print("This is to be added to the dropped shelf")
             add_book = models.Dropped_Shelf_Book(
@@ -138,33 +155,48 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                                     detail="This book already exists in this shelf")
         case models.Custom_Shelf:
             print("This is to be added to the custom shelf")
+
+            find_shelf_id_statement = select(Custom_Shelf.end_user_id).where(
+                Custom_Shelf.shelf_id == shelf_id
+            )
+            read_shelf_statement = select(Read_Shelf.shelf_id).where(
+                Read_Shelf.end_user_id == find_shelf_id_statement
+            )
+            read_shelf_id = db.exec(read_shelf_statement).first()
+
             statement = select(Read_Shelf_Book).where(
                 Read_Shelf_Book.book_id == found_book.book_id and
-                Read_Shelf_Book.read_shelf_id == shelf_id
+                Read_Shelf_Book.read_shelf_id == read_shelf_id
             )
             book_in_read_shelf = db.exec(statement).first()
 
-            # If it is not in the read book shelve
+            # If it is not in the read bookshelf, then
+            # get the shelf id for the user which we are connected to
+            # find_shelf_id_statement = select(Custom_Shelf.end_user_id).where(
+            #     Custom_Shelf.shelf_id == shelf_id
+            # )
+            # read_shelf_id = db.exec(find_shelf_id_statement).first()
             if not book_in_read_shelf:
                 add_book = models.Read_Shelf_Book(
-                    read_shelf_id=shelf_id.shelf_id,
+                    read_shelf_id=read_shelf_id,
                     book_id=found_book.book_id
                 )
-                try:
-                    db.add(add_book)
-                    db.commit()
-                    db.refresh(add_book)
-                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
-                except IntegrityError as e:
-                    raise HTTPException(status_code=500,
-                                        detail="This book already exists in this shelf")
+                # try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+                add_to_custom(db, found_book.book_id, read_shelf_id, shelf_id)
+                # except IntegrityError as e:
+                #     raise HTTPException(status_code=500,
+                #                         detail="This book already exists in this shelf")
             else:
                 try:
-                    add_to_custom(db, found_book.book_id, shelf_id.shelf_id, shelf_id)
+                    add_to_custom(db, found_book.book_id, read_shelf_id, shelf_id)
                 except IntegrityError as e:
                     raise HTTPException(status_code=500,
                                         detail="This book already exists in this shelf")
         case _:
+            print("I AM HERE")
             raise HTTPException(status_code=400, detail="Unknown shelf type")
 
     return book
@@ -179,8 +211,7 @@ def add_to_custom(db, book_id, read_shelf_id, custom_shelf):
     print("READ SHELF STMT: ", read_shelf_book_statement)
 
     custom_shelf_statement = select(Custom_Shelf).where(
-        Custom_Shelf.shelf_id == custom_shelf.shelf_id and
-        Custom_Shelf.shelf_name == custom_shelf.shelf_name
+        Custom_Shelf.shelf_id == custom_shelf
     )
 
     print("CUSTOM SHELF STMT: ", custom_shelf_statement)
@@ -267,17 +298,19 @@ def get_books(
 def get_custom_books(
         db: Session,
         owner_id: int,
-        shelf_name
+        shelf_name: str
 ):
     # Find the custom shelf by name and owner
     custom_shelf_statement = select(Custom_Shelf).where(
-        Custom_Shelf.end_user_id == owner_id,
+        # Custom_Shelf.end_user_id == owner_id and
         Custom_Shelf.shelf_name == shelf_name
     )
     custom_shelf = db.exec(custom_shelf_statement).first()
 
     if not custom_shelf:
         raise HTTPException(status_code=404, detail="Custom shelf not found")
+    else:
+        print("Custom shelf found", custom_shelf.shelf_name)
 
     # Get the read shelf books associated with this custom shelf
     read_shelf_books = custom_shelf.shelf_books
@@ -289,7 +322,7 @@ def get_custom_books(
             Book.book_id == book.book_id
         )
         book_to_add = db.exec(statement).first()
-        if book:
+        if book_to_add:
             books.append(book_to_add)
     return books
 
@@ -351,3 +384,104 @@ def delete_reading_goal(db: Session, user_id: int, goal_id: int):
     db.delete(goal)
     db.commit()
     return {"message": "Goal deleted"}
+
+
+def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_shelf_name: str):
+    statement = select(Custom_Shelf).where(
+        Custom_Shelf.end_user_id == user_id and
+        Custom_Shelf.shelf_name == shelf_name
+    )
+    shelf = db.exec(statement).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+
+    shelf.shelf_name = new_shelf_name
+    print("SHELF NEW NAME IS :", new_shelf_name)
+    try :
+        db.add(shelf)
+        db.commit()
+        db.refresh(shelf)
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Shelf name already exists for user")
+    return new_shelf_name
+
+
+def delete_custom_shelf(db: Session, user_id: int, shelf_name: str):
+    statement = select(Custom_Shelf).where(
+        Custom_Shelf.end_user_id == user_id,
+        Custom_Shelf.shelf_name == shelf_name
+    )
+    shelf = db.exec(statement).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    db.delete(shelf)
+    db.commit()
+
+
+def get_upcoming_value(db: Session, user_id: int, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+
+    statement = select(To_Read_Shelf_Book.upcoming_book_value).where(
+        To_Read_Shelf_Book.book_id == book_id and
+        To_Read_Shelf_Book.end_user_id == user_id
+    )
+    value = db.exec(statement).first()
+    return value
+
+
+def add_upcoming_value(db: Session, user_id: int, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+
+    shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
+        To_Read_Shelf.end_user_id == user_id
+    )
+
+    to_read_shelf_id = db.exec(shelf_id_statement).first()
+    statement = select(To_Read_Shelf_Book).where(To_Read_Shelf_Book.to_read_shelf_id == to_read_shelf_id)
+    books = db.exec(statement).all()
+    highest_value = 0
+    for book in books:
+        print("I AM IN BOOK LOOP")
+        print(book.upcoming_book_value)
+        if book.upcoming_book_value is type(None):
+            break
+        elif book.upcoming_book_value is type(int):
+            if book.upcoming_book_value > highest_value:
+                highest_value = book.upcoming_book_value
+
+    find_book_statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.book_id == book_id and
+        To_Read_Shelf_Book.end_user_id == user_id
+    )
+    find_book = db.exec(find_book_statement).first()
+    find_book.upcoming_book_value = highest_value + 1
+    db.add(find_book)
+    db.commit()
+    db.refresh(find_book)
+    return highest_value
+
+
+def get_upcoming_books(db: Session, user_id: int):
+    tbr_shelf = get_tbr_shelf(db, user_id)
+
+    statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.to_read_shelf_id == tbr_shelf.shelf_id
+    )
+    books = db.exec(statement).all()
+
+    print("BOOKS ARE : ", books)
+    books_to_return = []
+    for book in books:
+        print("BOOK VALUE TYPE IS : ", type(book.upcoming_book_value))
+        if type(book.upcoming_book_value) is int:
+            statement = select(Book).where(Book.book_id == book.book_id)
+            book = db.exec(statement).first()
+            books_to_return.append(book)
+            print("BOOKS TO RETURN ARE : ", book)
+    return books_to_return

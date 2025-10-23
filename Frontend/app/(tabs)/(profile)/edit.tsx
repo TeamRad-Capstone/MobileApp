@@ -10,11 +10,12 @@ import {
   Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AuthContext } from "@/contexts/AuthContext";
+import { getUsername } from "@/services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -22,7 +23,7 @@ const Edit = () => {
   const router = useRouter();
 
   const [usernameVisible, setUsernameVisible] = useState(false);
-  const [username, setUsername] = useState("BookLovah");
+  const [username, setUsername] = useState("");
   const [usernameChange, setUsernameChange] = useState("");
 
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -35,6 +36,12 @@ const Edit = () => {
 
   const { signout } = useContext(AuthContext);
 
+  useEffect(() => {
+    const loadStatic = async () => {
+      setUsername(await getUsername());
+    };
+    loadStatic();
+  }, [])
   const handleProfileImg = () => {
     console.log("Changing Profile Image");
     // Make a request to backend API to retrieve options

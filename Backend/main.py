@@ -1,9 +1,23 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session
+from starlette.middleware.cors import CORSMiddleware
+
 import models, crud, security, database
 
 app = FastAPI()
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @app.on_event("startup")
@@ -102,11 +116,11 @@ def add_book_to_dropped_shelf(
 @app.post("/shelves/current")
 def add_book_to_current_shelf(
         book_in: models.Book,
-
         db: Session = Depends(database.get_session),
         current_user: models.End_User = Depends(get_current_user)
 ):
     shelf = crud.get_current_shelf(db, current_user.end_user_id)
+    print("TEST THE THING TO ADD TO CURRENT SHELF: ", shelf.shelf_id)
     return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
@@ -131,10 +145,13 @@ def add_book_to_custom_shelf(
     # Get the user's TBR shelf
     shelves = crud.get_custom_shelves(db, current_user.end_user_id)
     for shelf in shelves:
-        if shelf.shelf_name == shelf_name:
-            return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf)
+        print("THIS IS THE SHELF NAME", shelf.shelf_name)
+        print("THIS IS THE SHELF NAME TO MATCH", shelf_name)
+        if shelf.shelf_name.strip() == shelf_name.strip():
+            print("SHELF HAS BEEN MATCHED")
+            return crud.add_book_to_chosen_shelf(db, book_in, models.Custom_Shelf(), shelf.shelf_id)
 
-    return None
+    raise HTTPException(status_code=404, detail="Custom shelf not found")
 
 
 @app.get("/shelves/tbr")
@@ -167,7 +184,7 @@ def get_books_from_current_shelf(
         current_user: models.End_User = Depends(get_current_user),
 
 ):
-    return crud.get_custom_books(db, current_user.end_user_id, name)
+    return crud.get_custom_books(db, current_user.end_user_id, name.strip())
 
 
 @app.get("/shelves/current")
@@ -177,33 +194,91 @@ def get_books_from_current_shelf(
 ):
     return crud.get_books(db, current_user.end_user_id, models.Current_Shelf())
 
+
 # PROMPT: can you make fastapi endpoints for reading goals so i can create, view, update, and delete them for the logged-in user? i also want endpoints for all goals, active goals, and completed goals, using my sqlmodel models readinggoalcreate, readinggoalupdate, and readinggoalread
 @app.post("/goals/", response_model=models.ReadingGoalRead)
 def create_goal(goal_in: models.ReadingGoalCreate, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.create_reading_goal(db, current_user.end_user_id, goal_in)
 
+
 @app.get("/goals/me", response_model=list[models.ReadingGoalRead])
 def get_my_goals(db: Session = Depends(database.get_session),
                  current_user: models.End_User = Depends(get_current_user)):
     return crud.get_reading_goals(db, current_user.end_user_id)
+
 
 @app.get("/goals/active", response_model=list[models.ReadingGoalRead])
 def get_active_goals(db: Session = Depends(database.get_session),
                      current_user: models.End_User = Depends(get_current_user)):
     return crud.get_active_goals(db, current_user.end_user_id)
 
+
 @app.get("/goals/completed", response_model=list[models.ReadingGoalRead])
 def get_completed_goals(db: Session = Depends(database.get_session),
                         current_user: models.End_User = Depends(get_current_user)):
     return crud.get_completed_goals(db, current_user.end_user_id)
+
 
 @app.put("/goals/{goal_id}", response_model=models.ReadingGoalRead)
 def update_goal(goal_id: int, goal_in: models.ReadingGoalUpdate, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.update_reading_goal(db, current_user.end_user_id, goal_id, goal_in)
 
+
 @app.delete("/goals/{goal_id}")
 def delete_goal(goal_id: int, db: Session = Depends(database.get_session),
                 current_user: models.End_User = Depends(get_current_user)):
     return crud.delete_reading_goal(db, current_user.end_user_id, goal_id)
+
+
+@app.put("/shelves/custom/{shelf_name}/{new_shelf_name}")
+def update_shelf(
+        shelf_name: str,
+        new_shelf_name: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.update_custom_shelf_name(db, current_user.end_user_id, shelf_name, new_shelf_name)
+
+
+@app.delete("/shelves/custom/{shelf_name}")
+def delete_custom_shelf(
+        shelf_name: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    print("I AM TRYING TO DELETE A CUSTOM SHELF (delete on an id)")
+
+    return crud.delete_custom_shelf(db, current_user.end_user_id, shelf_name)
+
+
+@app.get("/shelves/upcoming/{google_book_id}")
+def get_upcoming_of_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.get_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.post("/shelves/upcoming/{google_book_id}")
+def add_upcoming_of_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.add_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.get("/username/me")
+def read_username(current_user: models.End_User = Depends(get_current_user)):
+    return current_user.username
+
+
+@app.get("/shelves/upcomingBooks")
+def retrieve_upcoming_books(
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.get_upcoming_books(db, current_user.end_user_id)

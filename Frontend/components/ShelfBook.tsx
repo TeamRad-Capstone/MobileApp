@@ -48,18 +48,23 @@ const ShelfBook = ({
     }
   };
 
-  {
-    /** Make sure i change how this is used.**/
-  }
-  let id = 0;
   return (
     <View style={styles.container}>
       <Link
         href={{
-          pathname: "/(tabs)/(shelf)/[bookinfo]",
+          pathname: "/(tabs)/(book)/[shelfBook]",
           params: {
-            bookinfo: title,
-            bookId: google_book_id,
+            shelfBook: google_book_id,
+            title: title,
+            authors: authors,
+            description: description,
+            numOfPages: number_of_pages,
+            categories: categories,
+            published_date: published_date,
+            shelfName: shelf_name,
+            allShelves: JSON.stringify(allShelves),
+            pagesRead: 100,
+            rating: 1.5
           },
         }}
       >
@@ -82,8 +87,8 @@ const ShelfBook = ({
             {number_of_pages} Pages
           </Text>
           <Text numberOfLines={1} style={styles.genre}>
-            {categories?.map((category) => (
-              <Text key={++id}>{category}</Text>
+            {categories?.map((category, index) => (
+              <Text key={index}>{category}</Text>
             ))}
           </Text>
         </View>
