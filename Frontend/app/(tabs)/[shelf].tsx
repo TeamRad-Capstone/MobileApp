@@ -75,9 +75,9 @@ const ShelfDetails = () => {
     setShelfTitle("");
   };
 
-  const handleEditSave = async () => {
+  const handleEditSave = async (new_name: string) => {
     try {
-      if (!shelfTitle.trim() || shelfTitle === currentShelfName) {
+      if (new_name === currentShelfName) {
         handleEditClose();
         alert("Cannot use empty name or same name");
         return;
@@ -162,7 +162,7 @@ const ShelfDetails = () => {
             onChangeText={(e) => setShelfTitle(e)}
             style={styles.editInput}
           />
-          <Pressable style={styles.saveBtn} onPress={handleEditSave}>
+          <Pressable style={styles.saveBtn} onPress={() => handleEditSave(shelfTitle.trim())}>
             <Text style={styles.saveBtnText}>Save</Text>
           </Pressable>
           <Pressable style={styles.cancelBtn} onPress={handleEditClose}>
@@ -256,6 +256,5 @@ const styles = StyleSheet.create({
     fontFamily: "Agbalumo",
     fontSize: 20,
     textAlign: "center",
-
   }
 });
