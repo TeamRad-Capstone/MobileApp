@@ -1,18 +1,19 @@
 import CurrentBook from "@/components/CurrentBook";
 import UpcomingBook from "@/components/UpcomingBook";
-import booksData from "@/data/books.json";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { useEffect, useState } from "react";
+import { getBooksFromShelf, getUpcomingBooks, getUsername } from "@/services/api";
 
 const Profile = () => {
   const tabBarHeight = useBottomTabBarHeight();
 
   // Placeholder username until fetched from API
-  const username = "TesterUsernameIfItWereToBeHellaLongAndNeverStop";
+  const [username, setUsername] = useState("");
+  const [currentBooks, setCurrentBooks] = useState<any[]>([]);
+  const [upcomingBooks, setUpcomingBooks] = useState<any[]>([]);
 
   const router = useRouter();
 
@@ -24,6 +25,25 @@ const Profile = () => {
   const handleLog = () => {
     console.log("Navigating to log for clicked book");
   };
+
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        const retrievedUsername = await getUsername();
+        setUsername(retrievedUsername);
+        const retrievedBooks = await getBooksFromShelf("Currently Reading");
+        setCurrentBooks(retrievedBooks);
+        console.log("Getting books");
+        const retrievedUpcomingBooks = await getUpcomingBooks();
+        setUpcomingBooks(retrievedUpcomingBooks);
+        console.log("Done getting books")
+      } catch (error: any) {
+        console.log("Error while retrieving username and books");
+        console.error(error);
+      }
+    };
+    loadBooks();
+  }, []);
   // const [modalVisible, setModalVisible] = useState(false);
   // const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   // const [streak, setStreak] = useState(0);
@@ -82,82 +102,73 @@ const Profile = () => {
   // };
 
   return (
-      <SafeAreaView
-        style={{
-          paddingBottom: tabBarHeight,
-          flex: 1,
-          backgroundColor: "#F4F4E6",
-        }}
-      >
-        <ScrollView>
-          <Text style={styles.title}>Welcome to Rad Reads!</Text>
+    <SafeAreaView
+      style={{
+        paddingBottom: tabBarHeight,
+        flex: 1,
+        backgroundColor: "#F6F2EA",
+      }}
+    >
+      <ScrollView>
+        <Text style={styles.title}>Welcome to Rad Reads!</Text>
 
-          <Pressable style={styles.topContainer} onPress={handleProfile}>
-            <Image
-              style={styles.profileImage}
-              source={require("@/assets/images/profileImg.jpg")}
+        <Pressable style={styles.topContainer} onPress={handleProfile}>
+          <Image
+            style={styles.profileImage}
+            source={require("@/assets/images/profileImg.jpg")}
+          />
+          <Text numberOfLines={1} style={styles.textStyle}>
+            {username}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.topContainer}
+          onPress={() => router.push("/(tabs)/(profile)/stats")}
+        >
+          <Image
+            style={styles.profileImage}
+            source={require("@/assets/icons/graph.png")}
+          />
+          <Text style={styles.textStyle}>Statistics</Text>
+        </Pressable>
+
+        <Text style={styles.headerText}>Current Reads</Text>
+        <ScrollView
+          horizontal={true}
+          contentContainerStyle={styles.currentContainer}
+        >
+          {currentBooks?.map((currentBook, index) => (
+            <CurrentBook
+              key={index}
+              title={currentBook.title}
+              authors={currentBook.authors}
+              googleBookId={currentBook.google_book_id}
+              progress={100}
+              numOfPages={currentBook.number_of_pages}
+              description={currentBook.description}
+              categories={currentBook.categories}
+              publishedDate={currentBook.published_date}
             />
-            <Text numberOfLines={1} style={styles.textStyle}>
-              {username}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.topContainer}
-            onPress={() => router.push("/(tabs)/(profile)/stats")}
-          >
-            <Image
-              style={styles.profileImage}
-              source={require("@/assets/icons/graph.png")}
-            />
-            <Text style={styles.textStyle}>Statistics</Text>
-          </Pressable>
-
-          <Text style={styles.headerText}>Current Reads</Text>
-          <ScrollView
-            horizontal={true}
-            contentContainerStyle={styles.currentContainer}
-          >
-            {booksData.shelfBooks
-              .filter((sb) => sb.shelfId === 2)
-              .map((sb) => {
-                const book = booksData.books.find((b) => b.id === sb.bookId);
-                if (!book) return null;
-                return (
-                  <CurrentBook
-                    key={book.id}
-                    title={book.title}
-                    author={book.authors}
-                    coverUrl={book.coverUrl}
-                    description={book.description}
-                    numOfPages={book.numOfPages}
-                    category={book.category}
-                    publishedDate={book.publishedDate}
-                    context="currentBook"
-                    progress={70}
-                  />
-                );
-              })}
-          </ScrollView>
-
-          <Text style={styles.headerText}>Upcoming Books</Text>
-          <ScrollView
-            horizontal={true}
-            contentContainerStyle={styles.upcomingContainer}
-          >
-            {booksData.books
-              .filter((book) => !booksData.currentlyReading.includes(book.id))
-              .map((book) => (
-                <UpcomingBook
-                  key={book.id}
-                  title={book.title}
-                  author={book.authors}
-                  coverUrl={book.coverUrl}
-                />
-              ))}
-          </ScrollView>
+          ))}
         </ScrollView>
-      </SafeAreaView>
+
+        <Text style={styles.headerText}>Upcoming Books</Text>
+        <ScrollView
+          horizontal={true}
+          contentContainerStyle={styles.upcomingContainer}
+        >
+          {upcomingBooks.map((upcomingBook, index) => (
+            <UpcomingBook
+              key={index}
+              title={upcomingBook.title}
+              author={upcomingBook.authors}
+              coverUrl={upcomingBook.google_book_id}
+            />
+          ))}
+        </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
