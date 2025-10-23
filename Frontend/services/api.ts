@@ -190,8 +190,6 @@ const addToShelf = async (
 };
 
 const getBooksFromShelf = async (
-  shelf_id: number,
-  user_id: number,
   shelf_name: string,
 ) => {
   let endpoint = hostedUrl;
@@ -402,6 +400,50 @@ const addBookUpcomingValue = async (google_book_id: string) => {
   return true;
 }
 
+const getUsername = async () => {
+  const endpoint = hostedUrl + "/username/me"
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  console.log('Returning username');
+  return await response.json();
+}
+
+const getUpcomingBooks = async () => {
+  const endpoint = hostedUrl + "/shelves/upcomingBooks"
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  console.log('Returning upcoming books');
+  const data = await response.json();
+  console.log('Data: ', data);
+  return data;
+}
+
 export {
   testConnection,
   createUser,
@@ -418,4 +460,6 @@ export {
   deleteCustomShelf,
   getBookUpcomingValue,
   addBookUpcomingValue,
+  getUsername,
+  getUpcomingBooks
 };
