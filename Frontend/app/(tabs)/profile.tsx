@@ -6,6 +6,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { getBooksFromShelf, getUpcomingBooks, getUsername } from "@/services/api";
+import { useIsFocused } from "@react-navigation/core";
 
 const Profile = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -26,24 +27,28 @@ const Profile = () => {
     console.log("Navigating to log for clicked book");
   };
 
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    const loadBooks = async () => {
-      try {
-        const retrievedUsername = await getUsername();
-        setUsername(retrievedUsername);
-        const retrievedBooks = await getBooksFromShelf("Currently Reading");
-        setCurrentBooks(retrievedBooks);
-        console.log("Getting books");
-        const retrievedUpcomingBooks = await getUpcomingBooks();
-        setUpcomingBooks(retrievedUpcomingBooks);
-        console.log("Done getting books")
-      } catch (error: any) {
-        console.log("Error while retrieving username and books");
-        console.error(error);
-      }
-    };
-    loadBooks();
-  }, []);
+    if (isFocused) {
+      const loadBooks = async () => {
+        try {
+          const retrievedUsername = await getUsername();
+          setUsername(retrievedUsername);
+          const retrievedBooks = await getBooksFromShelf("Currently Reading");
+          setCurrentBooks(retrievedBooks);
+          console.log("Getting books");
+          const retrievedUpcomingBooks = await getUpcomingBooks();
+          setUpcomingBooks(retrievedUpcomingBooks);
+          console.log("Done getting books")
+        } catch (error: any) {
+          console.log("Error while retrieving username and books");
+          console.error(error);
+        }
+      };
+      loadBooks();
+    }
+  }, [isFocused]);
   // const [modalVisible, setModalVisible] = useState(false);
   // const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   // const [streak, setStreak] = useState(0);
