@@ -45,9 +45,7 @@ const ShelfDetails = () => {
       const loadBooks = async () => {
         try {
           const allBooks = await getBooksFromShelf(
-            shelf_id,
-            end_user_id,
-            shelf_name,
+            shelf_name
           );
           setBooks(allBooks);
         } catch (error: any) {
