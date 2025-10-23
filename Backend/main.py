@@ -116,11 +116,11 @@ def add_book_to_dropped_shelf(
 @app.post("/shelves/current")
 def add_book_to_current_shelf(
         book_in: models.Book,
-
         db: Session = Depends(database.get_session),
         current_user: models.End_User = Depends(get_current_user)
 ):
     shelf = crud.get_current_shelf(db, current_user.end_user_id)
+    print("TEST THE THING TO ADD TO CURRENT SHELF: ", shelf.shelf_id)
     return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
@@ -269,3 +269,16 @@ def add_upcoming_of_book(
         current_user: models.End_User = Depends(get_current_user),
 ):
     return crud.add_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.get("/username/me")
+def read_username(current_user: models.End_User = Depends(get_current_user)):
+    return current_user.username
+
+
+@app.get("/shelves/upcomingBooks")
+def retrieve_upcoming_books(
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.get_upcoming_books(db, current_user.end_user_id)
