@@ -118,14 +118,12 @@ const ShelfBook = () => {
             style={styles.bookCover}
           />
         </View>
-        <View style={styles.bookDetails}>
-          <View style={styles.bookDetailsScroll}>
+        <ScrollView style={styles.bookDetails}>
             <Text style={styles.bookTitle}>{title}</Text>
             <Text style={styles.bookInfoText}>
               {authorList.map((author) => `${author}\n`)}
             </Text>
-          </View>
-        </View>
+        </ScrollView>
       </View>
       <Text style={styles.bookPageText}>{numberOfPages} Pages</Text>
       <View style={{ marginHorizontal: 30, gap: 8 }}>
@@ -201,7 +199,7 @@ const styles = StyleSheet.create({
   },
   bookDetails: {
     height: 275,
-    width: "40%",
+    marginRight: 40,
   },
   bookTitle: {
     fontFamily: "Agbalumo",
