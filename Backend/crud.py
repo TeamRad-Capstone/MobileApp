@@ -102,6 +102,19 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                 db.refresh(add_book)
             except IntegrityError as e:
                 raise HTTPException(status_code=500, detail="This book already exists in this shelf")
+        case models.Current_Shelf:
+            print("This is to be added to the current shelf")
+            add_book = models.Current_Shelf_Book(
+                current_shelf_id=shelf_id,
+                book_id=found_book.book_id
+            )
+            try:
+                db.add(add_book)
+                db.commit()
+                db.refresh(add_book)
+            except IntegrityError as e:
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
         case models.Dropped_Shelf:
             print("This is to be added to the dropped shelf")
             add_book = models.Dropped_Shelf_Book(
@@ -183,6 +196,7 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                     raise HTTPException(status_code=500,
                                         detail="This book already exists in this shelf")
         case _:
+            print("I AM HERE")
             raise HTTPException(status_code=400, detail="Unknown shelf type")
 
     return book
@@ -404,7 +418,7 @@ def delete_custom_shelf(db: Session, user_id: int, shelf_name: str):
     db.commit()
 
 
-def get_upcoming_value(db:Session, user_id:int, google_book_id):
+def get_upcoming_value(db: Session, user_id: int, google_book_id):
     book_id_statement = select(Book.book_id).where(
         Book.google_book_id == google_book_id
     )
@@ -418,7 +432,7 @@ def get_upcoming_value(db:Session, user_id:int, google_book_id):
     return value
 
 
-def add_upcoming_value(db:Session, user_id:int, google_book_id):
+def add_upcoming_value(db: Session, user_id: int, google_book_id):
     book_id_statement = select(Book.book_id).where(
         Book.google_book_id == google_book_id
     )
@@ -451,3 +465,23 @@ def add_upcoming_value(db:Session, user_id:int, google_book_id):
     db.commit()
     db.refresh(find_book)
     return highest_value
+
+
+def get_upcoming_books(db: Session, user_id: int):
+    tbr_shelf = get_tbr_shelf(db, user_id)
+
+    statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.to_read_shelf_id == tbr_shelf.shelf_id
+    )
+    books = db.exec(statement).all()
+
+    print("BOOKS ARE : ", books)
+    books_to_return = []
+    for book in books:
+        print("BOOK VALUE TYPE IS : ", type(book.upcoming_book_value))
+        if type(book.upcoming_book_value) is int:
+            statement = select(Book).where(Book.book_id == book.book_id)
+            book = db.exec(statement).first()
+            books_to_return.append(book)
+            print("BOOKS TO RETURN ARE : ", book)
+    return books_to_return
