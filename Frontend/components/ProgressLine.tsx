@@ -7,7 +7,9 @@ type ProgressLineProps = {
 
 const ProgressLine = ({ progress, target }: ProgressLineProps) => {
   // calculates progress percentage
-  const progressPercent = (progress / target) * 100;
+  let progressPercent = (progress / target) * 100;
+  progressPercent = Math.min(progressPercent, 100)
+
 
   return (
     <View style={styles.container}>
