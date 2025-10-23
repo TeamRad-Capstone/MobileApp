@@ -7,6 +7,7 @@ import models, crud, security, database
 
 app = FastAPI()
 origins = [
+    "*"
     "http://localhost",
     "http://localhost:8080",
 ]
