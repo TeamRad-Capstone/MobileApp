@@ -71,11 +71,11 @@ const CurrentBook = ({
           uri: `https://books.google.com/books?id=${googleBookId}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
         }} />
         <View style={styles.details}>
-          <Text numberOfLines={1} style={styles.detailsTitle}>
+          <Text numberOfLines={3} style={styles.detailsTitle}>
             {title}
           </Text>
-          <Text numberOfLines={1} style={styles.detailsAuthor}>
-            {authors}
+          <Text numberOfLines={2} style={styles.detailsAuthor}>
+            {authors.map((author) => `${author}\n`)}
           </Text>
           <ProgressLine progress={progress} target={numOfPages} />
           <Pressable style={styles.button}>
@@ -96,16 +96,16 @@ const styles = StyleSheet.create({
   },
   container: {
     flexDirection: "row",
-    width: 280,
-    height: 180,
+    width: 270,
+    height: 230,
     backgroundColor: "#CFC6AE",
     borderRadius: 20,
     padding: 10,
     alignItems: "center",
   },
   imageCover: {
-    width: 100,
-    height: 160,
+    width: 125,
+    height: 200,
     borderRadius: 15,
   },
   details: {
