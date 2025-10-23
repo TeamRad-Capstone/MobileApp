@@ -1,56 +1,81 @@
 import ProgressLine from "@/components/ProgressLine";
 import { Link } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { getCustomShelves, getDefaultShelves } from "@/services/api";
+import { useEffect, useState } from "react";
 
 type CurrentBookProps = {
   title: string;
-  author: string;
-  coverUrl: string;
+  authors: string[];
+  googleBookId: string;
   progress: number;
   numOfPages: number;
   description: string;
-  category: string;
+  categories: string;
   publishedDate: string;
   context?: string;
 };
 
 const CurrentBook = ({
   title,
-  author,
-  coverUrl,
+  authors,
+  googleBookId,
   progress,
   numOfPages,
   description,
-  category,
+  categories,
   publishedDate,
   context,
 }: CurrentBookProps) => {
+
+  const [shelvesList, setShelvesList] = useState([]);
+  const [customList, setCustomList] = useState([]);
+  const [allShelves, setAllShelves] = useState([]);
+
+  useEffect(() => {
+    const loadShelves = async () => {
+      try {
+        setShelvesList(await getDefaultShelves());
+        setCustomList(await getCustomShelves());
+        setAllShelves([...shelvesList, ...customList]);
+
+      } catch (error: any) {
+        console.log("Error while retrieving default shelves");
+        console.error(error);
+      }
+    }
+    loadShelves();
+  }, []);
+
   return (
     <Link
       href={{
-        pathname: "/(tabs)/(shelf)/[bookinfo]",
+        pathname: "/(tabs)/(book)/[shelfBook]",
         params: {
-          bookinfo: title,
-          coverUrl: coverUrl,
+          shelfBook: googleBookId,
+          shelfName: "Currently Reading",
+          pagesRead: 100,
+          rating: 1.5,
           title: title,
-          authors: author,
-          description: description,
+          authors: authors,
+          categories: categories,
+          allShelves: JSON.stringify(allShelves),
           numOfPages: numOfPages,
-          category: category,
-          publishedDate: publishedDate,
-          context: context,
+          description: description,
         },
       }}
       style={styles.linkWrapper}
     >
       <View style={styles.container}>
-        <Image style={styles.imageCover} source={{ uri: coverUrl }} />
+        <Image style={styles.imageCover} source={{
+          uri: `https://books.google.com/books?id=${googleBookId}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+        }} />
         <View style={styles.details}>
           <Text numberOfLines={1} style={styles.detailsTitle}>
             {title}
           </Text>
           <Text numberOfLines={1} style={styles.detailsAuthor}>
-            {author}
+            {authors}
           </Text>
           <ProgressLine progress={progress} target={numOfPages} />
           <Pressable style={styles.button}>
