@@ -66,7 +66,7 @@ const ShelfBook = () => {
       }
     };
     getValueOfBook();
-  }, [shelfBook]);
+  }, [shelfBook, upcoming]);
 
   const handleUpcoming = async () => {
     if (upcoming === "Mark as Upcoming") {
