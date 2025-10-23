@@ -57,24 +57,24 @@ const ShelfBook = () => {
   const [upcoming, setUpcoming] = useState("Mark as Upcoming");
 
   useEffect(() => {
-    const getValueOfBook = async() => {
-      const value = await getBookUpcomingValue(shelfBook as string)
+    const getValueOfBook = async () => {
+      const value = await getBookUpcomingValue(shelfBook as string);
       if (value > 0) {
-        setUpcoming("Upcoming")
+        setUpcoming("Upcoming");
       } else {
-        setUpcoming("Mark as Upcoming")
+        setUpcoming("Mark as Upcoming");
       }
-    }
-    getValueOfBook()
+    };
+    getValueOfBook();
   }, [shelfBook]);
 
-  const handleUpcoming = async () =>{
+  const handleUpcoming = async () => {
     if (upcoming === "Mark as Upcoming") {
       // handle adding an upcoming value to that book
-      console.log("Trying to add an upcoming value to book")
-      await addBookUpcomingValue(shelfBook as string)
+      console.log("Trying to add an upcoming value to book");
+      await addBookUpcomingValue(shelfBook as string);
     }
-  }
+  };
   return (
     <SafeAreaView
       style={{
@@ -119,41 +119,39 @@ const ShelfBook = () => {
           />
         </View>
         <View style={styles.bookDetails}>
-          <ScrollView style={styles.bookDetailsScroll}>
+          <View style={styles.bookDetailsScroll}>
             <Text style={styles.bookTitle}>{title}</Text>
             <Text style={styles.bookInfoText}>
               {authorList.map((author) => `${author}\n`)}
             </Text>
-          </ScrollView>
-          <Text style={styles.bookPageText}>{numberOfPages} Pages</Text>
-          <ScrollView
-            horizontal={true}
-            contentContainerStyle={styles.genreScroll}
-          >
-            <Text style={styles.genre}>{categories}</Text>
-          </ScrollView>
-          {shelfName !== "Want to Read" && (
-            <Pressable style={styles.logBtn}>
-              <Text style={styles.logText}>Log</Text>
-            </Pressable>
-          )}
-          <Dropdown
-            maxHeight={60}
-            iconColor={"white"}
-            style={styles.dropdown}
-            containerStyle={styles.dropdownContainer}
-            placeholderStyle={{ textAlign: "center", color: "white" }}
-            itemTextStyle={{ textAlign: "center", color: "white" }}
-            data={shelvesList}
-            fontFamily={"Agbalumo"}
-            labelField={"shelf_name"}
-            valueField={"shelf_id"}
-            onChange={(item) => {
-              // handleAdd(item);
-            }}
-            placeholder={"Move to Shelf"}
-          />
+          </View>
         </View>
+      </View>
+      <Text style={styles.bookPageText}>{numberOfPages} Pages</Text>
+      <View style={{ marginHorizontal: 30, gap: 8 }}>
+        <Text style={styles.genre}>{categories}</Text>
+
+        {shelfName !== "Want to Read" && (
+          <Pressable style={styles.logBtn}>
+            <Text style={styles.logText}>Log</Text>
+          </Pressable>
+        )}
+        <Dropdown
+          maxHeight={60}
+          iconColor={"white"}
+          style={styles.dropdown}
+          containerStyle={styles.dropdownContainer}
+          placeholderStyle={{ textAlign: "center", color: "white" }}
+          itemTextStyle={{ textAlign: "center", color: "white" }}
+          data={shelvesList}
+          fontFamily={"Agbalumo"}
+          labelField={"shelf_name"}
+          valueField={"shelf_id"}
+          onChange={(item) => {
+            // handleAdd(item);
+          }}
+          placeholder={"Move to Shelf"}
+        />
       </View>
       <Text style={styles.descriptionHeader}>Description</Text>
       <ScrollView
@@ -229,7 +227,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     textAlign: "center",
     height: 30,
-    marginVertical: 12,
   },
   logText: {
     fontFamily: "Agbalumo",
@@ -272,7 +269,7 @@ const styles = StyleSheet.create({
     height: 30,
     width: "40%",
   },
-  upcomingText:{
+  upcomingText: {
     fontFamily: "Agbalumo",
     fontSize: 16,
     color: "white",
@@ -285,7 +282,10 @@ const styles = StyleSheet.create({
   },
   bookPageText: {
     fontFamily: "Agbalumo",
-    fontSize: 14,
+    fontSize: 20,
+    marginLeft: 30,
+    width: 175,
+    textAlign: "center",
   },
   descriptionHeader: {
     paddingTop: 30,
