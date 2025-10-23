@@ -27,12 +27,12 @@ const SearchedBookDetails = () => {
     publishedDate,
     shelves,
   } = useLocalSearchParams();
-  const authorList = authors.toString().split(",");
-  const categoryList = categories.toString().split(",");
+  const authorList = authors?.toString().split(",");
+  const categoryList = categories?.toString().split(",");
   const listRegex = /{(.*?)}/;
   const rgex = /\{[^{}]*\}/;
 
-  const shelvesList = JSON.parse(shelves.toString());
+  const shelvesList = JSON.parse(shelves?.toString());
   console.log(shelvesList);
 
   const handleAdd = async (shelf: any) => {
@@ -82,7 +82,7 @@ const SearchedBookDetails = () => {
           <ScrollView style={styles.bookDetailsScroll}>
             <Text style={styles.bookTitle}>{title}</Text>
             <Text style={styles.bookInfoText}>
-              {authorList.map((author) => `${author}\n`)}
+              {authorList?.map((author) => `${author}\n`)}
             </Text>
           </ScrollView>
           <Text style={styles.bookPageText}>{numOfPages} Pages</Text>
