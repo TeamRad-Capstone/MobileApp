@@ -505,8 +505,8 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(To_Read_Shelf_Book).where(
-                To_Read_Shelf_Book.to_read_shelf_id == shelf_id and
-                To_Read_Shelf_Book.book_id == book_id
+                To_Read_Shelf_Book.book_id == book_id and
+                To_Read_Shelf_Book.to_read_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
             db.delete(shelf_book)
@@ -525,8 +525,8 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Dropped_Shelf_Book).where(
-                Dropped_Shelf_Book.dropped_shelf_id == shelf_id and
-                Dropped_Shelf_Book.book_id == book_id
+                Dropped_Shelf_Book.book_id == book_id and
+                Dropped_Shelf_Book.dropped_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
             db.delete(shelf_book)
@@ -545,8 +545,8 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Current_Shelf_Book).where(
-                Current_Shelf_Book.current_shelf_id == shelf_id and
-                Current_Shelf_Book.book_id == book_id
+                Current_Shelf_Book.book_id == book_id and
+                Current_Shelf_Book.current_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
             db.delete(shelf_book)
@@ -565,8 +565,8 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Read_Shelf_Book).where(
-                Read_Shelf_Book.read_shelf_id == shelf_id and
-                Read_Shelf_Book.book_id == book_id
+                Read_Shelf_Book.book_id == book_id and
+                Read_Shelf_Book.read_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
             db.delete(shelf_book)
