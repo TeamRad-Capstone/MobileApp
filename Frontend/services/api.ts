@@ -1,7 +1,8 @@
 import { getToken, setToken, TokenResponse } from "@/services/auth";
 
 // const hostedUrl = "http://10.0.2.2:8000";
-const hostedUrl = "http://10.0.0.133:8000";
+const hostedUrl = "http://10.0.0.135:8000";
+
 
 export type Shelf = {
   end_user_id: number;

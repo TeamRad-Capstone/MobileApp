@@ -13,18 +13,15 @@ from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_
     Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
 from security import get_password_hash
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 def get_user_by_email(db: Session, email: str):
-    statement = select(End_User).where(End_User.email == email)
+    statement = select(End_User).where(End_User.email == email.lower())
     return db.exec(statement).first()
 
 
 def create_user(db: Session, user_in: EndUserCreate) -> End_User:
     user = End_User(
-        email=user_in.email,
+        email=user_in.email.lower(),
         username=user_in.username,
         password_hash=get_password_hash(user_in.password),
     )
@@ -426,9 +423,14 @@ def get_upcoming_value(db: Session, user_id: int, google_book_id):
     )
     book_id = db.exec(book_id_statement).first()
 
+    shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
+        To_Read_Shelf.end_user_id == user_id
+    )
+    shelf_id = db.exec(shelf_id_statement).first()
+
     statement = select(To_Read_Shelf_Book.upcoming_book_value).where(
         To_Read_Shelf_Book.book_id == book_id and
-        To_Read_Shelf_Book.end_user_id == user_id
+        To_Read_Shelf_Book.to_read_shelf_id == shelf_id
     )
     value = db.exec(statement).first()
     return value
@@ -440,33 +442,22 @@ def add_upcoming_value(db: Session, user_id: int, google_book_id):
     )
     book_id = db.exec(book_id_statement).first()
 
+    # Only 1 to read shelf per user
     shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
         To_Read_Shelf.end_user_id == user_id
     )
 
     to_read_shelf_id = db.exec(shelf_id_statement).first()
-    statement = select(To_Read_Shelf_Book).where(To_Read_Shelf_Book.to_read_shelf_id == to_read_shelf_id)
+    statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.to_read_shelf_id == to_read_shelf_id)
     books = db.exec(statement).all()
-    highest_value = 0
-    for book in books:
-        print("I AM IN BOOK LOOP")
-        print(book.upcoming_book_value)
-        if book.upcoming_book_value is type(None):
-            break
-        elif book.upcoming_book_value is type(int):
-            if book.upcoming_book_value > highest_value:
-                highest_value = book.upcoming_book_value
 
-    find_book_statement = select(To_Read_Shelf_Book).where(
-        To_Read_Shelf_Book.book_id == book_id and
-        To_Read_Shelf_Book.end_user_id == user_id
-    )
-    find_book = db.exec(find_book_statement).first()
-    find_book.upcoming_book_value = highest_value + 1
-    db.add(find_book)
-    db.commit()
-    db.refresh(find_book)
-    return highest_value
+    for book in books:
+        if book.book_id == book_id:
+            book.upcoming_book_value = 1
+            db.add(book)
+            db.commit()
+            db.refresh(book)
 
 
 def get_upcoming_books(db: Session, user_id: int):
