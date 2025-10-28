@@ -64,7 +64,7 @@ def login(
 def read_users_me(current_user: models.End_User = Depends(get_current_user)):
     return current_user
 
-@app.post("/shelf/", response_model=models.Custom_Shelf)
+@app.post("/shelf/")
 def create_shelf(
     shelf_in: models.CustomShelfCreate,
     current_user: models.End_User = Depends(get_current_user),
@@ -283,3 +283,53 @@ def retrieve_upcoming_books(
         current_user: models.End_User = Depends(get_current_user)
 ):
     return crud.get_upcoming_books(db, current_user.end_user_id)
+
+
+@app.delete("/shelves/tbr/{shelf_name}/{google_book_id}")
+def delete_book_from_shelf(
+        shelf_name: str,
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_book(db, current_user.end_user_id, models.To_Read_Shelf(), shelf_name, google_book_id)
+
+
+@app.delete("/shelves/dropped/{shelf_name}/{google_book_id}")
+def delete_book_from_shelf(
+        shelf_name: str,
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_book(db, current_user.end_user_id, models.Dropped_Shelf(), shelf_name, google_book_id)
+
+@app.delete("/shelves/current/{shelf_name}/{google_book_id}")
+def delete_book_from_shelf(
+        shelf_name: str,
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_book(db, current_user.end_user_id, models.Current_Shelf(), shelf_name, google_book_id)
+
+
+@app.delete("/shelves/read/{shelf_name}/{google_book_id}")
+def delete_book_from_shelf(
+        shelf_name: str,
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_book(db, current_user.end_user_id, models.Read_Shelf(), shelf_name, google_book_id)
+
+
+@app.delete("/shelves/custom/{shelf_name}/{google_book_id}")
+def delete_book_from_shelf(
+        shelf_name: str,
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_book(db, current_user.end_user_id, models.Custom_Shelf(), shelf_name, google_book_id)
+
