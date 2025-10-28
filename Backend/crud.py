@@ -429,9 +429,8 @@ def get_upcoming_value(db: Session, user_id: int, google_book_id):
     shelf_id = db.exec(shelf_id_statement).first()
 
     statement = select(To_Read_Shelf_Book.upcoming_book_value).where(
-        To_Read_Shelf_Book.book_id == book_id and
-        To_Read_Shelf_Book.to_read_shelf_id == shelf_id
-    )
+        To_Read_Shelf_Book.book_id == book_id).where(
+        To_Read_Shelf_Book.to_read_shelf_id == shelf_id)
     value = db.exec(statement).first()
     return value
 
