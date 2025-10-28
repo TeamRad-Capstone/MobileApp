@@ -6,7 +6,7 @@ import {
   getCustomShelves,
   getDefaultShelves,
   Book,
-  Shelf,
+  Shelf, removeBookFromShelf
 } from "@/services/api";
 
 type ShelfBookProps = {
@@ -47,6 +47,10 @@ const ShelfBook = ({
       alert("Cannot move book to the same shelf");
     }
   };
+
+  const handleBookRemoval = () => {
+    removeBookFromShelf(shelf_name, google_book_id);
+  }
 
   return (
     <View style={styles.container}>
@@ -94,7 +98,7 @@ const ShelfBook = ({
         </View>
         <View style={styles.btmBookDetails}>
           {/*If there exist a progress, add the bar here*/}
-          <Pressable style={styles.removeBtn}>
+          <Pressable style={styles.removeBtn} onPress={handleBookRemoval}>
             <Text style={styles.removeTxt}>Remove</Text>
           </Pressable>
           <Dropdown
@@ -113,7 +117,7 @@ const ShelfBook = ({
             onChange={(item) => {
               handleMove(item);
             }}
-            placeholder={"Move to Shelf"}
+            placeholder={"Add to Shelf"}
           />
         </View>
       </View>
