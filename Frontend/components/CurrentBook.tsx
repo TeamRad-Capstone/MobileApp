@@ -27,25 +27,24 @@ const CurrentBook = ({
   publishedDate,
   context,
 }: CurrentBookProps) => {
-
   const [shelvesList, setShelvesList] = useState([]);
   const [customList, setCustomList] = useState([]);
-  const [allShelves, setAllShelves] = useState([]);
 
   useEffect(() => {
     const loadShelves = async () => {
       try {
-        setShelvesList(await getDefaultShelves());
-        setCustomList(await getCustomShelves());
-        setAllShelves([...shelvesList, ...customList]);
-
+        const customList = await getCustomShelves();
+        setCustomList(customList);
+        const list = await getDefaultShelves();
+        setShelvesList(list);
       } catch (error: any) {
-        console.log("Error while retrieving default shelves");
+        console.log("Error while retrieving custom shelves");
         console.error(error);
       }
-    }
+    };
     loadShelves();
   }, []);
+  const allShelves = [...shelvesList, ...customList];
 
   return (
     <Link
@@ -67,9 +66,12 @@ const CurrentBook = ({
       style={styles.linkWrapper}
     >
       <View style={styles.container}>
-        <Image style={styles.imageCover} source={{
-          uri: `https://books.google.com/books?id=${googleBookId}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
-        }} />
+        <Image
+          style={styles.imageCover}
+          source={{
+            uri: `https://books.google.com/books?id=${googleBookId}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+          }}
+        />
         <View style={styles.details}>
           <Text numberOfLines={3} style={styles.detailsTitle}>
             {title}
