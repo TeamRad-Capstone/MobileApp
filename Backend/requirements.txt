@@ -10,3 +10,4 @@ pydantic
 python-dotenv
 bcrypt
 psycopg2
+postgres
