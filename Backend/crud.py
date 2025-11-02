@@ -28,6 +28,26 @@ def create_user(db: Session, user_in: EndUserCreate) -> End_User:
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    new_shelf_tbr = To_Read_Shelf(end_user_id=user.end_user_id)
+    db.add(new_shelf_tbr)
+    db.commit()
+    db.refresh(new_shelf_tbr)
+
+    new_shelf_dropped = Dropped_Shelf(end_user_id=user.end_user_id)
+    db.add(new_shelf_dropped)
+    db.commit()
+    db.refresh(new_shelf_dropped)
+
+    new_shelf_current = Current_Shelf(end_user_id=user.end_user_id)
+    db.add(new_shelf_current)
+    db.commit()
+    db.refresh(new_shelf_current)
+
+    new_shelf_read = Read_Shelf(end_user_id=user.end_user_id)
+    db.add(new_shelf_read)
+    db.commit()
+    db.refresh(new_shelf_read)
     return user
 
 

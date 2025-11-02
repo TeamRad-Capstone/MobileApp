@@ -42,7 +42,7 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.post("/register/", response_model=models.EndUserRead)
+@app.post("/register", response_model=models.EndUserRead)
 def register(user_in: models.EndUserCreate, db: Session = Depends(database.get_session)):
     if crud.get_user_by_email(db, user_in.email):
         raise HTTPException(status_code=400, detail="Email already registered")

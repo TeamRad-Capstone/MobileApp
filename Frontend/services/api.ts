@@ -1,7 +1,7 @@
 import { getToken, setToken, TokenResponse } from "@/services/auth";
 
 // const hostedUrl = "http://10.0.2.2:8000";
-const hostedUrl = "http://10.0.0.133:8000";
+const hostedUrl = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
 
 
 export type Shelf = {

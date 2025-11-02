@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // const API_URL = "http://10.0.2.2:8000";
-const API_URL = "http://10.0.0.133:8000";
+const API_URL = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
 
 
 
