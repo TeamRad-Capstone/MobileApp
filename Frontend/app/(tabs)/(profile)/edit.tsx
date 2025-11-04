@@ -8,43 +8,50 @@ import {
   TextInput,
   ImageBackground,
   Modal,
+  Alert,
+  ActivityIndicator,
+  //Edit,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { AuthContext } from "@/contexts/AuthContext";
+import { getUsername, changePassword } from "@/services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
-
   const router = useRouter();
+  const { signout, user } = useContext(AuthContext);
 
   const [usernameVisible, setUsernameVisible] = useState(false);
-  const [username, setUsername] = useState("BookLovah");
+  const [username, setUsername] = useState("");
   const [usernameChange, setUsernameChange] = useState("");
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [accountVisible, setAccountVisible] = useState(false);
 
-  const { signout } = useContext(AuthContext);
+  useEffect(() => {
+    const loadStatic = async () => {
+      setUsername(await getUsername());
+    };
+    loadStatic();
+  }, []);
 
   const handleProfileImg = () => {
     console.log("Changing Profile Image");
-    // Make a request to backend API to retrieve options
-    // Once options have been retrieved, user makes a choice and choice is saved locally prior to handling Save
   };
 
   const handleTransfer = () => {
     console.log("Attempt to import historical data");
-    // Read the csv file and send to API? Not sure how to implement yet
-    // Accept the file and send to API from there API will parse to DB
     DocumentPicker.getDocumentAsync({}).then((doc) => {
       if (!doc.canceled) {
         const file = doc.assets.pop();
@@ -61,30 +68,50 @@ const Edit = () => {
     console.log("Username Save button clicked");
     setUsername(usernameChange);
     setUsernameVisible(false);
-    // Initiate call to backend API to save changes to username, password and image if applicable
   };
 
-  const handlePasswordSave = () => {
+  const handlePasswordSave = async () => {
     console.log("Password Save button clicked");
     setPasswordError("");
-    let validFields = true;
+    
+    // Validation
+    if (!currentPassword) {
+      setPasswordError("Please enter your current password");
+      return;
+    }
 
     if (!newPassword || !passwordRegex.test(newPassword)) {
       setPasswordError(
-        "Your password must  must contain at least 1 uppercase letter, " +
-          "1 lowercase letter, and 1 number",
+        "Your password must contain at least 1 uppercase letter, " +
+          "1 lowercase letter, and 1 number, and be at least 8 characters long",
       );
-      validFields = false;
+      return;
     }
 
     if (!confirmNewPassword || confirmNewPassword !== newPassword) {
-      setPasswordError("Your password must match");
-      validFields = false;
+      setPasswordError("Your passwords must match");
+      return;
     }
 
-    if (validFields) {
-      setPasswordVisible(false);
-      // Save changes to database via Backend API
+    setIsLoading(true);
+    try {
+      const result = await changePassword(currentPassword, newPassword);
+      
+      if (result.success) {
+        Alert.alert("Success", "Password changed successfully!");
+        setPasswordVisible(false);
+        // Clear form
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      } else {
+        setPasswordError(result.message || "Failed to change password");
+      }
+    } catch (error) {
+      console.error("Password change error:", error);
+      setPasswordError("An error occurred while changing password");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -96,6 +123,14 @@ const Edit = () => {
   const handleLogout = async () => {
     console.log("Logout button clicked");
     await signout();
+  };
+
+  const clearPasswordModal = () => {
+    setPasswordVisible(false);
+    setPasswordError("");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
   };
 
   return (
@@ -148,14 +183,18 @@ const Edit = () => {
         </Pressable>
       </ScrollView>
 
-      {/*  Modal for Changing Username */}
+      {/* Modal for Changing Username */}
       <Modal transparent={true} visible={usernameVisible}>
         <View style={styles.modalContainer}>
           <View>
             <Text style={styles.modalText}>Current Username</Text>
             <TextInput style={styles.input} value={username} editable={false} />
             <Text style={styles.modalText}>New Username</Text>
-            <TextInput style={styles.input} onChangeText={setUsernameChange} />
+            <TextInput 
+              style={styles.input} 
+              onChangeText={setUsernameChange}
+              placeholder="Enter new username"
+            />
           </View>
           <Pressable style={styles.saveBtn} onPress={handleUsernameSave}>
             <Text style={styles.btnText}>Save</Text>
@@ -169,40 +208,63 @@ const Edit = () => {
         </View>
       </Modal>
 
-      {/*  Modal for Changing Password*/}
+      {/* Modal for Changing Password */}
       <Modal transparent={true} visible={passwordVisible}>
         <View style={styles.modalContainer}>
           <View>
             <Text style={styles.modalText}>Current Password</Text>
             <TextInput
               style={styles.input}
-              value={"************"}
-              editable={false}
+              placeholder="Enter current password"
+              secureTextEntry
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              editable={!isLoading}
             />
             <Text style={styles.modalText}>New Password</Text>
-            <TextInput style={styles.input} onChangeText={setNewPassword} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter new password"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+              editable={!isLoading}
+            />
             <Text style={styles.modalText}>Confirm New Password</Text>
             <TextInput
               style={styles.input}
+              placeholder="Confirm new password"
+              secureTextEntry
+              value={confirmNewPassword}
               onChangeText={setConfirmNewPassword}
+              editable={!isLoading}
             />
           </View>
           {passwordError && (
             <Text style={styles.errorText}>{passwordError}</Text>
           )}
-          <Pressable style={styles.saveBtn} onPress={handlePasswordSave}>
-            <Text style={styles.btnText}>Save</Text>
+          <Pressable 
+            style={[styles.saveBtn, isLoading && styles.disabledBtn]} 
+            onPress={handlePasswordSave}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Text style={styles.btnText}>Save</Text>
+            )}
           </Pressable>
           <Pressable
-            style={styles.cancelBtn}
-            onPress={() => setPasswordVisible(false)}
+            style={[styles.cancelBtn, isLoading && styles.disabledBtn]}
+            onPress={clearPasswordModal}
+            disabled={isLoading}
           >
             <Text style={styles.btnText}>Cancel</Text>
           </Pressable>
         </View>
       </Modal>
 
-      {/*  Delete Account Modal */}
+      {/* Delete Account Modal */}
       <Modal transparent={true} visible={accountVisible}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalText}>Confirm Delete?</Text>
@@ -281,6 +343,7 @@ const styles = StyleSheet.create({
     marginHorizontal: "14%",
     borderRadius: 40,
     borderWidth: 1,
+    padding: 20,
   },
   modalText: {
     fontFamily: "Agbalumo",
@@ -295,6 +358,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 20,
     marginHorizontal: 20,
+    padding: 10,
+    marginVertical: 5,
   },
   saveBtn: {
     backgroundColor: "#83884E",
@@ -304,6 +369,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginTop: 20,
+    minWidth: 100,
+    minHeight: 40,
+    justifyContent: 'center',
   },
   cancelBtn: {
     backgroundColor: "#B92628",
@@ -314,6 +382,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     marginBottom: 20,
+    minWidth: 100,
+    minHeight: 40,
+    justifyContent: 'center',
   },
   btnText: {
     fontFamily: "Agbalumo",
@@ -325,5 +396,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "red",
     textAlign: "center",
+    marginTop: 10,
+  },
+  disabledBtn: {
+    backgroundColor: "#cccccc",
+    opacity: 0.6,
   },
 });
+
+{/* I AM SUFFERING, HELP. I WAS THROWN IN HALFWAY THROUGH AND I HAVE NO CLUE WHAT I AM DOING, MY BRAIN HURTS TRYING TO PROCESS THIS*/ }
