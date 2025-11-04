@@ -625,7 +625,7 @@ export {
   addBookUpcomingValue,
   getUsername,
   getUpcomingBooks,
-  removeBookFromShelf
+  removeBookFromShelf,
   addBookToReadingGoal,
   getAllBooks,
   removeBookFromReadingGoal,
