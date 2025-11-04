@@ -48,7 +48,12 @@ const SearchedBookDetails = () => {
     };
 
     try {
-      await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+      await addToShelf(
+        bookInfo,
+        shelf.shelf_id,
+        shelf.end_user_id,
+        shelf.shelf_name
+      );
       alert("Added to shelf: " + shelf.shelf_name);
     } catch (e: any) {
       alert(e.message);

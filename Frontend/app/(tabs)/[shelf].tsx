@@ -13,7 +13,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import SearchBar from "@/components/SearchBar";
-import { Book, deleteCustomShelf, editShelfName, getBooksFromShelf } from "@/services/api";
+import {
+  Book,
+  deleteCustomShelf,
+  editShelfName,
+  getBooksFromShelf,
+} from "@/services/api";
 import ShelfBook from "@/components/ShelfBook";
 import { router } from "expo-router";
 import { useIsFocused } from "@react-navigation/core";
@@ -44,16 +49,14 @@ const ShelfDetails = () => {
     if (isFocused) {
       const loadBooks = async () => {
         try {
-          const allBooks = await getBooksFromShelf(
-            shelf_name
-          );
+          const allBooks = await getBooksFromShelf(shelf_name);
           setBooks(allBooks);
         } catch (error: any) {
           console.log("Error while retrieving books");
           console.error(error);
         }
       };
-      loadBooks()
+      loadBooks();
     }
   }, [end_user_id, shelf_id, shelf_name, title, isFocused]);
 
@@ -96,10 +99,10 @@ const ShelfDetails = () => {
   };
 
   const handleDeletion = async () => {
-    console.log("Current Shelf Id: ", shelf_id)
-    await deleteCustomShelf(shelf_name)
-    router.replace("/shelves_v2")
-  }
+    console.log("Current Shelf Id: ", shelf_id);
+    await deleteCustomShelf(shelf_name);
+    router.replace("/shelves_v2");
+  };
   return (
     <SafeAreaView
       style={{
@@ -162,7 +165,10 @@ const ShelfDetails = () => {
             onChangeText={(e) => setShelfTitle(e)}
             style={styles.editInput}
           />
-          <Pressable style={styles.saveBtn} onPress={() => handleEditSave(shelfTitle.trim())}>
+          <Pressable
+            style={styles.saveBtn}
+            onPress={() => handleEditSave(shelfTitle.trim())}
+          >
             <Text style={styles.saveBtnText}>Save</Text>
           </Pressable>
           <Pressable style={styles.cancelBtn} onPress={handleEditClose}>
@@ -256,5 +262,5 @@ const styles = StyleSheet.create({
     fontFamily: "Agbalumo",
     fontSize: 20,
     textAlign: "center",
-  }
+  },
 });
