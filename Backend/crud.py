@@ -7,11 +7,20 @@ from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_
     Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
 from security import get_password_hash
 
-def get_user_by_email(db: Session, email: str) -> End_User | None:
-    statement = select(End_User).where(End_User.email == email)
-    return db.exec(statement).first()
-    print(email)
-    return
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
+def update_user_password(db: Session, email: str, new_password: str) -> End_User:
+    user = db.exec(select(End_User).where(End_User.email == email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.password_hash = get_password_hash(new_password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 def create_user(db: Session, user_in: EndUserCreate) -> End_User:
     user = End_User(

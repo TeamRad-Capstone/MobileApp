@@ -203,3 +203,13 @@ class Log_Section(SQLModel, table=True):
     entry_text: str
     original_date: datetime
     edited_date: datetime
+    
+class Reading_Goal_Book(SQLModel, table=True):
+    reading_goal_book_id: Optional[int] = Field(default=None, primary_key=True)
+    reading_goal_id: int = Field(foreign_key="reading_goal.reading_goal_id")
+    book_id: int = Field(foreign_key="book.book_id")
+    added_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PasswordUpdate(SQLModel):
+    current_password: str
+    new_password: str

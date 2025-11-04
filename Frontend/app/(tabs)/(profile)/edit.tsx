@@ -10,20 +10,20 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
-  //Edit,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as DocumentPicker from "expo-document-picker";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { AuthContext } from "@/contexts/AuthContext";
-import { getUsername, changePassword } from "@/services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
-  const { signout, user } = useContext(AuthContext);
+  const { signout, user } = useContext(AuthContext); // Get user from AuthContext
 
   const [usernameVisible, setUsernameVisible] = useState(false);
   const [username, setUsername] = useState("");
@@ -31,25 +31,152 @@ const Edit = () => {
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const [accountVisible, setAccountVisible] = useState(false);
+  
+  // New states for profile image
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [imagePickerVisible, setImagePickerVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const loadStatic = async () => {
-      setUsername(await getUsername());
+      // Prefer username from AuthContext user if available
+      setUsername((user as any)?.username ?? "");
+      // Load current profile image from backend
+      await loadProfileImage();
     };
     loadStatic();
-  }, []);
+  }, [user]);
+  // API call functions
+    const apiCall = async (endpoint: string, method: string, body?: any) => {
+      // Use token from user context (if available) instead of a missing getAuthToken export
+      const token = (user as any)?.token ?? undefined;
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+  
+      const response = await fetch(`http://your-backend-url/api${endpoint}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Request failed');
+      }
+  
+      return await response.json();
+    };
 
-  const handleProfileImg = () => {
-    console.log("Changing Profile Image");
+  // Load profile image from backend
+  const loadProfileImage = async () => {
+    try {
+      const data = await apiCall('/users/profile', 'GET');
+      if (data.profile_image_url) {
+        setProfileImage(data.profile_image_url);
+      }
+    } catch (error) {
+      console.log("Error loading profile image:", error);
+    }
   };
 
+  // Profile Image Functions
+  const handleProfileImg = () => {
+    setImagePickerVisible(true);
+  };
+
+  const pickImageFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow gallery access to change your profile image');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await processAndUploadImage(result.assets[0].uri);
+    }
+    setImagePickerVisible(false);
+  };
+
+  const takePhotoWithCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow camera access to take photos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await processAndUploadImage(result.assets[0].uri);
+    }
+    setImagePickerVisible(false);
+  };
+
+  const processAndUploadImage = async (imageUri: string) => {
+    setUploadingImage(true);
+    
+    try {
+      // Optimize image before upload
+      const processedImage = await manipulateAsync(
+        imageUri,
+        [{ resize: { width: 300, height: 300 } }],
+        { compress: 0.7, format: SaveFormat.JPEG }
+      );
+
+      // Convert image to base64 for backend
+      const response = await fetch(processedImage.uri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        
+        try {
+          // Upload to backend API
+          await apiCall('/users/profile-image', 'PUT', {
+            image_url: base64data
+          });
+          
+          setProfileImage(processedImage.uri);
+          Alert.alert('Success', 'Profile image updated!');
+        } catch (error) {
+          Alert.alert('Upload Failed', 'Could not update profile image. Please try again.');
+        } finally {
+          setUploadingImage(false);
+        }
+      };
+      
+      reader.readAsDataURL(blob);
+      
+    } catch (error) {
+      Alert.alert('Upload Failed', 'Could not update profile image. Please try again.');
+      setUploadingImage(false);
+    }
+  };
+
+  // Existing functions 
   const handleTransfer = () => {
     console.log("Attempt to import historical data");
     DocumentPicker.getDocumentAsync({}).then((doc) => {
@@ -64,73 +191,83 @@ const Edit = () => {
     });
   };
 
-  const handleUsernameSave = () => {
-    console.log("Username Save button clicked");
-    setUsername(usernameChange);
-    setUsernameVisible(false);
+  const handleUsernameSave = async () => {
+    try {
+      console.log("Username Save button clicked");
+      
+      if (!usernameChange.trim()) {
+        Alert.alert('Error', 'Please enter a new username');
+        return;
+      }
+
+      await apiCall('/users/username', 'PUT', {
+        new_username: usernameChange
+      });
+
+      setUsername(usernameChange);
+      setUsernameVisible(false);
+      Alert.alert('Success', 'Username updated successfully!');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update username');
+    }
   };
 
   const handlePasswordSave = async () => {
-    console.log("Password Save button clicked");
+    // clear previous error
     setPasswordError("");
-    
-    // Validation
-    if (!currentPassword) {
-      setPasswordError("Please enter your current password");
+
+    console.log("Password Save button clicked");
+
+    const np = (newPassword || "").trim();
+    const cp = (confirmNewPassword || "").trim();
+
+    if (!np) {
+      setPasswordError("Please enter a new password.");
       return;
     }
 
-    if (!newPassword || !passwordRegex.test(newPassword)) {
+    if (!passwordRegex.test(np)) {
       setPasswordError(
-        "Your password must contain at least 1 uppercase letter, " +
-          "1 lowercase letter, and 1 number, and be at least 8 characters long",
+        "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter and 1 number."
       );
       return;
     }
 
-    if (!confirmNewPassword || confirmNewPassword !== newPassword) {
-      setPasswordError("Your passwords must match");
+    if (np !== cp) {
+      setPasswordError("Passwords do not match.");
       return;
     }
 
-    setIsLoading(true);
     try {
-      const result = await changePassword(currentPassword, newPassword);
-      
-      if (result.success) {
-        Alert.alert("Success", "Password changed successfully!");
-        setPasswordVisible(false);
-        // Clear form
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmNewPassword("");
-      } else {
-        setPasswordError(result.message || "Failed to change password");
-      }
-    } catch (error) {
-      console.error("Password change error:", error);
-      setPasswordError("An error occurred while changing password");
-    } finally {
-      setIsLoading(false);
+      await apiCall('/users/password', 'POST', { 
+        new_password: np
+      });
+      console.log("Password updated successfully");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setPasswordVisible(false);
+      Alert.alert("Success", "Password changed successfully.");
+    } catch (error: any) {
+      setPasswordError(error.message || 'Failed to update password');
+      console.log("Error updating password:", error);
     }
   };
 
-  const handleAccountDeletion = () => {
-    console.log("Account deletion button clicked");
-    setAccountVisible(false);
+  const handleAccountDeletion = async () => {
+    try {
+      console.log("Account deletion button clicked");
+      
+      
+      setAccountVisible(false);
+      Alert.alert('Success', 'Account deleted successfully');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to delete account');
+    }
   }
 
   const handleLogout = async () => {
     console.log("Logout button clicked");
     await signout();
-  };
-
-  const clearPasswordModal = () => {
-    setPasswordVisible(false);
-    setPasswordError("");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
   };
 
   return (
@@ -148,11 +285,23 @@ const Edit = () => {
         />
       </Pressable>
       <ScrollView>
-        <Pressable onLongPress={handleProfileImg}>
-          <Image
-            style={styles.profileImage}
-            source={require("@/assets/images/profileImg.jpg")}
-          />
+        <Pressable onPress={handleProfileImg}>
+          <View style={styles.imageContainer}>
+            <Image
+              style={styles.profileImage}
+              source={
+                profileImage 
+                  ? { uri: profileImage } 
+                  : require("@/assets/images/profileImg.jpg")
+              }
+            />
+            {uploadingImage && (
+              <View style={styles.uploadOverlay}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.uploadText}>Uploading...</Text>
+              </View>
+            )}
+          </View>
         </Pressable>
         <View style={styles.usernameView}>
           <Text style={styles.usernameText}>{username}</Text>
@@ -183,6 +332,25 @@ const Edit = () => {
         </Pressable>
       </ScrollView>
 
+      {/* Image Picker Modal */}
+      <Modal transparent={true} visible={imagePickerVisible}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalText}>Change Profile Image</Text>
+          <Pressable style={styles.imageOptionBtn} onPress={pickImageFromGallery}>
+            <Text style={styles.btnText}>Choose from Gallery</Text>
+          </Pressable>
+          <Pressable style={styles.imageOptionBtn} onPress={takePhotoWithCamera}>
+            <Text style={styles.btnText}>Take Photo</Text>
+          </Pressable>
+          <Pressable
+            style={styles.cancelBtn}
+            onPress={() => setImagePickerVisible(false)}
+          >
+            <Text style={styles.btnText}>Cancel</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
       {/* Modal for Changing Username */}
       <Modal transparent={true} visible={usernameVisible}>
         <View style={styles.modalContainer}>
@@ -194,6 +362,7 @@ const Edit = () => {
               style={styles.input} 
               onChangeText={setUsernameChange}
               placeholder="Enter new username"
+              autoCapitalize="none"
             />
           </View>
           <Pressable style={styles.saveBtn} onPress={handleUsernameSave}>
@@ -208,56 +377,38 @@ const Edit = () => {
         </View>
       </Modal>
 
-      {/* Modal for Changing Password */}
+      {/* Modal for Changing Password*/}
       <Modal transparent={true} visible={passwordVisible}>
         <View style={styles.modalContainer}>
           <View>
-            <Text style={styles.modalText}>Current Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter current password"
-              secureTextEntry
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              editable={!isLoading}
-            />
             <Text style={styles.modalText}>New Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter new password"
-              secureTextEntry
-              value={newPassword}
+            <TextInput 
+              style={styles.input} 
               onChangeText={setNewPassword}
-              editable={!isLoading}
+              value={newPassword}
+              secureTextEntry
+              placeholder="Enter new password"
+              autoCapitalize="none"
             />
             <Text style={styles.modalText}>Confirm New Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Confirm new password"
-              secureTextEntry
-              value={confirmNewPassword}
               onChangeText={setConfirmNewPassword}
-              editable={!isLoading}
+              value={confirmNewPassword}
+              secureTextEntry
+              placeholder="Confirm new password"
+              autoCapitalize="none"
             />
           </View>
           {passwordError && (
             <Text style={styles.errorText}>{passwordError}</Text>
           )}
-          <Pressable 
-            style={[styles.saveBtn, isLoading && styles.disabledBtn]} 
-            onPress={handlePasswordSave}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <Text style={styles.btnText}>Save</Text>
-            )}
+          <Pressable style={styles.saveBtn} onPress={handlePasswordSave}>
+            <Text style={styles.btnText}>Save</Text>
           </Pressable>
           <Pressable
-            style={[styles.cancelBtn, isLoading && styles.disabledBtn]}
-            onPress={clearPasswordModal}
-            disabled={isLoading}
+            style={styles.cancelBtn}
+            onPress={() => setPasswordVisible(false)}
           >
             <Text style={styles.btnText}>Cancel</Text>
           </Pressable>
@@ -268,6 +419,9 @@ const Edit = () => {
       <Modal transparent={true} visible={accountVisible}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalText}>Confirm Delete?</Text>
+          <Text style={[styles.modalText, {fontSize: 14, marginBottom: 20}]}>
+            This action cannot be undone.
+          </Text>
           <Pressable style={styles.saveBtn} onPress={handleAccountDeletion}>
             <Text style={styles.btnText}>Delete</Text>
           </Pressable>
@@ -288,12 +442,33 @@ const styles = StyleSheet.create({
     width: 30,
     marginLeft: 30,
   },
+  imageContainer: {
+    position: 'relative',
+  },
   profileImage: {
     width: 250,
     height: 250,
     borderRadius: 200,
     marginTop: 30,
     marginHorizontal: "auto",
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 30,
+    left: '50%',
+    marginLeft: -125,
+    width: 250,
+    height: 250,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 200,
+  },
+  uploadText: {
+    color: '#FFFFFF',
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Agbalumo",
   },
   usernameView: {
     width: "80%",
@@ -359,7 +534,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 20,
     padding: 10,
-    marginVertical: 5,
+    marginVertical: 10,
   },
   saveBtn: {
     backgroundColor: "#83884E",
@@ -369,9 +544,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     marginTop: 20,
-    minWidth: 100,
-    minHeight: 40,
-    justifyContent: 'center',
+  },
+  imageOptionBtn: {
+    backgroundColor: "#007AFF",
+    alignItems: "center",
+    marginHorizontal: "auto",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    marginTop: 10,
+    width: '80%',
   },
   cancelBtn: {
     backgroundColor: "#B92628",
@@ -382,9 +564,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 20,
     marginBottom: 20,
-    minWidth: 100,
-    minHeight: 40,
-    justifyContent: 'center',
   },
   btnText: {
     fontFamily: "Agbalumo",
@@ -396,12 +575,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "red",
     textAlign: "center",
-    marginTop: 10,
-  },
-  disabledBtn: {
-    backgroundColor: "#cccccc",
-    opacity: 0.6,
   },
 });
-
-{/* I AM SUFFERING, HELP. I WAS THROWN IN HALFWAY THROUGH AND I HAVE NO CLUE WHAT I AM DOING, MY BRAIN HURTS TRYING TO PROCESS THIS*/ }
