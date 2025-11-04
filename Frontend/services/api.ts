@@ -1,6 +1,8 @@
 import { getToken, setToken, TokenResponse } from "@/services/auth";
 
-const hostedUrl = "http://10.0.2.2:8000";
+// const hostedUrl = "http://10.0.2.2:8000";
+const hostedUrl = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
+
 
 export type Shelf = {
   end_user_id: number;
@@ -40,7 +42,7 @@ const testConnection = async () => {
 const createUser = async (
   email: string,
   username: string,
-  password: string,
+  password: string
 ) => {
   const endpoint = hostedUrl + "/register/";
 
@@ -80,7 +82,7 @@ const createShelf = async (name: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      shelf_name: name.trim()
+      shelf_name: name.trim(),
     }),
   });
   if (!response.ok) {
@@ -141,7 +143,7 @@ const addToShelf = async (
   }: Book,
   shelf_id: number,
   user_id: number,
-  shelf_name: string,
+  shelf_name: string
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -189,9 +191,7 @@ const addToShelf = async (
   }
 };
 
-const getBooksFromShelf = async (
-  shelf_name: string,
-) => {
+const getBooksFromShelf = async (shelf_name: string) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
     case "Want to Read":
@@ -236,7 +236,7 @@ const getBooksFromShelf = async (
 const createReadingGoal = async (
   title: string,
   target: number,
-  description?: string,
+  description?: string
 ) => {
   const endpoint = hostedUrl + "/goals/";
   const token = await getToken();
@@ -279,7 +279,7 @@ const getMyReadingGoals = async () => {
 const updateReadingGoal = async (
   goal_id: number,
   title?: string,
-  target?: number,
+  target?: number
 ) => {
   const endpoint = hostedUrl + `/goals/${goal_id}`;
   const token = await getToken();
@@ -339,7 +339,7 @@ const deleteCustomShelf = async (shelf_name: string) => {
   const endpoint = hostedUrl + `/shelves/custom/${shelf_name}`;
   const token = await getToken();
   if (!token) throw new Error("No token");
-  console.log('Attempting to delete shelf:', endpoint);
+  console.log("Attempting to delete shelf:", endpoint);
 
   const response = await fetch(endpoint, {
     method: "DELETE",
@@ -347,18 +347,18 @@ const deleteCustomShelf = async (shelf_name: string) => {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-  })
-    console.log('Response status:', response.status);
-    console.log('Response status text:', response.statusText);
+  });
+  console.log("Response status:", response.status);
+  console.log("Response status text:", response.statusText);
   if (!response.ok) {
     throw new Error(response.statusText);
   }
 
   return true;
-}
+};
 
 const getBookUpcomingValue = async (google_book_id: string) => {
-  console.log('Attempting to get upcoming value for book:', google_book_id);
+  console.log("Attempting to get upcoming value for book:", google_book_id);
   const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
   const token = await getToken();
   if (!token) throw new Error("No token");
@@ -375,12 +375,12 @@ const getBookUpcomingValue = async (google_book_id: string) => {
   }
 
   const data = await response.json();
-  console.log('Data: ', data);
+  console.log("Data: ", data);
   return data;
-}
+};
 
 const addBookUpcomingValue = async (google_book_id: string) => {
-  console.log('Attempting to add upcoming value for book:', google_book_id);
+  console.log("Attempting to add upcoming value for book:", google_book_id);
   const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
   const token = await getToken();
   if (!token) throw new Error("No token");
@@ -398,10 +398,10 @@ const addBookUpcomingValue = async (google_book_id: string) => {
   }
 
   return true;
-}
+};
 
 const getUsername = async () => {
-  const endpoint = hostedUrl + "/username/me"
+  const endpoint = hostedUrl + "/username/me";
   const token = await getToken();
   if (!token) throw new Error("No token");
 
@@ -417,12 +417,12 @@ const getUsername = async () => {
     throw new Error(response.statusText);
   }
 
-  console.log('Returning username');
+  console.log("Returning username");
   return await response.json();
-}
+};
 
 const getUpcomingBooks = async () => {
-  const endpoint = hostedUrl + "/shelves/upcomingBooks"
+  const endpoint = hostedUrl + "/shelves/upcomingBooks";
   const token = await getToken();
   if (!token) throw new Error("No token");
 
@@ -438,10 +438,173 @@ const getUpcomingBooks = async () => {
     throw new Error(response.statusText);
   }
 
-  console.log('Returning upcoming books');
+  console.log("Returning upcoming books");
   const data = await response.json();
-  console.log('Data: ', data);
+  console.log("Data: ", data);
   return data;
+};
+const addBookToReadingGoal = async (
+  reading_goal_id: number,
+  book_id: number
+) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/reading_goal_book/?reading_goal_id=${reading_goal_id}&book_id=${book_id}`;
+  console.log("Adding book to goal. Endpoint:", endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  console.log("Response status:", response.status);
+  const text = await response.text();
+  console.log("Response text:", text);
+
+  if (!response.ok) {
+    throw new Error(`Failed to link book to reading goal: ${response.status}`);
+  }
+
+  return JSON.parse(text);
+};
+
+const getAllBooks = async () => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(`${hostedUrl}/books`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  console.log("Fetch status:", response.status);
+  const data = await response.text(); // see raw response
+  console.log("Fetch data:", data);
+
+  if (!response.ok)
+    throw new Error(`Failed to fetch all books: ${response.status}`);
+  return JSON.parse(data);
+};
+
+const removeBookFromReadingGoal = async (
+  reading_goal_id: number,
+  book_id: number
+) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/reading_goal_book/${reading_goal_id}/${book_id}`;
+  console.log("Deleting book from goal. Endpoint:", endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  console.log("Response status:", response.status);
+  const text = await response.text();
+  console.log("Response text:", text);
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to remove book from reading goal: ${response.status}`
+    );
+  }
+
+  return JSON.parse(text);
+};
+
+const getBooksFromGoal = async (reading_goal_id: number) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/reading_goal_book/${reading_goal_id}`;
+  console.log("Fetching books from goal. Endpoint:", endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  console.log("Response status:", response.status);
+  const text = await response.text();
+  console.log("Response text:", text);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch books for goal: ${response.status}`);
+  }
+
+  return JSON.parse(text);
+};
+
+const updateBookRating = async (book_id: number, rating: number) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/books/${book_id}/rating?rating=${rating}`;
+  console.log(
+    "Attempting to update rating for book_id:",
+    book_id,
+    "to",
+    rating
+  );
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    console.error("Failed rating update response:", text);
+    throw new Error(`Failed to update rating for book_id ${book_id}`);
+  }
+
+  let data = null;
+  if (text) data = JSON.parse(text);
+  console.log("Rating update response:", data);
+  return data;
+};
+
+const removeBookFromShelf = async (shelfName: string, googleBookId: string) =>{
+  let shelfType = "";
+  switch (shelfName) {
+    case "Want to Read":
+      shelfType = "tbr";
+      break;
+    case "Dropped":
+      shelfType = "dropped";
+      break;
+    case "Currently Reading":
+      shelfType = "current";
+      break;
+    case "Read":
+      shelfType = "read";
+      break;
+    default:
+      shelfType = "custom";
+  }
+
+  const endpoint =
+    hostedUrl + `/shelves/${shelfType}/${shelfName}/${googleBookId}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  console.log('Attempting to remove book from shelf');
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
 }
 
 export {
@@ -461,5 +624,11 @@ export {
   getBookUpcomingValue,
   addBookUpcomingValue,
   getUsername,
-  getUpcomingBooks
+  getUpcomingBooks,
+  removeBookFromShelf,
+  addBookToReadingGoal,
+  getAllBooks,
+  removeBookFromReadingGoal,
+  getBooksFromGoal,
+  updateBookRating,
 };

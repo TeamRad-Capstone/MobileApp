@@ -13,6 +13,9 @@ from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_
     Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book
 from security import get_password_hash
 
+def get_user_by_email(db: Session, email: str):
+    statement = select(End_User).where(End_User.email == email.lower())
+    return db.exec(statement).first()
 
 def update_user_password(db: Session, email: str, new_password: str) -> End_User:
     user = db.exec(select(End_User).where(End_User.email == email)).first()

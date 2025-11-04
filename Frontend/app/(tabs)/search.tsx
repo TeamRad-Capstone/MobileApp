@@ -39,26 +39,29 @@ const Search = () => {
   const [queryType, setQueryType] = useState(queryTypeData[0].label);
 
   const [buttonHidden, setButtonHidden] = useState(true);
+  const [startIndex, setStartIndex] = useState(0);
 
-  const searchInAPI = async () => {
-    setReturnedBooks([]);
-    let amount = 20;
+  const searchInAPI = async (amtLoaded: number, startIndex: number) => {
 
-    let volumeQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=";
-    let maxResults = `&maxResults=${amount}`;
+    let volumeQueryUrl = `https://www.googleapis.com/books/v1/volumes?q=`;
+    let startIndexValue = `&startIndex=${startIndex}`;
 
+    if (amtLoaded <= 10) {
+      setReturnedBooks([])
+    }
     try {
       const searched = searchParam.split(" ").join("+");
-      let type = queryType === "Default" ? `` : `+in${queryType}:` + searched;
-      let querySearch = queryType !== "Default" ? "" : searched;
+      let type =
+        queryType === "Default" ? `${searched}` : `+in${queryType}:` + searched;
+      console.log("Query type is: " + type);
 
       const response = await fetch(
         volumeQueryUrl +
-          searched +
-          type +
-          maxResults +
-          "&key=" +
-          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
+        type +
+        startIndexValue +
+        "&printType=books" +
+        "&key=" +
+        process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
       );
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
@@ -79,65 +82,15 @@ const Search = () => {
         };
         setReturnedBooks((oldBooks) => [...oldBooks, newBook]);
       }
-      if (numOfBooks >= 20) {
+      if (numOfBooks === 10) {
         setButtonHidden(false);
+        setStartIndex(startIndex + numOfBooks);
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Refactor to include in original function for searching in API
-  const addToSearch = async () => {
-    let amount = 40;
-    let volumeQueryUrl = "https://www.googleapis.com/books/v1/volumes?q=";
-    let maxResults = `&maxResults=${amount}`;
-
-    try {
-      const searched = searchParam.split(" ").join("+");
-      let type = queryType === "Default" ? `` : `+in${queryType}:` + searched;
-      let querySearch = queryType !== "Default" ? "" : searched;
-
-      const response = await fetch(
-        volumeQueryUrl +
-          querySearch +
-          type +
-          maxResults +
-          "&key=" +
-          process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
-      );
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      let numOfBooks = 0;
-      for (const books of data.items) {
-        if (numOfBooks >= 20) {
-          let newBook = {
-            coverUrl: `https://books.google.com/books?id=${books.id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
-            bookId: books.id,
-            title: books.volumeInfo.title,
-            authors: books.volumeInfo.authors,
-            description: books.volumeInfo.description,
-            numOfPages: books.volumeInfo.pageCount,
-            categories: books.volumeInfo.categories,
-            publishedDate: books.volumeInfo.publishedDate,
-          };
-          setReturnedBooks((oldBooks) => [...oldBooks, newBook]);
-        } else {
-          numOfBooks++;
-        }
-      }
-      setButtonHidden(true);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleLoadMore = () => {
-    addToSearch();
-  };
   return (
     <SafeAreaView
       style={{
@@ -147,11 +100,38 @@ const Search = () => {
       }}
     >
       <Text style={styles.headingText}>Search</Text>
-      <SearchBar
-        searchText={searchParam}
-        setSearchText={setSearchParams}
-        submitSearchText={searchInAPI}
-      />
+      <View style={{ flexDirection: "row" }}>
+        <View style={styles.headerView}>
+          <Image
+            style={styles.searchIcon}
+            source={require("@/assets/icons/search.png")}
+          />
+          <TextInput
+            style={styles.searchInput}
+            value={searchParam}
+            onChangeText={setSearchParams}
+            onSubmitEditing={() => {
+              setStartIndex(0);
+              searchInAPI(0, 0);
+            }}
+          />
+        </View>
+        <View style={styles.queryChoice}>
+          <Dropdown
+            style={{ width: 90, marginLeft: 10 }}
+            data={queryTypeData}
+            fontFamily={"Agbalumo"}
+            labelField={"label"}
+            valueField={"value"}
+            onChange={(item) => {
+              setQueryType(item.value);
+              console.log(item.value);
+            }}
+            value={queryType}
+            placeholder={queryType}
+          />
+        </View>
+      </View>
       <ScrollView>
         {returnedBooks.map((book, index) => (
           <SearchBook
@@ -167,7 +147,10 @@ const Search = () => {
           />
         ))}
         {!buttonHidden && (
-          <Pressable style={styles.button} onPress={handleLoadMore}>
+          <Pressable
+            style={styles.button}
+            onPress={() => searchInAPI(11, startIndex)}
+          >
             <Text style={styles.buttonText}>Load More</Text>
           </Pressable>
         )}

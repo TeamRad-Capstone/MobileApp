@@ -53,7 +53,6 @@ const SearchBook = ({
   const [shelfId, setShelfId] = useState(0);
 
   const handleAdd = async (shelf: any) => {
-
     setChosenShelf(shelf.shelf_id);
 
     // based on shelf chosen
@@ -68,7 +67,12 @@ const SearchBook = ({
     };
 
     try {
-      await addToShelf(bookInfo, shelf.shelf_id, shelf.end_user_id, shelf.shelf_name);
+      await addToShelf(
+        bookInfo,
+        shelf.shelf_id,
+        shelf.end_user_id,
+        shelf.shelf_name
+      );
       alert("Added to shelf: " + shelf.shelf_name);
     } catch (e: any) {
       alert(e.message);
