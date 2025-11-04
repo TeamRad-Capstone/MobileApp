@@ -1,4 +1,13 @@
-import { StyleSheet, View, Text, Image, Pressable, Modal } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  Pressable,
+  Modal,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useState } from "react";
 
 type UpcomingBookProps = {
@@ -10,12 +19,16 @@ type UpcomingBookProps = {
 const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
   const [openState, setOpenState] = useState(false);
 
-  const changeOpenState = () => {
-    setOpenState(!openState);
+  const openModalState = () => {
+    setOpenState(true);
+  };
+
+  const closeModalState = () => {
+    setOpenState(false);
   };
   return (
     <>
-      <Pressable onPress={changeOpenState}>
+      <Pressable onPress={openModalState}>
         <Image
           style={styles.bookImg}
           source={{
@@ -26,28 +39,35 @@ const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
       </Pressable>
 
       <Modal transparent={true} visible={openState}>
-        <Pressable style={styles.modal} onPress={changeOpenState}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalText}>{title}</Text>
-            <Text style={styles.modalText}>{author}</Text>
-            <Image
-              style={styles.modalImg}
-              source={{
-                uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
-              }}
-              accessibilityLabel={`Image of book title: ${title}`}
-            />
-            <Pressable>
-              <View style={styles.button}>
-                <Text style={styles.modalText}>Move to Shelf</Text>
-                <Image
-                  style={{ width: 20, height: 20, marginTop: 5 }}
-                  source={require("@/assets/icons/dropdown.png")}
-                />
+        <Pressable style={styles.modal} onPress={closeModalState}>
+
+            {/*<TouchableWithoutFeedback>*/}
+              <View style={styles.modalContainer} onStartShouldSetResponder={() => true}>
+                <ScrollView>
+                  <Text style={styles.modalText}>{title}</Text>
+                  <Text style={styles.modalText}>{author}</Text>
+                  <Image
+                    style={styles.modalImg}
+                    source={{
+                      uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+                    }}
+                    accessibilityLabel={`Image of book title: ${title}`}
+                  />
+                  <Pressable>
+                    <View style={styles.button}>
+                      <Text style={styles.modalText}>Move to Shelf</Text>
+                      <Image
+                        style={{ width: 20, height: 20, marginTop: 5 }}
+                        source={require("@/assets/icons/dropdown.png")}
+                      />
+                    </View>
+                  </Pressable>
+                </ScrollView>
               </View>
-            </Pressable>
-          </View>
+            {/*</TouchableWithoutFeedback>*/}
+
         </Pressable>
+        {/*</TouchableWithoutFeedback>*/}
       </Modal>
     </>
   );
@@ -60,21 +80,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bookImg: {
-    height: 200,
-    width: 130,
+    height: 250,
+    width: 150,
     borderRadius: 20,
+    marginBottom: 20,
   },
   modal: {
     flex: 1,
   },
   modalContainer: {
+    verticalAlign: "middle",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#83884E",
-    marginHorizontal: "20%",
+    marginHorizontal: "14%",
     marginVertical: "auto",
     paddingVertical: 20,
     borderRadius: 50,
+    height: 500,
   },
   modalText: {
     fontFamily: "Agbalumo",
@@ -83,9 +106,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
   },
   modalImg: {
-    height: 200,
-    width: 130,
+    height: 300,
+    width: 200,
     marginVertical: 20,
+    marginHorizontal: "auto",
   },
   button: {
     flexDirection: "row",
@@ -96,5 +120,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
     marginVertical: 20,
+    marginHorizontal: "auto",
   },
 });

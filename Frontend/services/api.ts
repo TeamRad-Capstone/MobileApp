@@ -1,6 +1,8 @@
 import { getToken, setToken, TokenResponse } from "@/services/auth";
 
-const hostedUrl = "http://10.0.2.2:8000";
+// const hostedUrl = "http://10.0.2.2:8000";
+const hostedUrl = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
+
 
 export type Shelf = {
   end_user_id: number;
@@ -569,6 +571,42 @@ const updateBookRating = async (book_id: number, rating: number) => {
   return data;
 };
 
+const removeBookFromShelf = async (shelfName: string, googleBookId: string) =>{
+  let shelfType = "";
+  switch (shelfName) {
+    case "Want to Read":
+      shelfType = "tbr";
+      break;
+    case "Dropped":
+      shelfType = "dropped";
+      break;
+    case "Currently Reading":
+      shelfType = "current";
+      break;
+    case "Read":
+      shelfType = "read";
+      break;
+    default:
+      shelfType = "custom";
+  }
+
+  const endpoint =
+    hostedUrl + `/shelves/${shelfType}/${shelfName}/${googleBookId}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  console.log('Attempting to remove book from shelf');
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+}
+
 export {
   testConnection,
   createUser,
@@ -587,6 +625,7 @@ export {
   addBookUpcomingValue,
   getUsername,
   getUpcomingBooks,
+  removeBookFromShelf
   addBookToReadingGoal,
   getAllBooks,
   removeBookFromReadingGoal,

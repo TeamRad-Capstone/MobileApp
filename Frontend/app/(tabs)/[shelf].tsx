@@ -85,7 +85,7 @@ const ShelfDetails = () => {
         alert("Cannot use empty name or same name");
         return;
       }
-      await editShelfName(currentShelfName, shelfTitle.trim());
+      await editShelfName(shelf_name, shelfTitle.trim());
       setCurrentShelfName(shelfTitle.trim());
       setChangedTitle(!changedTitle);
       // Optional: also update the route param so if you navigate back/forward it’s consistent
