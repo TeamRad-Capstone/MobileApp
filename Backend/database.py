@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# DATABASE_URL = os.getenv("DATABASE_URL")
-DATABASE_URL = os.getenv("HEROKU_POSTGRESQL_MAUVE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
+# DATABASE_URL = os.getenv("HEROKU_POSTGRESQL_MAUVE_URL")
 engine = create_engine(DATABASE_URL, echo=True)
 
 def init_db():
