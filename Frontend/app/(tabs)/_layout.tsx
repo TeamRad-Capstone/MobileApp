@@ -55,6 +55,13 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="(book)/[shelfBook]"
+          options={{
+            headerShown: false,
+            href: null,
+          }}
+        />
+        <Tabs.Screen
           name="search"
           options={{
             headerShown: false,

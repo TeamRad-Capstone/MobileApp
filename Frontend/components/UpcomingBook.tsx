@@ -18,11 +18,9 @@ const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
       <Pressable onPress={changeOpenState}>
         <Image
           style={styles.bookImg}
-          source={
-            coverUrl
-              ? { uri: coverUrl }
-              : require("@/assets/images/books/cover-not-found.jpg")
-          }
+          source={{
+            uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+          }}
           accessibilityLabel={`Image of book title: ${title}`}
         />
       </Pressable>
@@ -34,11 +32,9 @@ const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
             <Text style={styles.modalText}>{author}</Text>
             <Image
               style={styles.modalImg}
-              source={
-                coverUrl
-                  ? { uri: coverUrl }
-                  : require("@/assets/images/books/cover-not-found.jpg")
-              }
+              source={{
+                uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+              }}
               accessibilityLabel={`Image of book title: ${title}`}
             />
             <Pressable>

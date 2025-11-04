@@ -46,6 +46,12 @@ const Edit = () => {
     loadStatic();
   }, []);
 
+  useEffect(() => {
+    const loadStatic = async () => {
+      setUsername(await getUsername());
+    };
+    loadStatic();
+  }, [])
   const handleProfileImg = () => {
     console.log("Changing Profile Image");
   };
