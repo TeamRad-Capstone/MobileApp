@@ -6,7 +6,7 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useEffect, useState } from "react";
@@ -30,6 +30,7 @@ const ShelfBook = () => {
     description,
   } = useLocalSearchParams();
   const tabBarHeight = useBottomTabBarHeight();
+  const router = useRouter();
 
   const readPages = Number.parseInt(pagesRead as string);
   const numberOfPages = Number.parseInt(numOfPages as string);
@@ -41,7 +42,7 @@ const ShelfBook = () => {
       ratingText.push(<FontAwesome size={30} name="star" color="#CCB452" />);
     } else if (Math.abs(userRating - i) == 0.5) {
       ratingText.push(
-        <FontAwesome size={30} name="star-half-full" color="#CCB452" />,
+        <FontAwesome size={30} name="star-half-full" color="#CCB452" />
       );
     } else {
       ratingText.push(<FontAwesome size={30} name="star" color="#83884E" />);
@@ -75,6 +76,15 @@ const ShelfBook = () => {
       await addBookUpcomingValue(shelfBook as string);
     }
   };
+
+  const handleLog = () => {
+    console.log("Navigating to log page");
+    router.push({
+      pathname: "/(tabs)/log",
+      params: { bookId: shelfBook },
+    });
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -130,7 +140,7 @@ const ShelfBook = () => {
         <Text style={styles.genre}>{categories}</Text>
 
         {shelfName !== "Want to Read" && (
-          <Pressable style={styles.logBtn}>
+          <Pressable style={styles.logBtn} onPress={handleLog}>
             <Text style={styles.logText}>Log</Text>
           </Pressable>
         )}

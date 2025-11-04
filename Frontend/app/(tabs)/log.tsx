@@ -1,301 +1,163 @@
-import ProgressLine from "@/components/ProgressLine";
-import booksData from "@/data/books.json";
+import { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
   ScrollView,
-  StyleSheet,
   Text,
-  TextInput,
+  StyleSheet,
   View,
+  Pressable,
+  Alert,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+import ProgressLine from "@/components/ProgressLine";
+import {
+  getBooksFromShelf,
+  getAllBooks,
+  getMyReadingGoals,
+  addBookToReadingGoal,
+  updateBookRating,
+} from "@/services/api";
+
+type BookType = {
+  google_book_id: string;
+  book_id: number;
+  title: string;
+  authors: string[];
+  rating?: number;
+  progress?: number;
+  pages?: number;
+};
+
+type GoalType = {
+  reading_goal_id: number;
+  title: string;
+};
 
 const Log = () => {
   const params = useLocalSearchParams();
   const { bookId } = params;
-  const book = booksData.books.find((b) => b.id === Number(bookId));
-  if (!book) return null;
 
-  const initialRating =
-    booksData.ratings?.find((r) => r.bookId === book.id)?.rating ?? 0;
+  const [readBooks, setReadBooks] = useState<BookType[]>([]);
+  const [goals, setGoals] = useState<GoalType[]>([]);
+  const [statusMsg, setStatusMsg] = useState("Loading...");
+  const [matchedBook, setMatchedBook] = useState<BookType | null>(null);
+  const [readShelfBook, setReadShelfBook] = useState<BookType | null>(null);
+  const [chosenGoal, setChosenGoal] = useState<number | null>(null);
+  const [chosenRating, setChosenRating] = useState<number>(0);
 
-  const [chosenShelf, setChosenShelf] = useState(
-    booksData.defaultShelves[0].name
-  );
-  const [chosenGoal, setChosenGoal] = useState("No Goal");
-  const [chosenRating, setChosenRating] = useState(initialRating);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const allBooks = await getAllBooks();
+        const readShelf = await getBooksFromShelf("Read");
+        setReadBooks(readShelf);
 
-  const [progressModalVisible, setProgressModalVisible] = useState(false);
-  const [logModalVisible, setLogModalVisible] = useState(false);
-  const [pageInput, setPageInput] = useState("");
+        const book = allBooks.find(
+          (b: BookType) => b.google_book_id === bookId
+        );
+        if (!book) return setStatusMsg("Book not found");
 
-  const [logTitle, setLogTitle] = useState("");
-  const [logDescription, setLogDescription] = useState("");
+        setMatchedBook(book);
 
-  const shelves = [
-    ...booksData.defaultShelves.map((s) => ({ label: s.name, value: s.name })),
-    ...booksData.customShelves.map((s) => ({ label: s.name, value: s.name })),
-  ];
+        const readEntry = readShelf.find(
+          (b: BookType) => b.google_book_id === book.google_book_id
+        );
+        if (!readEntry) return setStatusMsg("Book is not in Read shelf");
 
-  const goals = [
-    ...booksData.goals.map((g) => ({ label: g.title, value: g.id })),
-    { label: "No Goal", value: 0 },
-  ];
+        setReadShelfBook(readEntry);
+        setChosenRating(readEntry.rating || 0);
 
-  const ratings = [1, 2, 3, 4, 5].map((r) => ({
-    label: r.toString(),
-    value: r,
+        const myGoals = await getMyReadingGoals();
+        setGoals(myGoals);
+
+        setStatusMsg("");
+      } catch (err) {
+        console.error(err);
+        setStatusMsg("Failed to fetch data");
+      }
+    };
+    fetchData();
+  }, [bookId]);
+
+  const handleAddToGoal = async () => {
+    if (!matchedBook || !chosenGoal) return Alert.alert("Select a goal");
+    try {
+      await addBookToReadingGoal(chosenGoal, matchedBook.book_id);
+      Alert.alert("Added", "Book added to goal");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Failed to add book to goal");
+    }
+  };
+
+  const handleRatingChange = async (rating: number) => {
+    if (!readShelfBook) return;
+    setChosenRating(rating);
+
+    try {
+      await updateBookRating(readShelfBook.book_id, rating);
+      Alert.alert("Success", "Rating updated");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Failed to update rating");
+    }
+  };
+
+  if (statusMsg)
+    return <Text style={[styles.center, { marginTop: 200 }]}>{statusMsg}</Text>;
+
+  const goalDropdownData = goals.map((g: GoalType) => ({
+    label: g.title,
+    value: g.reading_goal_id,
   }));
 
-  const bookProgressObj = booksData.readingProgress.find(
-    (rp) => rp.bookId === book.id
+  const renderStars = () => (
+    <View style={styles.starContainer}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Pressable key={i} onPress={() => handleRatingChange(i)}>
+          <Text style={[styles.star, i <= chosenRating && styles.starSelected]}>
+            ★
+          </Text>
+        </Pressable>
+      ))}
+    </View>
   );
-  const progressPages = bookProgressObj?.progress ?? 0;
-
-  const logGroup = booksData.logs.find((lg) => lg.bookId === book.id);
-  const [logs, setLogs] = useState(logGroup ? [...logGroup.entries] : []);
-
-  const handleAddShelf = (shelfName: string) => {
-    const shelfObj = [
-      ...booksData.defaultShelves,
-      ...booksData.customShelves,
-    ].find((s) => s.name === shelfName);
-    if (!shelfObj) return;
-    const exists = booksData.shelfBooks.find(
-      (sb) => sb.bookId === book.id && sb.shelfId === shelfObj.id
-    );
-    if (exists) {
-      Alert.alert(
-        "Already in shelf",
-        `${book.title} is already in ${shelfName}`
-      );
-      return;
-    }
-    booksData.shelfBooks.push({ shelfId: shelfObj.id, bookId: book.id });
-    Alert.alert("Added to shelf", `${book.title} added to ${shelfName}`);
-  };
-
-  const handleAddGoal = (goalValue: number) => {
-    if (goalValue === 0) return;
-    const exists = booksData.goalBooks.find(
-      (gb) => gb.book_id === book.id && gb.goal_id === goalValue
-    );
-    if (exists) {
-      Alert.alert("Already in goal", `${book.title} is already in this goal`);
-      return;
-    }
-    const newId = booksData.goalBooks.length + 1;
-    booksData.goalBooks.push({
-      id: newId,
-      goal_id: goalValue,
-      book_id: book.id,
-    });
-    Alert.alert("Added to goal", `${book.title} added to the goal`);
-  };
-
-  const handleRatingChange = (ratingValue: number) => {
-    setChosenRating(ratingValue);
-    const ratingObj = booksData.ratings.find((r) => r.bookId === book.id);
-    if (ratingObj) {
-      ratingObj.rating = ratingValue;
-    } else {
-      booksData.ratings.push({ bookId: book.id, rating: ratingValue });
-    }
-  };
-
-  const handleAddLog = () => {
-    if (!logTitle.trim() || !logDescription.trim()) {
-      Alert.alert("Error", "Please enter both title and description");
-      return;
-    }
-
-    const newEntry = {
-      id: logs.length + 1,
-      title: logTitle,
-      description: logDescription,
-    };
-
-    let logGroup = booksData.logs.find((lg) => lg.bookId === book.id);
-    if (!logGroup) {
-      logGroup = { bookId: book.id, entries: [] };
-      booksData.logs.push(logGroup);
-    }
-    logGroup.entries.push(newEntry);
-
-    setLogs([...logGroup.entries]);
-    setLogTitle("");
-    setLogDescription("");
-    setLogModalVisible(false);
-  };
-
-  const handleUpdateProgress = () => {
-    const pages = Number(pageInput);
-    if (isNaN(pages) || pages < 0 || pages > book.numOfPages) {
-      Alert.alert(
-        "Invalid input",
-        `Enter a number between 0 and ${book.numOfPages}`
-      );
-      return;
-    }
-    if (bookProgressObj) {
-      bookProgressObj.progress = pages;
-    } else {
-      booksData.readingProgress.push({ bookId: book.id, progress: pages });
-    }
-    setProgressModalVisible(false);
-    setPageInput("");
-  };
 
   return (
-    <ScrollView style={styles.container}>
-      {progressPages > 0 && (
-        <View style={{ marginBottom: 10 }}>
-          <ProgressLine progress={progressPages} target={book.numOfPages} />
+    <ScrollView contentContainerStyle={styles.container}>
+      {matchedBook?.progress && matchedBook.progress > 0 && (
+        <View style={{ marginBottom: 30, width: "90%" }}>
+          <ProgressLine
+            progress={matchedBook.progress}
+            target={matchedBook.pages || 100}
+          />
           <Text style={styles.progressText}>
-            {progressPages}/{book.numOfPages} pages read
+            {matchedBook.progress}/{matchedBook.pages || 100} pages read
           </Text>
         </View>
       )}
 
-      <Text style={styles.titleAuthor}>
-        {book.title} - {book.authors}
-      </Text>
+      <Text style={styles.title}>{matchedBook?.title}</Text>
+      <Text style={styles.author}>{matchedBook?.authors.join(", ")}</Text>
 
-      <View style={styles.row}>
-        <Dropdown
-          data={shelves}
-          labelField="label"
-          valueField="value"
-          value={chosenShelf}
-          onChange={(item) => {
-            setChosenShelf(item.value);
-            handleAddShelf(item.value);
-          }}
-          style={styles.dropdown}
-        />
-        <Dropdown
-          data={goals}
-          labelField="label"
-          valueField="value"
-          value={chosenGoal}
-          onChange={(item) => {
-            setChosenGoal(item.label);
-            handleAddGoal(item.value);
-          }}
-          style={styles.dropdown}
-        />
-      </View>
-
-      <View style={styles.row}>
-        <Dropdown
-          data={ratings}
-          labelField="label"
-          valueField="value"
-          value={chosenRating}
-          onChange={(item) => handleRatingChange(item.value)}
-          style={styles.ratingDropdown}
-        />
-        <Pressable
-          style={styles.updateButton}
-          onPress={() => setProgressModalVisible(true)}
-        >
-          <Text style={styles.updateButtonText}>Update Progress</Text>
-        </Pressable>
-      </View>
-
-      <Modal
-        visible={progressModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setProgressModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Update Progress</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder={`Enter page (0-${book.numOfPages})`}
-              keyboardType="numeric"
-              value={pageInput}
-              onChangeText={setPageInput}
-            />
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={styles.modalButton}
-                onPress={handleUpdateProgress}
-              >
-                <Text style={styles.modalButtonText}>Update</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.modalButton, { backgroundColor: "#B35B5B" }]}
-                onPress={() => setProgressModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Add Log Button */}
-      <Pressable
-        style={styles.addLogButton}
-        onPress={() => setLogModalVisible(true)}
-      >
-        <Text style={styles.addLogText}>Add Log</Text>
+      <Text style={styles.subtitle}>Add to Reading Goal:</Text>
+      <Dropdown
+        data={goalDropdownData}
+        labelField="label"
+        valueField="value"
+        value={chosenGoal}
+        placeholder="Select a goal"
+        onChange={(item) => setChosenGoal(item.value)}
+        style={styles.dropdown}
+        placeholderStyle={styles.dropdownPlaceholder}
+        selectedTextStyle={styles.dropdownText}
+      />
+      <Pressable style={styles.addButton} onPress={handleAddToGoal}>
+        <Text style={styles.addButtonText}>Add to Goal</Text>
       </Pressable>
 
-      {/* Modal for Add Log */}
-      <Modal
-        visible={logModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setLogModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Add Log</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Log Title"
-              value={logTitle}
-              onChangeText={setLogTitle}
-            />
-            <TextInput
-              style={[styles.modalInput, { height: 80 }]}
-              placeholder="Log Description"
-              multiline
-              value={logDescription}
-              onChangeText={setLogDescription}
-            />
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.modalButton} onPress={handleAddLog}>
-                <Text style={styles.modalButtonText}>Add</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.modalButton, { backgroundColor: "#B35B5B" }]}
-                onPress={() => setLogModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Logs */}
-      <View style={styles.logsContainer}>
-        {logs.map((log) => (
-          <View key={log.id} style={styles.logEntry}>
-            <Text style={styles.logTitle}>{log.title}</Text>
-            <Text style={styles.logDescription}>{log.description}</Text>
-          </View>
-        ))}
-      </View>
+      <Text style={styles.subtitle}>Rate this book:</Text>
+      {renderStars()}
     </ScrollView>
   );
 };
@@ -304,106 +166,64 @@ export default Log;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
+    flexGrow: 1,
+    paddingTop: 80,
+    paddingBottom: 40,
+    paddingHorizontal: 25,
     backgroundColor: "#F6F2EA",
-    marginTop: 60,
+    alignItems: "center",
   },
-  progressText: {
-    fontSize: 14,
-    color: "#5A5D37",
-    marginBottom: 15,
+  center: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "#333",
+  },
+  progressText: { fontSize: 15, marginTop: 8, color: "#555" },
+  title: {
+    fontSize: 28,
     fontFamily: "Agbalumo",
+    textAlign: "center",
+    color: "#4B3F2F",
+    marginBottom: 5,
   },
-  titleAuthor: {
-    fontSize: 20,
+  author: {
+    fontSize: 17,
     fontFamily: "Agbalumo",
-    marginBottom: 15,
+    textAlign: "center",
+    color: "#6B5E4E",
+    marginBottom: 25,
   },
-  row: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 15,
-    justifyContent: "space-between",
+  subtitle: {
+    fontSize: 18,
+    fontFamily: "Agbalumo",
+    color: "#4B3F2F",
+    alignSelf: "flex-start",
+    marginBottom: 10,
   },
   dropdown: {
-    flex: 1,
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    backgroundColor: "#E0DCD3",
+    marginBottom: 20,
+  },
+  dropdownPlaceholder: { color: "#AAA", fontFamily: "Agbalumo" },
+  dropdownText: { color: "#333", fontFamily: "Agbalumo" },
+  addButton: {
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: 12,
     backgroundColor: "#725437",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    height: 40,
+    alignItems: "center",
+    marginBottom: 30,
   },
-  ratingDropdown: {
-    width: 120,
-    backgroundColor: "#725437",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    height: 40,
-  },
-  updateButton: {
-    flex: 1,
-    backgroundColor: "#985325",
-    borderRadius: 8,
-    paddingVertical: 10,
+  addButtonText: { color: "#fff", fontSize: 16, fontFamily: "Agbalumo" },
+  starContainer: {
+    flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
+    marginBottom: 40,
   },
-  updateButtonText: { color: "#FFF", fontFamily: "Agbalumo" },
-  addLogButton: {
-    backgroundColor: "#CCB452",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    alignItems: "center",
-  },
-  addLogText: { color: "#000", fontFamily: "Agbalumo" },
-  logsContainer: { marginTop: 10, gap: 5 },
-  logEntry: {
-    marginBottom: 10,
-    backgroundColor: "#BDB59F",
-    padding: 10,
-    borderRadius: 20,
-  },
-  logTitle: {
-    fontSize: 16,
-    fontFamily: "Agbalumo",
-    color: "#333",
-    marginBottom: 4,
-  },
-  logDescription: {
-    fontSize: 14,
-    fontFamily: "Agbalumo",
-    color: "#555",
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    padding: 20,
-    width: "80%",
-  },
-  modalTitle: { fontSize: 18, fontFamily: "Agbalumo", marginBottom: 10 },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-    fontFamily: "Agbalumo",
-  },
-  modalButtons: { flexDirection: "row", justifyContent: "space-between" },
-  modalButton: {
-    flex: 1,
-    backgroundColor: "#5A5D37",
-    borderRadius: 8,
-    padding: 10,
-    marginHorizontal: 5,
-    alignItems: "center",
-  },
-  modalButtonText: { color: "#FFF", fontFamily: "Agbalumo" },
+  star: { fontSize: 42, color: "#CCC", marginHorizontal: 6 },
+  starSelected: { color: "#FFD700" },
 });

@@ -1,26 +1,23 @@
-import GoalModal from "@/components/GoalModal";
-import ProgressBar from "@/components/ProgressBar";
-import ProgressLine from "@/components/ProgressLine";
-import Shelf from "@/components/Shelf";
 import { useState, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { getToken } from "@/services/auth";
+import GoalModal from "@/components/GoalModal";
+import ProgressBar from "@/components/ProgressBar";
+import Shelf from "@/components/Shelf";
 import {
   createReadingGoal,
   getMyReadingGoals,
   updateReadingGoal,
   deleteReadingGoal,
+  getBooksFromGoal,
 } from "@/services/api";
 
 export default function Goal() {
   const [goals, setGoals] = useState<any[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const [showCompleted, setShowCompleted] = useState(false);
-
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editTarget, setEditTarget] = useState("");
@@ -28,14 +25,27 @@ export default function Goal() {
   const fetchGoals = async () => {
     try {
       const data = await getMyReadingGoals();
-      setGoals(
-        data.map((g: any) => ({
-          reading_goal_id: g.reading_goal_id,
-          title: g.title,
-          target: g.target,
-          active: g.active,
-        }))
+      const goalsWithBooks = await Promise.all(
+        data.map(async (g: any) => {
+          let books = [];
+          try {
+            books = await getBooksFromGoal(g.reading_goal_id);
+          } catch (err) {
+            console.warn(`No books found for goal: ${g.title}`, err);
+          }
+
+          const progress = books.length;
+          const isCompleted = progress >= g.target;
+
+          if (isCompleted && g.active) {
+            await updateReadingGoal(g.reading_goal_id, g.title, g.target);
+            g.active = false;
+          }
+
+          return { ...g, books };
+        })
       );
+      setGoals(goalsWithBooks);
     } catch (err) {
       console.error(err);
     }
@@ -61,7 +71,7 @@ export default function Goal() {
         newGoalTitle,
         parseInt(newGoalTarget)
       );
-      setGoals((prev) => [...prev, newGoal]);
+      setGoals((prev) => [...prev, { ...newGoal, books: [] }]);
       setNewGoalTitle("");
       setNewGoalTarget("");
       setModalVisible(false);
@@ -78,7 +88,6 @@ export default function Goal() {
         editTitle,
         parseInt(editTarget)
       );
-
       setGoals((prev) =>
         prev.map((g) =>
           g.reading_goal_id === updatedGoal.reading_goal_id ? updatedGoal : g
@@ -156,18 +165,12 @@ export default function Goal() {
             <Text style={styles.editButtonText}>Edit</Text>
           </Pressable>
 
-          <View style={styles.progressContainer}>
-            <View style={{ flex: 1, marginRight: 10 }}>
-              <ProgressLine
-                progress={calculateProgress(selectedGoal.reading_goal_id)}
-                target={selectedGoal.target}
-                title={selectedGoal.title}
-              />
-            </View>
-            <Text style={{ fontFamily: "Agbalumo", fontSize: 14 }}>
-              {calculateProgress(selectedGoal.reading_goal_id)}/
-              {selectedGoal.target}
-            </Text>
+          <View style={{ width: "90%", marginBottom: 10 }}>
+            <ProgressBar
+              progress={calculateProgress(selectedGoal.reading_goal_id)}
+              target={selectedGoal.target}
+              title={selectedGoal.title}
+            />
           </View>
 
           <Shelf goalId={selectedGoal.reading_goal_id} context="goalShelf" />
@@ -273,11 +276,4 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   editButtonText: { color: "#fff", fontFamily: "Agbalumo" },
-  progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    width: "90%",
-    height: 40,
-  },
 });

@@ -1,128 +1,80 @@
-import ProgressLine from "@/components/ProgressLine"; // adjust import path if needed
-import booksData from "@/data/books.json";
+import { Image, Pressable, StyleSheet, Text, View, Alert } from "react-native";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
+import ProgressLine from "@/components/ProgressLine";
+import { removeBookFromReadingGoal } from "@/services/api";
 
-type BookProps = {
-  bookId: number;
-  shelfId?: number;
-  goalId?: number;
-  context?: string;
-};
+type BookProps = { book: any; goalId?: number; context?: string };
 
-const Book = ({ bookId, shelfId, goalId, context }: BookProps) => {
-  const [chosenShelf, setChosenShelf] = useState<number | null>(null);
-
-  const book = booksData.books.find((b) => b.id === bookId);
-  if (!book) return null;
-
-  const rating = booksData.ratings?.find((r) => r.bookId === bookId)?.rating;
-
-  const shelves = [
-    ...booksData.defaultShelves.map((s) => ({ label: s.name, value: s.id })),
-    ...booksData.customShelves.map((s) => ({ label: s.name, value: s.id })),
-  ];
-
-  const handleAdd = (shelfValue: number) => {
-    booksData.shelfBooks.push({ shelfId: shelfValue, bookId: book.id });
-    alert(
-      `Added "${book.title}" to shelf: ${
-        shelves.find((s) => s.value === shelfValue)?.label
-      }`
-    );
-  };
-
-  const handleRemove = () => {
-    if (context === "goalShelf" && goalId) {
-      booksData.goalBooks = booksData.goalBooks.filter(
-        (gb) => !(gb.book_id === book.id && gb.goal_id === goalId)
-      );
-      alert(`Removed "${book.title}" from goal`);
-    } else {
-      const shelfToRemove = shelfId ?? chosenShelf;
-      if (!shelfToRemove) return;
-
-      booksData.shelfBooks = booksData.shelfBooks.filter(
-        (sb) => !(sb.bookId === book.id && sb.shelfId === shelfToRemove)
-      );
-      alert(`Removed "${book.title}" from shelf`);
+const Book = ({ book, goalId, context }: BookProps) => {
+  const handleRemove = async () => {
+    if (!goalId) return;
+    try {
+      await removeBookFromReadingGoal(goalId, book.book_id);
+      Alert.alert("Removed", "Book removed from goal");
+    } catch (err) {
+      Alert.alert("Error", "Failed to remove book from goal");
     }
   };
-
-  const bookProgressObj = booksData.readingProgress?.find(
-    (rp) => rp.bookId === book.id
-  );
 
   return (
     <View style={styles.container}>
       <Pressable
         onPress={() =>
           router.push({
-            pathname: "/(tabs)/(shelf)/[bookinfo]",
-            params: { bookId: book.id, context: "goalPage" },
+            pathname: "/(tabs)/(book)/[shelfBook]",
+            params: {
+              shelfBook: book.google_book_id.toString(),
+              bookinfo: book.google_book_id.toString(),
+              bookId: book.google_book_id.toString(),
+              title: book.title || "",
+              authors: (book.authors || []).join(", "),
+              categories: book.categories || "",
+              pagesRead: (book.progress || 0).toString(),
+              numOfPages: (book.pages || 0).toString(),
+              rating: (book.rating || 0).toString(),
+              shelfName: book.shelfName || "",
+              allShelves: JSON.stringify(book.allShelves || []),
+              description: book.description || "",
+            },
           })
         }
       >
         <Image
           style={styles.cover}
-          source={
-            book.coverUrl
-              ? { uri: book.coverUrl }
-              : require("@/assets/images/books/cover-not-found.jpg")
-          }
+          source={{
+            uri: `https://books.google.com/books?id=${book.google_book_id}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+          }}
         />
       </Pressable>
 
-      <View style={styles.textContainer}>
-        {/* Top Info */}
-        <View style={styles.topInfo}>
-          <Text style={styles.title}>{book.title}</Text>
-          <Text style={styles.author}>{book.authors}</Text>
-          <Text style={styles.genre}>{book.category}</Text>
-
-          {rating !== undefined && (
-            <Text style={styles.stars}>
-              {"★".repeat(rating) + "☆".repeat(5 - rating)}
+      <View style={styles.infoContainer}>
+        <View style={styles.topDetails}>
+          <Text numberOfLines={2} style={styles.title}>
+            {book.title}
+          </Text>
+          <Text numberOfLines={1} style={styles.author}>
+            {book.authors?.join(", ")}
+          </Text>
+          <Text numberOfLines={1} style={styles.pages}>
+            {book.pages || 0} pages
+          </Text>
+          {book.categories && (
+            <Text numberOfLines={1} style={styles.genre}>
+              {book.categories.join(", ")}
             </Text>
           )}
         </View>
 
-        {bookProgressObj && (
-          <View style={{ marginTop: 5, width: 200 }}>
-            <ProgressLine
-              progress={bookProgressObj.progress}
-              target={book.numOfPages}
-            />
-          </View>
-        )}
-
-        <View style={styles.bottomColumn}>
-          {(context === "readBook" ||
-            context === "wantToReadShelf" ||
-            context === "goalShelf") && (
-            <Pressable style={styles.removeButton} onPress={handleRemove}>
-              <Text style={styles.removeButtonText}>Remove</Text>
-            </Pressable>
+        <View style={styles.bottomDetails}>
+          {book.progress !== undefined && (
+            <ProgressLine progress={book.progress} target={book.pages || 100} />
           )}
 
-          <Dropdown
-            maxHeight={200}
-            style={styles.dropdown}
-            containerStyle={styles.dropdownContainer}
-            placeholderStyle={{ textAlign: "center", color: "white" }}
-            itemTextStyle={{ textAlign: "center", color: "white" }}
-            data={shelves}
-            labelField="label"
-            valueField="value"
-            onChange={(item) => {
-              setChosenShelf(item.value);
-              handleAdd(item.value);
-            }}
-            value={chosenShelf}
-            placeholder="Add to Shelf"
-          />
+          {context === "goalShelf" && (
+            <Pressable style={styles.removeBtn} onPress={handleRemove}>
+              <Text style={styles.removeTxt}>Remove from Goal</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -132,41 +84,61 @@ const Book = ({ bookId, shelfId, goalId, context }: BookProps) => {
 export default Book;
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", margin: 10 },
-  cover: { width: 160, height: 240, borderRadius: 5 },
-  textContainer: { marginLeft: 15, flex: 1, justifyContent: "space-between" },
-  topInfo: {}, // Keeps top info compact
-  title: { fontSize: 18, fontFamily: "Agbalumo" },
-  author: { fontSize: 16, fontFamily: "Agbalumo", color: "#555" },
+  container: {
+    flexDirection: "row",
+    marginHorizontal: 20,
+    marginVertical: 12,
+    height: 275,
+    backgroundColor: "#F6F2EA",
+  },
+  cover: {
+    width: 175,
+    height: 275,
+    borderRadius: 30,
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "space-between",
+  },
+  topDetails: {
+    gap: 8,
+  },
+  title: {
+    fontFamily: "Agbalumo",
+    fontSize: 20,
+  },
+  author: {
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+  },
+  pages: {
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+  },
   genre: {
-    fontSize: 14,
     fontFamily: "Agbalumo",
-    color: "#888",
-    marginVertical: 2,
-  },
-  stars: { fontSize: 18, marginVertical: 2 },
-  bottomColumn: { marginTop: 10 },
-  removeButton: {
-    backgroundColor: "#B35B5B",
+    fontSize: 16,
+    backgroundColor: "#CCB452",
     borderRadius: 10,
-    paddingVertical: 5,
     paddingHorizontal: 10,
-    width: 200,
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  removeButtonText: {
-    color: "white",
-    fontFamily: "Agbalumo",
-    textAlign: "center",
-  },
-  dropdown: {
-    backgroundColor: "#725437",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    textAlign: "center",
     height: 30,
-    width: 200,
+    marginTop: 4,
   },
-  dropdownContainer: { backgroundColor: "#725437", borderRadius: 10 },
+  bottomDetails: {
+    gap: 10,
+  },
+  removeBtn: {
+    backgroundColor: "#9B2426",
+    borderRadius: 10,
+    height: 35,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  removeTxt: {
+    fontFamily: "Agbalumo",
+    fontSize: 16,
+    color: "#fff",
+  },
 });

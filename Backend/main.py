@@ -333,3 +333,70 @@ def delete_book_from_shelf(
 ):
     return crud.delete_book(db, current_user.end_user_id, models.Custom_Shelf(), shelf_name, google_book_id)
 
+@app.post("/reading_goal_book/")
+def add_reading_goal_book(
+    reading_goal_id: int,
+    book_id: int,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    new_link = models.Reading_Goal_Book(
+        reading_goal_id=reading_goal_id,
+        book_id=book_id
+    )
+    db.add(new_link)
+    db.commit()
+    db.refresh(new_link)
+    return new_link
+
+@app.get("/books", response_model=list[models.Book])
+def get_all_books(db: Session = Depends(database.get_session),
+                  current_user: models.End_User = Depends(get_current_user)):
+    return crud.get_all_books(db)
+
+@app.delete("/reading_goal_book/{reading_goal_id}/{book_id}")
+def remove_book_from_goal(
+    reading_goal_id: int,
+    book_id: int,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user),
+):
+    deleted = (
+        db.query(models.Reading_Goal_Book)
+        .filter(
+            models.Reading_Goal_Book.reading_goal_id == reading_goal_id,
+            models.Reading_Goal_Book.book_id == book_id
+        )
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Book not found in goal")
+    return {"message": "Book removed from goal"}
+
+@app.get("/reading_goal_book/{reading_goal_id}", response_model=list[models.Book])
+def get_books_from_goal(
+    reading_goal_id: int,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user),
+):
+    books = (
+        db.query(models.Book)
+        .join(models.Reading_Goal_Book, models.Book.book_id == models.Reading_Goal_Book.book_id)
+        .filter(models.Reading_Goal_Book.reading_goal_id == reading_goal_id)
+        .all()
+    )
+
+    if not books:
+        raise HTTPException(status_code=404, detail="No books found for this goal")
+    return books
+
+@app.put("/books/{book_id}/rating")
+def update_book_rating(
+    book_id: int,
+    rating: int,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user),
+):
+    updated_book = crud.update_read_shelf_book_rating(db, current_user.end_user_id, book_id, rating)
+    return {"book_id": updated_book.book_id, "rating": updated_book.rating}

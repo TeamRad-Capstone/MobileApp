@@ -4,13 +4,19 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text, TextInput,
-  View
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useEffect, useState } from "react";
-import { Shelf, getCustomShelves, getDefaultShelves, createShelf } from "@/services/api";
+import {
+  Shelf,
+  getCustomShelves,
+  getDefaultShelves,
+  createShelf,
+} from "@/services/api";
 import DefaultShelf from "@/components/DefaultShelf";
 import { useIsFocused } from "@react-navigation/core";
 
@@ -94,7 +100,7 @@ const Shelves = () => {
       {/*  Modal for adding a new shelf */}
       <Modal transparent={true} visible={shelfModalVisible}>
         <View style={styles.modalContainer}>
-          <View style={{marginTop: 20}}>
+          <View style={{ marginTop: 20 }}>
             <TextInput
               style={styles.input}
               placeholder={"Title"}
@@ -136,7 +142,7 @@ const styles = StyleSheet.create({
   customView: {
     marginTop: 50,
     marginHorizontal: 40,
-    gap: 20
+    gap: 20,
   },
   addBtn: {
     marginTop: 30,
