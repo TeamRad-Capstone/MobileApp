@@ -156,18 +156,6 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
             except IntegrityError as e:
                 raise HTTPException(status_code=500,
                                     detail="This book already exists in this shelf")
-            print("This is to be added to the current shelf")
-            add_book = models.Current_Shelf_Book(
-                current_shelf_id=shelf_id,
-                book_id=found_book.book_id
-            )
-            try:
-                db.add(add_book)
-                db.commit()
-                db.refresh(add_book)
-            except IntegrityError as e:
-                raise HTTPException(status_code=500,
-                                    detail="This book already exists in this shelf")
         case models.Read_Shelf:
             print("This is to be added to the read shelf")
             add_book = models.Read_Shelf_Book(
