@@ -14,7 +14,7 @@ export type Book = {
   authors: string[];
   description: string;
   number_of_pages: number;
-  category: string[];
+  categories: string[];
   published_date: string;
 };
 
@@ -26,7 +26,7 @@ const testConnection = async () => {
       method: "GET",
     });
     if (!response.ok) {
-      throw new Error("Failed to fetch reponse");
+      throw new Error("Failed to fetch response");
     }
 
     const result = await response.json();
@@ -40,31 +40,32 @@ const testConnection = async () => {
 const createUser = async (
   email: string,
   username: string,
-  password: string
+  password: string,
 ) => {
   const endpoint = hostedUrl + "/register/";
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: email,
-        username: username,
-        password: password,
-      }),
-    });
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, username, password }),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log(result);
-  } catch (error: any) {
-    console.log("Something is happening");
-    console.error(error.message);
+  if (!response.ok) {
+    let message = `Response status: ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.detail)
+        message =
+          typeof err.detail === "string"
+            ? err.detail
+            : JSON.stringify(err.detail);
+    } catch {}
+    throw new Error(message);
   }
+
+  const result = await response.json();
+  console.log(result);
+  return result;
 };
 
 const createShelf = async (name: string) => {
@@ -79,7 +80,7 @@ const createShelf = async (name: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      shelf_name: name,
+      shelf_name: name.trim()
     }),
   });
   if (!response.ok) {
@@ -135,12 +136,12 @@ const addToShelf = async (
     authors,
     description,
     number_of_pages,
-    category,
+    categories,
     published_date,
   }: Book,
   shelf_id: number,
   user_id: number,
-  shelf_name: string
+  shelf_name: string,
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -157,7 +158,7 @@ const addToShelf = async (
       endpoint += "/shelves/read";
       break;
     default: // Custom shelf
-      endpoint += "/shelves/custom";
+      endpoint += `/shelves/custom/${shelf_name}`;
       break;
   }
 
@@ -171,33 +172,25 @@ const addToShelf = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      book_in: {
-        google_book_id: google_book_id,
-        title: title,
-        authors: authors,
-        description: description,
-        number_of_pages: number_of_pages,
-        categories: category,
-        published_date: published_date,
-      },
-      shelf_in: {
-        shelf_id: shelf_id,
-        end_user_id: user_id,
-        shelf_name: shelf_name,
-      },
+      google_book_id: google_book_id,
+      title: title,
+      authors: authors,
+      description: description,
+      number_of_pages: number_of_pages,
+      categories: categories,
+      published_date: published_date,
     }),
   });
 
   if (!response.ok) {
     console.log(`Cannot add book`);
     console.log(`Response status: ${response.status}`);
+    throw new Error(`Book is already in shelf: ${shelf_name}`);
   }
 };
 
 const getBooksFromShelf = async (
-  shelf_id: number,
-  user_id: number,
-  shelf_name: string
+  shelf_name: string,
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -243,7 +236,7 @@ const getBooksFromShelf = async (
 const createReadingGoal = async (
   title: string,
   target: number,
-  description?: string
+  description?: string,
 ) => {
   const endpoint = hostedUrl + "/goals/";
   const token = await getToken();
@@ -286,7 +279,7 @@ const getMyReadingGoals = async () => {
 const updateReadingGoal = async (
   goal_id: number,
   title?: string,
-  target?: number
+  target?: number,
 ) => {
   const endpoint = hostedUrl + `/goals/${goal_id}`;
   const token = await getToken();
@@ -322,6 +315,135 @@ const deleteReadingGoal = async (goal_id: number) => {
   return true;
 };
 
+const editShelfName = async (shelf_name: string, new_shelf_name: string) => {
+  const endpoint =
+    hostedUrl + `/shelves/custom/${shelf_name}/${new_shelf_name}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+  return await response.json();
+};
+
+const deleteCustomShelf = async (shelf_name: string) => {
+  const endpoint = hostedUrl + `/shelves/custom/${shelf_name}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+  console.log('Attempting to delete shelf:', endpoint);
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return true;
+}
+
+const getBookUpcomingValue = async (google_book_id: string) => {
+  console.log('Attempting to get upcoming value for book:', google_book_id);
+  const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  const data = await response.json();
+  console.log('Data: ', data);
+  return data;
+}
+
+const addBookUpcomingValue = async (google_book_id: string) => {
+  console.log('Attempting to add upcoming value for book:', google_book_id);
+  const endpoint = hostedUrl + `/shelves/upcoming/${google_book_id}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return true;
+}
+
+const getUsername = async () => {
+  const endpoint = hostedUrl + "/username/me"
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  console.log('Returning username');
+  return await response.json();
+}
+
+const getUpcomingBooks = async () => {
+  const endpoint = hostedUrl + "/shelves/upcomingBooks"
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  console.log('Returning upcoming books');
+  const data = await response.json();
+  console.log('Data: ', data);
+  return data;
+}
+
 export {
   testConnection,
   createUser,
@@ -334,4 +456,10 @@ export {
   getMyReadingGoals,
   updateReadingGoal,
   deleteReadingGoal,
+  editShelfName,
+  deleteCustomShelf,
+  getBookUpcomingValue,
+  addBookUpcomingValue,
+  getUsername,
+  getUpcomingBooks
 };

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = "http://10.0.2.2:8000";
+
 async function setToken(token: string) {
   await AsyncStorage.setItem("access_token", token);
 }
@@ -31,7 +32,7 @@ export async function loginApi(email: string, password: string) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body
   });
-  if (!res.ok) throw new Error("Invalid credentials");
+  if (!res.ok) throw new Error("Invalid credentials. Try again");
   const data: TokenResponse = await res.json();
   await setToken(data.access_token);
   return data;
