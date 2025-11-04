@@ -6,17 +6,16 @@ import { useState } from "react";
 import search from "@/app/(tabs)/search";
 
 const DefaultShelf = ({ end_user_id, shelf_id, shelf_name }: Shelf) => {
-
   return (
     <Pressable style={styles.container}>
       <Link
         href={{
-          pathname:"/(tabs)/[shelf]",
+          pathname: "/(tabs)/[shelf]",
           params: {
             shelf: shelf_id,
             user_id: end_user_id,
             title: shelf_name,
-          }
+          },
         }}
       >
         <Text style={styles.shelfTitle}>{shelf_name}</Text>
@@ -34,7 +33,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: "40%"
+    minWidth: "40%",
   },
   shelfTitle: {
     fontFamily: "Agbalumo",
