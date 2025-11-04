@@ -10,7 +10,7 @@ from sqlmodel import Session, select, update
 import models
 from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
     Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, Read_Shelf_Book, \
-    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal
+    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book
 from security import get_password_hash
 
 import logging
@@ -485,3 +485,51 @@ def get_upcoming_books(db: Session, user_id: int):
             books_to_return.append(book)
             print("BOOKS TO RETURN ARE : ", book)
     return books_to_return
+
+def create_reading_goal_book(db: Session, reading_goal_id: int, book_id: int):
+    new_link = models.Reading_Goal_Book(
+        reading_goal_id=reading_goal_id,
+        book_id=book_id
+    )
+    db.add(new_link)
+    db.commit()
+    db.refresh(new_link)
+    return new_link
+
+
+def get_all_books(db: Session):
+    statement = select(models.Book)
+    books = db.exec(statement).all()
+    return books
+def remove_reading_goal_book(db: Session, reading_goal_id: int, book_id: int):
+    deleted = db.query(models.Reading_Goal_Book).filter(
+        models.Reading_Goal_Book.reading_goal_id == reading_goal_id,
+        models.Reading_Goal_Book.book_id == book_id
+    ).delete(synchronize_session=False)
+    db.commit()
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Book not found in this goal")
+    return {"message": "Book removed from goal"}
+def get_books_from_goal(db: Session, reading_goal_id: int):
+    books = db.query(models.Reading_Goal_Book).filter(
+        models.Reading_Goal_Book.reading_goal_id == reading_goal_id
+    ).all()
+    if not books:
+        raise HTTPException(status_code=404, detail="No books found for this goal")
+    return books
+def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int, new_rating: int):
+    read_shelf = get_read_shelf(db, user_id)
+    statement = select(models.Read_Shelf_Book).where(
+        (models.Read_Shelf_Book.read_shelf_id == read_shelf.shelf_id) &
+        (models.Read_Shelf_Book.book_id == book_id)
+    )
+    link = db.exec(statement).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Book not found in read shelf")
+
+    link.rating = new_rating
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+
+    return link
