@@ -17,7 +17,7 @@ import {
   Book,
   deleteCustomShelf,
   editShelfName,
-  getBooksFromShelf,
+  getBooksFromShelf, removeBookFromShelf
 } from "@/services/api";
 import ShelfBook from "@/components/ShelfBook";
 import { router } from "expo-router";
@@ -35,6 +35,8 @@ const ShelfDetails = () => {
   const [editableTitle, setEditableTitle] = useState(false);
   const [shelfTitle, setShelfTitle] = useState("");
   const [changedTitle, setChangedTitle] = useState(false);
+
+  const [deletionState, setDeletionState] = useState(false);
 
   // React navigation - core library
   const isFocused = useIsFocused();
@@ -58,7 +60,7 @@ const ShelfDetails = () => {
       };
       loadBooks();
     }
-  }, [end_user_id, shelf_id, shelf_name, title, isFocused]);
+  }, [end_user_id, shelf_id, shelf_name, title, isFocused, deletionState, changedTitle]);
 
   // Check if shelf name and not a custom shelf from api
   const checkIfDefaultShelf = () => {
@@ -88,8 +90,9 @@ const ShelfDetails = () => {
       await editShelfName(shelf_name, shelfTitle.trim());
       setCurrentShelfName(shelfTitle.trim());
       setChangedTitle(!changedTitle);
-      // Optional: also update the route param so if you navigate back/forward it’s consistent
-      // router.setParams({ title: newName });
+      router.setParams({
+        title: shelfTitle.trim(),
+      })
     } catch (error) {
       console.error(error);
     } finally {
@@ -97,6 +100,11 @@ const ShelfDetails = () => {
       setShelfTitle("");
     }
   };
+
+  const handleBookRemoval = async (shelf_name: string, google_book_id: string) => {
+    await removeBookFromShelf(shelf_name, google_book_id);
+    setDeletionState(!deletionState);
+  }
 
   const handleDeletion = async () => {
     console.log("Current Shelf Id: ", shelf_id);
@@ -144,6 +152,7 @@ const ShelfDetails = () => {
               number_of_pages={book.number_of_pages}
               categories={book.categories}
               published_date={book.published_date}
+              onBookDelete={() => handleBookRemoval(shelf_name, book.google_book_id)}
             />
           ))
         ) : (

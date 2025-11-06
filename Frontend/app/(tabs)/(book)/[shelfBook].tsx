@@ -151,6 +151,8 @@ const ShelfBook = () => {
           containerStyle={styles.dropdownContainer}
           placeholderStyle={{ textAlign: "center", color: "white" }}
           itemTextStyle={{ textAlign: "center", color: "white" }}
+          selectedTextStyle={{ textAlign: "center", color: "white" }}
+          activeColor={"#725437"}
           data={shelvesList}
           fontFamily={"Agbalumo"}
           labelField={"shelf_name"}
@@ -158,7 +160,7 @@ const ShelfBook = () => {
           onChange={(item) => {
             // handleAdd(item);
           }}
-          placeholder={"Move to Shelf"}
+          placeholder={"Add to Shelf"}
         />
       </View>
       <Text style={styles.descriptionHeader}>Description</Text>

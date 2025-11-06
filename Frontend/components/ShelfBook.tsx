@@ -11,10 +11,12 @@ import {
 
 type ShelfBookProps = {
   shelf_name: string;
+  onBookDelete: () => void;
 } & Book;
 
 const ShelfBook = ({
   shelf_name,
+  onBookDelete,
   google_book_id,
   title,
   authors,
@@ -42,15 +44,9 @@ const ShelfBook = ({
   }, []);
   const allShelves = [...defaultShelves, ...shelves];
 
-  const handleMove = (item: Shelf) => {
-    if (item.shelf_name === shelf_name) {
-      alert("Cannot move book to the same shelf");
-    }
+  const handleAdd = (item: Shelf) => {
+    console.log(item);
   };
-
-  const handleBookRemoval = () => {
-    removeBookFromShelf(shelf_name, google_book_id);
-  }
 
   return (
     <View style={styles.container}>
@@ -98,7 +94,7 @@ const ShelfBook = ({
         </View>
         <View style={styles.btmBookDetails}>
           {/*If there exist a progress, add the bar here*/}
-          <Pressable style={styles.removeBtn} onPress={handleBookRemoval}>
+          <Pressable style={styles.removeBtn} onPress={onBookDelete}>
             <Text style={styles.removeTxt}>Remove</Text>
           </Pressable>
           <Dropdown
@@ -115,7 +111,7 @@ const ShelfBook = ({
             labelField={"shelf_name"}
             valueField={"shelf_id"}
             onChange={(item) => {
-              handleMove(item);
+              handleAdd(item);
             }}
             placeholder={"Add to Shelf"}
           />
