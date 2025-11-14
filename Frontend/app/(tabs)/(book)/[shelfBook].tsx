@@ -13,14 +13,18 @@ import { useEffect, useState } from "react";
 import ProgressLine from "@/components/ProgressLine";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Dropdown } from "react-native-element-dropdown";
-import shelfBook from "@/components/ShelfBook";
-import { addBookUpcomingValue, getBookUpcomingValue } from "@/services/api";
+import {
+  addBookUpcomingValue,
+  getBookRating,
+  getBookUpcomingValue,
+  removeBookUpcoming,
+} from "@/services/api";
+import { useIsFocused } from "@react-navigation/core";
 
 const ShelfBook = () => {
   const {
     shelfName,
     pagesRead,
-    rating,
     shelfBook,
     title,
     authors,
@@ -31,49 +35,70 @@ const ShelfBook = () => {
   } = useLocalSearchParams();
   const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
+  const isFocused = useIsFocused();
 
   const readPages = Number.parseInt(pagesRead as string);
   const numberOfPages = Number.parseInt(numOfPages as string);
-  console.log("READ PAGES: " + numberOfPages);
-  let userRating = Number.parseFloat(rating as string);
-  let ratingText = [];
-  for (let i = 1; i <= 5; i++) {
-    if (userRating - i >= 0) {
-      ratingText.push(<FontAwesome size={30} name="star" color="#CCB452" />);
-    } else if (Math.abs(userRating - i) == 0.5) {
-      ratingText.push(
-        <FontAwesome size={30} name="star-half-full" color="#CCB452" />
-      );
-    } else {
-      ratingText.push(<FontAwesome size={30} name="star" color="#83884E" />);
-    }
-  }
-
-  console.log("ALL SHELVES: " + allShelves);
   const shelvesList = JSON.parse(allShelves as string);
-
   const authorList = authors.toString().split(",");
-  console.log(shelvesList);
 
   const [upcoming, setUpcoming] = useState("Mark as Upcoming");
+  const [ratingText, setRatingText] = useState<any>([]);
 
   useEffect(() => {
-    const getValueOfBook = async () => {
-      const value = await getBookUpcomingValue(shelfBook as string);
-      if (value > 0) {
-        setUpcoming("Upcoming");
-      } else {
-        setUpcoming("Mark as Upcoming");
-      }
-    };
-    getValueOfBook();
-  }, [shelfBook, upcoming]);
+    if (isFocused) {
+      const getValuesOfBook = async () => {
+        const value = await getBookUpcomingValue(shelfBook as string);
+        if (value > 0) {
+          setUpcoming("Upcoming");
+        } else {
+          setUpcoming("Mark as Upcoming");
+        }
+
+        const rating = await getBookRating(shelfBook as string);
+        setRatingText([]);
+        console.log("RATING: " + rating);
+        for (let i = 1; i <= 5; i++) {
+          if (rating - i >= 0) {
+            setRatingText((prev: any) => [
+              ...prev,
+              <FontAwesome key={i} size={30} name="star" color="#CCB452" />,
+              "  ",
+            ]);
+          } else if (Math.abs(rating - i) === 0.5) {
+            setRatingText((prev: any) => [
+              ...prev,
+              <FontAwesome
+                key={i}
+                size={30}
+                name="star-half-full"
+                color="#CCB452"
+              />,
+              "  ",
+            ]);
+          } else {
+            setRatingText((prev: any) => [
+              ...prev,
+              <FontAwesome key={i} size={30} name="star" color="#83884E" />,
+              "  ",
+            ]);
+          }
+        }
+      };
+      getValuesOfBook();
+    }
+  }, [shelfBook, upcoming, isFocused]);
 
   const handleUpcoming = async () => {
     if (upcoming === "Mark as Upcoming") {
       // handle adding an upcoming value to that book
       console.log("Trying to add an upcoming value to book");
       await addBookUpcomingValue(shelfBook as string);
+      setUpcoming("Upcoming");
+    } else {
+      console.log("Trying to remove an upcoming value from book");
+      await removeBookUpcoming(shelfBook as string);
+      setUpcoming("Mark as Upcoming");
     }
   };
 
@@ -109,7 +134,7 @@ const ShelfBook = () => {
         {shelfName !== "Currently Reading" &&
           shelfName !== "Dropped" &&
           shelfName !== "Want to Read" && (
-            <View style={{ flexDirection: "row", gap: 14 }}>
+            <View style={{ flexDirection: "row" }}>
               <Text>{ratingText}</Text>
             </View>
           )}
@@ -129,10 +154,10 @@ const ShelfBook = () => {
           />
         </View>
         <ScrollView style={styles.bookDetails}>
-            <Text style={styles.bookTitle}>{title}</Text>
-            <Text style={styles.bookInfoText}>
-              {authorList.map((author) => `${author}\n`)}
-            </Text>
+          <Text style={styles.bookTitle}>{title}</Text>
+          <Text style={styles.bookInfoText}>
+            {authorList.map((author) => `${author}\n`)}
+          </Text>
         </ScrollView>
       </View>
       <Text style={styles.bookPageText}>{numberOfPages} Pages</Text>
