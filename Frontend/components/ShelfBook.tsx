@@ -64,7 +64,7 @@ const ShelfBook = ({
             shelfName: shelf_name,
             allShelves: JSON.stringify(allShelves),
             pagesRead: 100,
-            rating: 1.5
+            // rating: 1.5
           },
         }}
       >

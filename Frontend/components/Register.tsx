@@ -77,6 +77,7 @@ const Register = () => {
       setSubmitting(true);
       const res = await createUser(emailTrim, usernameTrim, password);
       console.log("API Call successfully registered:", res);
+      alert("Registration successful. Please login to continue.");
       router.push("/");
       handleFormCleanUp();
     } catch (e: any) {
