@@ -42,7 +42,7 @@ const testConnection = async () => {
 const createUser = async (
   email: string,
   username: string,
-  password: string
+  password: string,
 ) => {
   const endpoint = hostedUrl + "/register/";
 
@@ -143,7 +143,7 @@ const addToShelf = async (
   }: Book,
   shelf_id: number,
   user_id: number,
-  shelf_name: string
+  shelf_name: string,
 ) => {
   let endpoint = hostedUrl;
   switch (shelf_name) {
@@ -236,7 +236,7 @@ const getBooksFromShelf = async (shelf_name: string) => {
 const createReadingGoal = async (
   title: string,
   target: number,
-  description?: string
+  description?: string,
 ) => {
   const endpoint = hostedUrl + "/goals/";
   const token = await getToken();
@@ -279,7 +279,7 @@ const getMyReadingGoals = async () => {
 const updateReadingGoal = async (
   goal_id: number,
   title?: string,
-  target?: number
+  target?: number,
 ) => {
   const endpoint = hostedUrl + `/goals/${goal_id}`;
   const token = await getToken();
@@ -443,9 +443,10 @@ const getUpcomingBooks = async () => {
   console.log("Data: ", data);
   return data;
 };
+
 const addBookToReadingGoal = async (
   reading_goal_id: number,
-  book_id: number
+  book_id: number,
 ) => {
   const token = await getToken();
   if (!token) throw new Error("No token");
@@ -491,7 +492,7 @@ const getAllBooks = async () => {
 
 const removeBookFromReadingGoal = async (
   reading_goal_id: number,
-  book_id: number
+  book_id: number,
 ) => {
   const token = await getToken();
   if (!token) throw new Error("No token");
@@ -510,7 +511,7 @@ const removeBookFromReadingGoal = async (
 
   if (!response.ok) {
     throw new Error(
-      `Failed to remove book from reading goal: ${response.status}`
+      `Failed to remove book from reading goal: ${response.status}`,
     );
   }
 
@@ -549,7 +550,7 @@ const updateBookRating = async (book_id: number, rating: number) => {
     "Attempting to update rating for book_id:",
     book_id,
     "to",
-    rating
+    rating,
   );
 
   const response = await fetch(endpoint, {
@@ -571,7 +572,7 @@ const updateBookRating = async (book_id: number, rating: number) => {
   return data;
 };
 
-const removeBookFromShelf = async (shelfName: string, googleBookId: string) =>{
+const removeBookFromShelf = async (shelfName: string, googleBookId: string) => {
   let shelfType = "";
   switch (shelfName) {
     case "Want to Read":
@@ -595,16 +596,58 @@ const removeBookFromShelf = async (shelfName: string, googleBookId: string) =>{
   const token = await getToken();
   if (!token) throw new Error("No token");
 
-  console.log('Attempting to remove book from shelf');
+  console.log("Attempting to remove book from shelf");
   const response = await fetch(endpoint, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-  })
-    console.log('Response status:', response.status);
-    console.log('Response status text:', response.statusText);
+  });
+  console.log("Response status:", response.status);
+  console.log("Response status text:", response.statusText);
+};
+
+const removeBookUpcoming = async (googleBookId: string) => {
+  const endpoint = hostedUrl + `/shelves/upcoming/${googleBookId}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+  console.log("Attempting to remove book from upcoming");
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+};
+
+const getBookRating = async (googleBookId: string) => {
+  const endpoint = hostedUrl + `/shelves/rating/${googleBookId}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+  console.log("Attempting to get rating for book:", googleBookId);
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  const data = await response.json();
+  console.log("Returning rating " + data);
+  return data
 }
 
 export {
@@ -631,4 +674,6 @@ export {
   removeBookFromReadingGoal,
   getBooksFromGoal,
   updateBookRating,
+  removeBookUpcoming,
+  getBookRating,
 };
