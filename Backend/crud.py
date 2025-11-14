@@ -488,7 +488,7 @@ def get_upcoming_books(db: Session, user_id: int):
     books_to_return = []
     for book in books:
         print("BOOK VALUE TYPE IS : ", type(book.upcoming_book_value))
-        if type(book.upcoming_book_value) is int:
+        if type(book.upcoming_book_value) is int and book.upcoming_book_value > 0:
             statement = select(Book).where(Book.book_id == book.book_id)
             book = db.exec(statement).first()
             books_to_return.append(book)
@@ -626,6 +626,8 @@ def get_all_books(db: Session):
     statement = select(models.Book)
     books = db.exec(statement).all()
     return books
+
+
 def remove_reading_goal_book(db: Session, reading_goal_id: int, book_id: int):
     deleted = db.query(models.Reading_Goal_Book).filter(
         models.Reading_Goal_Book.reading_goal_id == reading_goal_id,
@@ -635,6 +637,8 @@ def remove_reading_goal_book(db: Session, reading_goal_id: int, book_id: int):
     if not deleted:
         raise HTTPException(status_code=404, detail="Book not found in this goal")
     return {"message": "Book removed from goal"}
+
+
 def get_books_from_goal(db: Session, reading_goal_id: int):
     books = db.query(models.Reading_Goal_Book).filter(
         models.Reading_Goal_Book.reading_goal_id == reading_goal_id
@@ -642,6 +646,8 @@ def get_books_from_goal(db: Session, reading_goal_id: int):
     if not books:
         raise HTTPException(status_code=404, detail="No books found for this goal")
     return books
+
+
 def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int, new_rating: int):
     read_shelf = get_read_shelf(db, user_id)
     statement = select(models.Read_Shelf_Book).where(
@@ -658,3 +664,47 @@ def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int, new_r
     db.refresh(link)
 
     return link
+
+
+def delete_upcoming_value(db, user_id, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+
+    # Only 1 to read shelf per user
+    shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
+        To_Read_Shelf.end_user_id == user_id
+    )
+    to_read_shelf_id = db.exec(shelf_id_statement).first()
+
+    statement = select(To_Read_Shelf_Book).where(
+        To_Read_Shelf_Book.to_read_shelf_id == to_read_shelf_id
+    )
+    books = db.exec(statement).all()
+
+    for book in books:
+        if book.book_id == book_id:
+            book.upcoming_book_value = 0
+            db.add(book)
+            db.commit()
+            db.refresh(book)
+
+
+def get_book_rating(db, user_id, google_book_id):
+    book_id_statement = select(Book.book_id).where(
+        Book.google_book_id == google_book_id
+    )
+    book_id = db.exec(book_id_statement).first()
+
+    # Only 1 to read shelf per user
+    shelf_id_statement = select(Read_Shelf.shelf_id).where(
+        Read_Shelf.end_user_id == user_id
+    )
+    read_shelf_id = db.exec(shelf_id_statement).first()
+
+    statement = select(Read_Shelf_Book.rating).where(
+        Read_Shelf_Book.book_id == book_id and
+        Read_Shelf_Book.read_shelf_id == read_shelf_id
+    )
+    return db.exec(statement).first()
