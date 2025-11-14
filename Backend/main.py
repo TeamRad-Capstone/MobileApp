@@ -122,7 +122,7 @@ def add_book_to_current_shelf(
 ):
     shelf = crud.get_current_shelf(db, current_user.end_user_id)
     print("TEST THE THING TO ADD TO CURRENT SHELF: ", shelf.shelf_id)
-    return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
+    return crud.book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/read")
@@ -400,3 +400,21 @@ def update_book_rating(
 ):
     updated_book = crud.update_read_shelf_book_rating(db, current_user.end_user_id, book_id, rating)
     return {"book_id": updated_book.book_id, "rating": updated_book.rating}
+
+
+@app.put("/shelves/upcoming/{google_book_id}")
+def remove_upcoming_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.get("/shelves/rating/{google_book_id}")
+def get_rating_of_book(
+        google_book_id: str,
+        current_user: models.End_User = Depends(get_current_user),
+        db: Session = Depends(database.get_session),
+):
+    return crud.get_book_rating(db, current_user.end_user_id, google_book_id)

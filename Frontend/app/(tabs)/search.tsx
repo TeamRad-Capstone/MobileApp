@@ -60,6 +60,7 @@ const Search = () => {
         type +
         startIndexValue +
         "&printType=books" +
+        "&langRestrict=en" +
         "&key=" +
         process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY,
       );

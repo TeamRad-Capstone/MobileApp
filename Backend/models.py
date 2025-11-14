@@ -155,7 +155,7 @@ class Read_Shelf_Book(SQLModel, table=True):
     )
     book_id: int | None = Field(default=None, foreign_key="book.book_id")
     reading_goal_id: int | None = Field(default=None, foreign_key="reading_goal.reading_goal_id")
-    date_read: datetime
+    date_read: datetime | None
     rating: float | None
     __table_args__ = (UniqueConstraint("book_id", "read_shelf_id", name="unique_read_shelf_book"),)
 

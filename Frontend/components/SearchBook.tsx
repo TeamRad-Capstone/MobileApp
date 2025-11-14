@@ -133,11 +133,6 @@ const SearchBook = ({
           onChange={(item) => {
             handleAdd(item);
           }}
-          // confirmSelectItem={true}
-          // onConfirmSelectItem={(item) => {
-          //   setShelfId(item.shelf_id);
-          //   console.log("Shelf id = " + item.shelf_id);
-          // }}
           placeholder={"Add to Shelf"}
         />
       </View>
