@@ -1,11 +1,6 @@
-from typing import Any
-from warnings import catch_warnings
-
 from fastapi import HTTPException
-from pydantic import EmailStr
-from sqlalchemy import Row
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select, update
+from sqlmodel import Session, select
 
 import models
 from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
@@ -98,11 +93,10 @@ def get_read_shelf(db: Session, owner_id: int) -> Read_Shelf:
 def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
     found_book_statement = select(Book).where(Book.google_book_id == book.google_book_id)
     print("Book ID: ", book.google_book_id)
-    found_book = db.exec(found_book_statement).first()
+    found_book = db.exec(found_book_statement)
 
     # Add the book to database if not found
     if not found_book:
-        # does it not read the book properly
         add_to_book = models.Book(
             google_book_id=book.google_book_id,
             title=book.title,
@@ -181,7 +175,7 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
             read_shelf_id = db.exec(read_shelf_statement).first()
 
             statement = select(Read_Shelf_Book).where(
-                Read_Shelf_Book.book_id == found_book.book_id and
+                Read_Shelf_Book.book_id == found_book.book_id).where(
                 Read_Shelf_Book.read_shelf_id == read_shelf_id
             )
             book_in_read_shelf = db.exec(statement).first()
@@ -221,7 +215,7 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
 def add_to_custom(db, book_id, read_shelf_id, custom_shelf):
     print("Adding to custom shelf")
     read_shelf_book_statement = select(Read_Shelf_Book).where(
-        Read_Shelf_Book.book_id == book_id and
+        Read_Shelf_Book.book_id == book_id).where(
         Read_Shelf_Book.read_shelf_id == read_shelf_id
     )
     print("READ SHELF STMT: ", read_shelf_book_statement)
@@ -404,7 +398,7 @@ def delete_reading_goal(db: Session, user_id: int, goal_id: int):
 
 def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_shelf_name: str):
     statement = select(Custom_Shelf).where(
-        Custom_Shelf.shelf_name == shelf_name and
+        Custom_Shelf.shelf_name == shelf_name).where(
         Custom_Shelf.end_user_id == user_id
     )
     shelf = db.exec(statement).first()
@@ -424,7 +418,7 @@ def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_she
 
 def delete_custom_shelf(db: Session, user_id: int, shelf_name: str):
     statement = select(Custom_Shelf).where(
-        Custom_Shelf.end_user_id == user_id,
+        Custom_Shelf.end_user_id == user_id).where(
         Custom_Shelf.shelf_name == shelf_name
     )
     shelf = db.exec(statement).first()
@@ -501,7 +495,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
     match type(shelf_type):
         case models.To_Read_Shelf:
             shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
-                To_Read_Shelf.end_user_id == user_id and
+                To_Read_Shelf.end_user_id == user_id).where(
                 To_Read_Shelf.shelf_name == shelf_name
             )
             shelf_id = db.exec(shelf_id_statement).first()
@@ -512,7 +506,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(To_Read_Shelf_Book).where(
-                To_Read_Shelf_Book.book_id == book_id and
+                To_Read_Shelf_Book.book_id == book_id).where(
                 To_Read_Shelf_Book.to_read_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
@@ -521,7 +515,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             db.refresh(shelf_book)
         case models.Dropped_Shelf:
             shelf_id_statement = select(Dropped_Shelf.shelf_id).where(
-                Dropped_Shelf.end_user_id == user_id and
+                Dropped_Shelf.end_user_id == user_id).where(
                 Dropped_Shelf.shelf_name == shelf_name
             )
             shelf_id = db.exec(shelf_id_statement).first()
@@ -532,7 +526,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Dropped_Shelf_Book).where(
-                Dropped_Shelf_Book.book_id == book_id and
+                Dropped_Shelf_Book.book_id == book_id).where(
                 Dropped_Shelf_Book.dropped_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
@@ -541,7 +535,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             db.refresh(shelf_book)
         case models.Current_Shelf:
             shelf_id_statement = select(Current_Shelf.shelf_id).where(
-                Current_Shelf.end_user_id == user_id and
+                Current_Shelf.end_user_id == user_id).where(
                 Current_Shelf.shelf_name == shelf_name
             )
             shelf_id = db.exec(shelf_id_statement).first()
@@ -552,7 +546,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Current_Shelf_Book).where(
-                Current_Shelf_Book.book_id == book_id and
+                Current_Shelf_Book.book_id == book_id).where(
                 Current_Shelf_Book.current_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
@@ -561,7 +555,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             db.refresh(shelf_book)
         case models.Read_Shelf:
             shelf_id_statement = select(Read_Shelf.shelf_id).where(
-                Read_Shelf.end_user_id == user_id and
+                Read_Shelf.end_user_id == user_id).where(
                 Read_Shelf.shelf_name == shelf_name
             )
             shelf_id = db.exec(shelf_id_statement).first()
@@ -572,7 +566,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             book_id = db.exec(book_id_statement).first()
 
             shelf_statement = select(Read_Shelf_Book).where(
-                Read_Shelf_Book.book_id == book_id and
+                Read_Shelf_Book.book_id == book_id).where(
                 Read_Shelf_Book.read_shelf_id == shelf_id
             )
             shelf_book = db.exec(shelf_statement).first()
@@ -594,7 +588,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
             # Get the bookshelf id that is linked to the read shelf book and the book id
             # linked to the google book id passed in
             bookshelf_id_statement = select(Read_Shelf_Book.bookshelf_id).where(
-                Read_Shelf_Book.book_id == book_id and
+                Read_Shelf_Book.book_id == book_id).where(
                 Read_Shelf_Book.read_shelf_id == read_shelf_id
             )
             bookshelf_id = db.exec(bookshelf_id_statement).first()
@@ -704,7 +698,7 @@ def get_book_rating(db, user_id, google_book_id):
     read_shelf_id = db.exec(shelf_id_statement).first()
 
     statement = select(Read_Shelf_Book.rating).where(
-        Read_Shelf_Book.book_id == book_id and
+        Read_Shelf_Book.book_id == book_id).where(
         Read_Shelf_Book.read_shelf_id == read_shelf_id
     )
-    return db.exec(statement).first()
+    return db.exec(statement).all()
