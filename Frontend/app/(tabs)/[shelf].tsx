@@ -17,11 +17,14 @@ import {
   Book,
   deleteCustomShelf,
   editShelfName,
-  getBooksFromShelf, removeBookFromShelf
+  getBooksFromShelf,
+  removeBookFromShelf,
 } from "@/services/api";
 import ShelfBook from "@/components/ShelfBook";
 import { router } from "expo-router";
 import { useIsFocused } from "@react-navigation/core";
+import { Dropdown } from "react-native-element-dropdown";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 
 const ShelfDetails = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -38,6 +41,25 @@ const ShelfDetails = () => {
 
   const [deletionState, setDeletionState] = useState(false);
 
+  let sortByValues = [
+    { label: "Author", value: "Author" },
+    { label: "Title", value: "Title" },
+    { label: "Genre", value: "Genre" },
+    { label: "Date Added", value: "Date Added" },
+  ];
+
+  if (
+    shelf_name !== "Want to Read" &&
+    shelf_name !== "Dropped" &&
+    shelf_name !== "Currently Reading"
+  ) {
+    sortByValues.push(
+      { label: "Date Read", value: "Date Read" },
+      { label: "Rating", value: "Rating" },
+    );
+  }
+
+  const [chosenSort, setChosenSort] = useState(0);
   // React navigation - core library
   const isFocused = useIsFocused();
 
@@ -60,7 +82,15 @@ const ShelfDetails = () => {
       };
       loadBooks();
     }
-  }, [end_user_id, shelf_id, shelf_name, title, isFocused, deletionState, changedTitle]);
+  }, [
+    end_user_id,
+    shelf_id,
+    shelf_name,
+    title,
+    isFocused,
+    deletionState,
+    changedTitle,
+  ]);
 
   // Check if shelf name and not a custom shelf from api
   const checkIfDefaultShelf = () => {
@@ -92,7 +122,7 @@ const ShelfDetails = () => {
       setChangedTitle(!changedTitle);
       router.setParams({
         title: shelfTitle.trim(),
-      })
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -101,10 +131,13 @@ const ShelfDetails = () => {
     }
   };
 
-  const handleBookRemoval = async (shelf_name: string, google_book_id: string) => {
+  const handleBookRemoval = async (
+    shelf_name: string,
+    google_book_id: string,
+  ) => {
     await removeBookFromShelf(shelf_name, google_book_id);
     setDeletionState(!deletionState);
-  }
+  };
 
   const handleDeletion = async () => {
     console.log("Current Shelf Id: ", shelf_id);
@@ -139,7 +172,36 @@ const ShelfDetails = () => {
         submitSearchText={searchInShelf}
       />
 
-      <ScrollView>
+      <View style={styles.sorting}>
+        <Dropdown
+          maxHeight={50}
+          fontFamily={"Agbalumo"}
+          iconColor={"black"}
+          style={styles.dropdown}
+          containerStyle={styles.dropdownContainer}
+          placeholderStyle={{ textAlign: "right" }}
+          itemTextStyle={{ textAlign: "right" }}
+          selectedTextStyle={{ textAlign: "right" }}
+          activeColor={"#F6F2EA"}
+          data={sortByValues}
+          placeholder="Sort By"
+          labelField={"label"}
+          valueField={"value"}
+          onChange={() => {}}
+        />
+        <SegmentedControl
+          values={["Ascending", "Descending"]}
+          selectedIndex={chosenSort}
+          onChange={(chosen) => {
+            setChosenSort(chosen.nativeEvent.selectedSegmentIndex);
+          }}
+          style={styles.sortSegment}
+          activeFontStyle={{ color: "#A65926" }}
+          fontStyle={{ fontFamily: "Agbalumo" }}
+        />
+      </View>
+
+      <ScrollView style={{ marginTop: 20 }}>
         {Array.isArray(books) && books.length > 0 ? (
           books.map((book) => (
             <ShelfBook
@@ -152,7 +214,9 @@ const ShelfDetails = () => {
               number_of_pages={book.number_of_pages}
               categories={book.categories}
               published_date={book.published_date}
-              onBookDelete={() => handleBookRemoval(shelf_name, book.google_book_id)}
+              onBookDelete={() =>
+                handleBookRemoval(shelf_name, book.google_book_id)
+              }
             />
           ))
         ) : (
@@ -271,5 +335,30 @@ const styles = StyleSheet.create({
     fontFamily: "Agbalumo",
     fontSize: 20,
     textAlign: "center",
+  },
+  sorting: {
+    flexDirection: "column",
+    width: "100%",
+  },
+  dropdown: {
+    borderRadius: 10,
+    textAlign: "right",
+    height: 30,
+    marginRight: 25,
+  },
+  dropdownContainer: {
+    borderColor: "black",
+    borderRadius: 20,
+    color: "white",
+    borderWidth: 1,
+    width: "40%",
+    marginLeft: "auto",
+    marginRight: 25,
+  },
+  sortSegment: {
+    marginLeft: "auto",
+    marginRight: 20,
+    backgroundColor: "#F6F2EA",
+    width: "50%",
   },
 });
