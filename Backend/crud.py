@@ -10,12 +10,29 @@ from sqlmodel import Session, select, update
 import models
 from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
     Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, Read_Shelf_Book, \
-    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book
+    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book, Image_Url
 from security import get_password_hash
 
 def get_user_by_email(db: Session, email: str):
     statement = select(End_User).where(End_User.email == email.lower())
     return db.exec(statement).first()
+
+def update_user_profile_image(db: Session, user_id: int, image_url: str) -> End_User:
+    user = db.get(End_User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.profile_image_url = image_url
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def get_user_profile(db: Session, user_id: int) -> End_User:
+    user = db.get(End_User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 def update_user_password(db: Session, email: str, new_password: str) -> End_User:
     user = db.exec(select(End_User).where(End_User.email == email)).first()
@@ -670,3 +687,193 @@ def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int, new_r
     db.refresh(link)
 
     return link
+def delete_user_account_by_username(db: Session, username: str):
+    """
+    Delete a user account and all associated data by username
+    """
+    try:
+        # Get the user by username
+        user = db.exec(select(End_User).where(End_User.username == username)).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user_id = user.end_user_id
+
+        # Delete user's custom shelves and their links
+        custom_shelves = db.exec(select(Custom_Shelf).where(Custom_Shelf.end_user_id == user_id)).all()
+        for shelf in custom_shelves:
+            # Delete custom shelf book links
+            link_statement = select(Custom_Shelf_Book_Link).where(
+                Custom_Shelf_Book_Link.custom_shelf_id == shelf.shelf_id
+            )
+            links = db.exec(link_statement).all()
+            for link in links:
+                db.delete(link)
+            
+            db.delete(shelf)
+
+        # Delete user's reading goals and their book links
+        reading_goals = db.exec(select(Reading_Goal).where(Reading_Goal.end_user_id == user_id)).all()
+        for goal in reading_goals:
+            # Delete reading goal book links
+            goal_books = db.exec(select(Reading_Goal_Book).where(
+                Reading_Goal_Book.reading_goal_id == goal.reading_goal_id
+            )).all()
+            for goal_book in goal_books:
+                db.delete(goal_book)
+            
+            db.delete(goal)
+
+        # Delete books from various shelves
+        # To Read Shelf Books
+        tbr_shelf = get_tbr_shelf(db, user_id)
+        if tbr_shelf:
+            tbr_books = db.exec(select(To_Read_Shelf_Book).where(
+                To_Read_Shelf_Book.to_read_shelf_id == tbr_shelf.shelf_id
+            )).all()
+            for book in tbr_books:
+                db.delete(book)
+            db.delete(tbr_shelf)
+
+        # Current Shelf Books
+        current_shelf = get_current_shelf(db, user_id)
+        if current_shelf:
+            current_books = db.exec(select(Current_Shelf_Book).where(
+                Current_Shelf_Book.current_shelf_id == current_shelf.shelf_id
+            )).all()
+            for book in current_books:
+                db.delete(book)
+            db.delete(current_shelf)
+
+        # Dropped Shelf Books
+        dropped_shelf = get_dropped_shelf(db, user_id)
+        if dropped_shelf:
+            dropped_books = db.exec(select(Dropped_Shelf_Book).where(
+                Dropped_Shelf_Book.dropped_shelf_id == dropped_shelf.shelf_id
+            )).all()
+            for book in dropped_books:
+                db.delete(book)
+            db.delete(dropped_shelf)
+
+        # Read Shelf Books
+        read_shelf = get_read_shelf(db, user_id)
+        if read_shelf:
+            read_books = db.exec(select(Read_Shelf_Book).where(
+                Read_Shelf_Book.read_shelf_id == read_shelf.shelf_id
+            )).all()
+            for book in read_books:
+                db.delete(book)
+            db.delete(read_shelf)
+
+        # Delete journal entries and log sections
+        journal_entries = db.exec(select(Journal_Entry).where(Journal_Entry.end_user_id == user_id)).all()
+        for entry in journal_entries:
+            log_sections = db.exec(select(Log_Section).where(Log_Section.journal_entry_id == entry.journal_entry_id)).all()
+            for section in log_sections:
+                db.delete(section)
+            db.delete(entry)
+
+        # Delete recommendations
+        recommendations = db.exec(select(Recommendation).where(Recommendation.end_user_id == user_id)).all()
+        for rec in recommendations:
+            db.delete(rec)
+
+        # Delete transfer history if exists
+        if user.transfer_history_id:
+            transfer_history = db.get(Transfer_History, user.transfer_history_id)
+            if transfer_history:
+                # Delete imported books associated with this transfer history
+                imported_books = db.exec(select(Imported_Book).where(
+                    Imported_Book.transfer_history_id == user.transfer_history_id
+                )).all()
+                for imported_book in imported_books:
+                    db.delete(imported_book)
+                
+                db.delete(transfer_history)
+
+        # Finally delete the user
+        db.delete(user)
+        db.commit()
+
+        return {"message": "Account and all associated data deleted successfully"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting account: {str(e)}")
+    
+def update_user_profile_image(db: Session, user_id: int, image_url: str):
+    """
+    Update user's profile image
+    """
+    try:
+        # Find the user
+        user = db.get(End_User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Check if user already has a profile image
+        if user.image_url_id:
+            # Update existing image URL
+            existing_image = db.get(Image_Url, user.image_url_id)
+            if existing_image:
+                existing_image.url = image_url
+                db.add(existing_image)
+            else:
+                # Create new image URL record
+                new_image = Image_Url(url=image_url)
+                db.add(new_image)
+                db.commit()
+                db.refresh(new_image)
+                user.image_url_id = new_image.image_url_id
+        else:
+            # Create new image URL record
+            new_image = Image_Url(url=image_url)
+            db.add(new_image)
+            db.commit()
+            db.refresh(new_image)
+            user.image_url_id = new_image.image_url_id
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+        return user
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error updating profile image: {str(e)}")
+
+def get_user_profile_image(db: Session, user_id: int):
+    """
+    Get user's profile image URL
+    """
+    user = db.get(End_User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.image_url_id:
+        image_url = db.get(Image_Url, user.image_url_id)
+        return image_url.url if image_url else None
+    
+    return None
+
+def get_user_profile(db: Session, user_id: int):
+    """
+    Get complete user profile including image
+    """
+    user = db.get(End_User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    profile_data = {
+        "username": user.username,
+        "email": user.email,
+        "profile_image_url": None
+    }
+    
+    if user.image_url_id:
+        image_url = db.get(Image_Url, user.image_url_id)
+        if image_url:
+            profile_data["profile_image_url"] = image_url.url
+    
+    return profile_data
