@@ -213,3 +213,13 @@ class Reading_Goal_Book(SQLModel, table=True):
 class PasswordUpdate(SQLModel):
     current_password: str
     new_password: str
+
+class End_User(SQLModel, table=True):
+    __tablename__ = "end_user"
+    
+    end_user_id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True, index=True)
+    username: str
+    password_hash: str
+    profile_image_url: Optional[str] = Field(default=None)  # Add this field
+    # ... rest of your existing fields
