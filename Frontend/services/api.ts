@@ -20,6 +20,28 @@ export type Book = {
   published_date: string;
 };
 
+const apiCall = async (_endpoint: string, method: string, body?: any) => {
+      const token = await getToken();
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+  
+      const response = await fetch(hostedUrl, {
+        method,
+        headers,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Request failed');
+      }
+  
+      return await response.json();
+    };
+
 const testConnection = async () => {
   const endpoint = hostedUrl + "/";
 
@@ -762,6 +784,7 @@ export {
   getAllBooks,
   removeBookFromReadingGoal,
   getBooksFromGoal,
+  updateBookRating, apiCall,
   updateBookRating,
   removeBookUpcoming,
   getBookRating,
