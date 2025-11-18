@@ -19,6 +19,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { AuthContext } from "@/contexts/AuthContext";
+import { apiCall } from "@/services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -51,30 +52,6 @@ const Edit = () => {
     };
     loadStatic();
   }, [user]);
-  // API call functions
-    const apiCall = async (endpoint: string, method: string, body?: any) => {
-      // Use token from user context (if available) instead of a missing getAuthToken export
-      const token = (user as any)?.token ?? undefined;
-      const headers: any = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-  
-      const response = await fetch(`http://your-backend-url/api${endpoint}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Request failed');
-      }
-  
-      return await response.json();
-    };
 
   // Load profile image from backend
   const loadProfileImage = async () => {

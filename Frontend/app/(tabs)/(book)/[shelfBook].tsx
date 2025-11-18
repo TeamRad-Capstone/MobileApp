@@ -102,11 +102,14 @@ const ShelfBook = () => {
     }
   };
 
-  const handleLog = () => {
-    console.log("Navigating to log page");
+  const handleLog = async () => {
     router.push({
       pathname: "/(tabs)/log",
-      params: { bookId: shelfBook },
+      params: {
+        bookId: shelfBook,
+        shelfName,
+        rating: await getBookRating(shelfBook as string),
+      },
     });
   };
 

@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import GoalModal from "@/components/GoalModal";
 import ProgressBar from "@/components/ProgressBar";
@@ -54,6 +56,12 @@ export default function Goal() {
   useEffect(() => {
     fetchGoals();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGoals();
+    }, [])
+  );
 
   const activeGoals = goals.filter((g) => g.active);
   const completedGoals = goals.filter((g) => !g.active);
