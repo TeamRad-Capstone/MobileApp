@@ -93,7 +93,7 @@ def get_read_shelf(db: Session, owner_id: int) -> Read_Shelf:
 def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
     found_book_statement = select(Book).where(Book.google_book_id == book.google_book_id)
     print("Book ID: ", book.google_book_id)
-    found_book = db.exec(found_book_statement)
+    found_book = db.exec(found_book_statement).first()
 
     # Add the book to database if not found
     if not found_book:
