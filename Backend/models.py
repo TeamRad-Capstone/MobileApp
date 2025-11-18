@@ -213,3 +213,22 @@ class Reading_Goal_Book(SQLModel, table=True):
 class PasswordUpdate(SQLModel):
     current_password: str
     new_password: str
+class Log(SQLModel, table=True):
+    log_id: Optional[int] = Field(default=None, primary_key=True)
+    book_id: int
+    title: str
+    text: Optional[str] = None
+    created_at: datetime =Field(default=datetime.now())
+
+class LogCreate(SQLModel):
+    title: str
+    text: Optional[str] = None
+class LogUpdate(SQLModel):
+    title: Optional[str] = None
+    text: Optional[str] = None
+class LogRead(SQLModel):
+    log_id: int
+    book_id: int
+    title: str
+    text: Optional[str] = None
+    created_at: datetime

@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 import models
 from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
     Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, Read_Shelf_Book, \
-    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book
+    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book, Log, LogCreate, LogUpdate, LogRead
 from security import get_password_hash
 
 def get_user_by_email(db: Session, email: str):
@@ -702,3 +702,45 @@ def get_book_rating(db, user_id, google_book_id):
         Read_Shelf_Book.read_shelf_id == read_shelf_id
     )
     return db.exec(statement).all()
+
+def create_log(db: Session, book_id: int, log_in: LogCreate):
+    log_entry = Log(
+        book_id=book_id,
+        title=log_in.title,
+        text=log_in.text,
+
+    )
+    db.add(log_entry)
+    db.commit()
+    db.refresh(log_entry)
+    return log_entry
+
+def get_logs_by_book(db: Session, book_id: int):
+    statement = select(Log).where(Log.book_id == book_id)
+    return db.exec(statement).all()
+
+def get_log(db: Session, log_id: int):
+    log_entry = db.get(Log, log_id)
+    if not log_entry:
+        raise HTTPException(status_code=404, detail="Log not found")
+    return log_entry
+
+def update_log(db: Session, log_id: int, log_in: LogUpdate):
+    log_entry = db.get(Log, log_id)
+    if not log_entry:
+        return None
+    if log_in.title is not None:
+        log_entry.title = log_in.title
+    if log_in.text is not None:
+        log_entry.text = log_in.text
+    db.add(log_entry)
+    db.commit()
+    db.refresh(log_entry)
+    return log_entry
+
+def delete_log(db: Session, log_id: int):
+    log_entry = db.get(Log, log_id)
+    if not log_entry:
+        raise HTTPException(status_code=404, detail="Log not found")
+    db.delete(log_entry)
+    db.commit()

@@ -3,14 +3,20 @@ import { router } from "expo-router";
 import ProgressLine from "@/components/ProgressLine";
 import { removeBookFromReadingGoal } from "@/services/api";
 
-type BookProps = { book: any; goalId?: number; context?: string };
+type BookProps = {
+  book: any;
+  goalId?: number;
+  context?: string;
+  onRemoved?: () => void;
+};
 
-const Book = ({ book, goalId, context }: BookProps) => {
+const Book = ({ book, goalId, context, onRemoved }: BookProps) => {
   const handleRemove = async () => {
     if (!goalId) return;
     try {
       await removeBookFromReadingGoal(goalId, book.book_id);
       Alert.alert("Removed", "Book removed from goal");
+      if (onRemoved) onRemoved();
     } catch (err) {
       Alert.alert("Error", "Failed to remove book from goal");
     }

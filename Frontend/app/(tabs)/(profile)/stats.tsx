@@ -4,6 +4,12 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAllBooks, getMyReadingGoals } from "@/services/api";
 
+type Book = {
+  number_of_pages?: number;
+  authors?: string[] | string | null;
+  categories?: string[] | string | null;
+};
+
 const Stats = () => {
   const router = useRouter();
 
@@ -24,14 +30,14 @@ const Stats = () => {
       const goals = await getMyReadingGoals();
 
       const totalPagesRead = books.reduce(
-        (sum: number, b: any) => sum + (b.number_of_pages || 0),
+        (sum: number, b: Book) => sum + (b.number_of_pages || 0),
         0
       );
 
       const authors = new Set(
-        books.flatMap((b: any) =>
+        books.flatMap((b: Book) =>
           Array.isArray(b.authors)
-            ? b.authors.map((a: string) => a.trim())
+            ? b.authors.map((a) => a.trim())
             : b.authors
               ? [b.authors.trim()]
               : []
@@ -39,12 +45,12 @@ const Stats = () => {
       );
 
       const genres = new Set(
-        books.flatMap((b: any) => {
+        books.flatMap((b: Book) => {
           if (!b.categories) return [];
           if (Array.isArray(b.categories))
-            return b.categories.map((c: string) => c.trim());
+            return b.categories.map((c) => c.trim());
           if (typeof b.categories === "string")
-            return b.categories.split(",").map((c: string) => c.trim());
+            return b.categories.split(",").map((c) => c.trim());
           return [];
         })
       );
@@ -77,40 +83,36 @@ const Stats = () => {
         </Pressable>
       </View>
 
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Stats</Text>
+      <Text style={styles.headerText}>Statistics</Text>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Total Books</Text>
+        <Text style={styles.sectionValue}>{stats.totalBooks}</Text>
       </View>
 
-      <View style={styles.statsBox}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Total Books</Text>
-          <Text style={styles.value}>{stats.totalBooks}</Text>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Reading Goals</Text>
+        <Text style={styles.sectionValue}>{stats.totalGoals}</Text>
+      </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Reading Goals</Text>
-          <Text style={styles.value}>{stats.totalGoals}</Text>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Completed Goals</Text>
+        <Text style={styles.sectionValue}>{stats.completedGoals}</Text>
+      </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Completed Goals</Text>
-          <Text style={styles.value}>{stats.completedGoals}</Text>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Pages Read</Text>
+        <Text style={styles.sectionValue}>{stats.totalPagesRead}</Text>
+      </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Pages Read</Text>
-          <Text style={styles.value}>{stats.totalPagesRead}</Text>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Authors Read</Text>
+        <Text style={styles.sectionValue}>{stats.uniqueAuthors}</Text>
+      </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Authors Read</Text>
-          <Text style={styles.value}>{stats.uniqueAuthors}</Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Genres Read</Text>
-          <Text style={styles.value}>{stats.uniqueGenres}</Text>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Genres Read</Text>
+        <Text style={styles.sectionValue}>{stats.uniqueGenres}</Text>
       </View>
     </SafeAreaView>
   );
@@ -130,9 +132,6 @@ const styles = StyleSheet.create({
     top: 30,
     left: 25,
   },
-  header: {
-    marginBottom: 30,
-  },
   headerIcon: {
     width: 30,
     height: 30,
@@ -140,34 +139,29 @@ const styles = StyleSheet.create({
   headerText: {
     fontFamily: "Agbalumo",
     fontSize: 24,
-    textAlign: "center",
     color: "#5C4033",
+    marginBottom: 20,
   },
-  statsBox: {
+  section: {
+    width: "85%",
     backgroundColor: "#FFF5EC",
     borderRadius: 20,
-    width: "85%",
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 3,
+    paddingVertical: 20,
+    paddingHorizontal: 25,
+    marginBottom: 15,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E6DACF",
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 8,
-  },
-  label: {
+  sectionTitle: {
     fontFamily: "Agbalumo",
     fontSize: 16,
     color: "#725437",
+    marginBottom: 5,
   },
-  value: {
+  sectionValue: {
     fontFamily: "Agbalumo",
-    fontSize: 16,
+    fontSize: 22,
     color: "#985325",
   },
 });
