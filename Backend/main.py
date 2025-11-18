@@ -276,7 +276,7 @@ def add_book_to_current_shelf(
 ):
     shelf = crud.get_current_shelf(db, current_user.end_user_id)
     print("TEST THE THING TO ADD TO CURRENT SHELF: ", shelf.shelf_id)
-    return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
+    return crud.book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/read")
@@ -554,3 +554,69 @@ def update_book_rating(
 ):
     updated_book = crud.update_read_shelf_book_rating(db, current_user.end_user_id, book_id, rating)
     return {"book_id": updated_book.book_id, "rating": updated_book.rating}
+
+
+@app.put("/shelves/upcoming/{google_book_id}")
+def remove_upcoming_book(
+        google_book_id: str,
+        db: Session = Depends(database.get_session),
+        current_user: models.End_User = Depends(get_current_user),
+):
+    return crud.delete_upcoming_value(db, current_user.end_user_id, google_book_id)
+
+
+@app.get("/shelves/rating/{google_book_id}")
+def get_rating_of_book(
+        google_book_id: str,
+        current_user: models.End_User = Depends(get_current_user),
+        db: Session = Depends(database.get_session),
+):
+    return crud.get_book_rating(db, current_user.end_user_id, google_book_id)
+
+@app.post("/logs/{book_id}", response_model=models.LogRead)
+def create_log(
+    book_id: int,
+    log_in: models.LogCreate,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.create_log(db, book_id, log_in)
+
+
+@app.get("/logs/me", response_model=list[models.LogRead])
+def get_my_logs(
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.get_user_logs(db, current_user.end_user_id)
+
+
+@app.get("/logs/book/{book_id}", response_model=list[models.LogRead])
+def get_logs_for_book(
+    book_id: int,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    logs = crud.get_logs_by_book(db, book_id)
+    if not logs:
+        raise HTTPException(status_code=404, detail="No logs found for this book")
+    return logs
+
+@app.put("/logs/{log_id}", response_model=models.LogRead)
+def update_log_endpoint(
+    log_id: int,
+    log_in: models.LogUpdate,
+    db: Session = Depends(database.get_session)
+):
+    updated_log = crud.update_log(db, log_id, log_in)
+    if not updated_log:
+        raise HTTPException(status_code=404, detail="Log not found")
+    return updated_log
+
+@app.delete("/logs/{log_id}")
+def delete_log_endpoint(
+    log_id: int,
+    db: Session = Depends(database.get_session)
+):
+    crud.delete_log(db, log_id)
+    return {"message": "Log deleted successfully"}
