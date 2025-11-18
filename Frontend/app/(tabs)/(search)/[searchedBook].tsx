@@ -104,6 +104,8 @@ const SearchedBookDetails = () => {
             containerStyle={styles.dropdownContainer}
             placeholderStyle={{ textAlign: "center", color: "white" }}
             itemTextStyle={{ textAlign: "center", color: "white" }}
+            selectedTextStyle={{ textAlign: "center", color: "white" }}
+            activeColor={"#725437"}
             data={shelvesList}
             fontFamily={"Agbalumo"}
             labelField={"shelf_name"}

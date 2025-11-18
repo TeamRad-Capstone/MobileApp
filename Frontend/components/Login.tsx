@@ -45,7 +45,7 @@ const Login = () => {
 
     if (!passwordRegex.test(password)) {
       setPasswordErrorMsg(
-        "Your password must  must contain at least 1 uppercase letter, " +
+        "Your password must contain at least 1 uppercase letter, " +
           "1 lowercase letter, and 1 number",
       );
       validFields = false;

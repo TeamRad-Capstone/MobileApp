@@ -14,9 +14,17 @@ type UpcomingBookProps = {
   title: string;
   author: string;
   coverUrl: string;
+  onCurrentMove: () => void;
+  onImagePress: () => void;
 };
 
-const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
+const UpcomingBook = ({
+  title,
+  author,
+  coverUrl,
+  onCurrentMove,
+  onImagePress,
+}: UpcomingBookProps) => {
   const [openState, setOpenState] = useState(false);
 
   const openModalState = () => {
@@ -25,6 +33,10 @@ const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
 
   const closeModalState = () => {
     setOpenState(false);
+  };
+
+  const handleMoveToCurrent = () => {
+    console.log("Move to current");
   };
   return (
     <>
@@ -40,34 +52,30 @@ const UpcomingBook = ({ title, author, coverUrl }: UpcomingBookProps) => {
 
       <Modal transparent={true} visible={openState}>
         <Pressable style={styles.modal} onPress={closeModalState}>
-
-            {/*<TouchableWithoutFeedback>*/}
-              <View style={styles.modalContainer} onStartShouldSetResponder={() => true}>
-                <ScrollView>
-                  <Text style={styles.modalText}>{title}</Text>
-                  <Text style={styles.modalText}>{author}</Text>
-                  <Image
-                    style={styles.modalImg}
-                    source={{
-                      uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
-                    }}
-                    accessibilityLabel={`Image of book title: ${title}`}
-                  />
-                  <Pressable>
-                    <View style={styles.button}>
-                      <Text style={styles.modalText}>Move to Shelf</Text>
-                      <Image
-                        style={{ width: 20, height: 20, marginTop: 5 }}
-                        source={require("@/assets/icons/dropdown.png")}
-                      />
-                    </View>
-                  </Pressable>
-                </ScrollView>
-              </View>
-            {/*</TouchableWithoutFeedback>*/}
-
+          <View
+            style={styles.modalContainer}
+            onStartShouldSetResponder={() => true}
+          >
+            <ScrollView>
+              <Text style={styles.modalText}>{title}</Text>
+              <Text style={styles.modalText}>{author}</Text>
+              <Pressable onPress={onImagePress}>
+                <Image
+                  style={styles.modalImg}
+                  source={{
+                    uri: `https://books.google.com/books?id=${coverUrl}&printsec=frontcover&img=1&zoom=4&edge=curl&source=gbs_api`,
+                  }}
+                  accessibilityLabel={`Image of book title: ${title}`}
+                />
+              </Pressable>
+              <Pressable onPress={onCurrentMove}>
+                <View style={styles.button}>
+                  <Text style={styles.modalText}>Currently Reading?</Text>
+                </View>
+              </Pressable>
+            </ScrollView>
+          </View>
         </Pressable>
-        {/*</TouchableWithoutFeedback>*/}
       </Modal>
     </>
   );

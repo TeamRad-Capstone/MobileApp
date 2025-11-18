@@ -5,7 +5,13 @@ import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
-import { getBooksFromShelf, getUpcomingBooks, getUsername } from "@/services/api";
+import {
+  addToShelf,
+  getBooksFromShelf,
+  getUpcomingBooks,
+  getUsername,
+  removeBookFromShelf,
+} from "@/services/api";
 import { useIsFocused } from "@react-navigation/core";
 
 const Profile = () => {
@@ -15,6 +21,8 @@ const Profile = () => {
   const [username, setUsername] = useState("");
   const [currentBooks, setCurrentBooks] = useState<any[]>([]);
   const [upcomingBooks, setUpcomingBooks] = useState<any[]>([]);
+
+  const [changeLog, setChangeLog] = useState(false);
 
   const router = useRouter();
 
@@ -40,7 +48,7 @@ const Profile = () => {
           console.log("Getting books");
           const retrievedUpcomingBooks = await getUpcomingBooks();
           setUpcomingBooks(retrievedUpcomingBooks);
-          console.log("Done getting books")
+          console.log("Done getting books");
         } catch (error: any) {
           console.log("Error while retrieving username and books");
           console.error(error);
@@ -48,64 +56,37 @@ const Profile = () => {
       };
       loadBooks();
     }
-  }, [isFocused]);
-  // const [modalVisible, setModalVisible] = useState(false);
-  // const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  // const [streak, setStreak] = useState(0);
-  //
-  // const handleLogout = () => {
-  //   console.log("Attempt to logout");
-  //   setLogoutModalVisible(true);
-  // };
-  //
-  // const handleConfirmLogout = () => {
-  //   // do something with backend API and authentication to cancel user and hide info / session details.
-  //   console.log("Logout confirmed");
-  //   setLogoutModalVisible(false);
-  //
-  //   // Placeholder until backend API is implemented
-  //   router.push("/");
-  // };
-  //
-  // const handleCancelLogout = () => {
-  //   setLogoutModalVisible(false);
-  // };
-  //
-  // const handleEditProfile = () => {
-  //   console.log("Attempt to edit Profile");
-  //   router.push("/(tabs)/(profile)/edit");
-  // };
-  //
-  // const showTransferModal = () => {
-  //   setModalVisible(true);
-  // };
-  //
-  // const handleModalClose = () => {
-  //   setModalVisible(false);
-  // };
-  //
-  // const handleImport = () => {
-  //   console.log("Attempt to import historical data");
-  //   // Read the csv file and send to API? Not sure how to implement yet
-  //   // Accept the file and send to API from there API will parse to DB
-  //   DocumentPicker.getDocumentAsync({}).then((doc) => {
-  //     if (!doc.canceled) {
-  //       const file = doc.assets.pop();
-  //       const fileName = file ? file.name : "";
-  //       console.log(fileName);
-  //       handleModalClose();
-  //       router.push("/(tabs)/(profile)/transferred");
-  //     } else {
-  //       console.log("No file picked");
-  //     }
-  //   });
-  // };
-  //
-  // const handleStats = () => {
-  //   console.log("Attempt to import stats");
-  //   router.push("/(tabs)/(profile)/stats");
-  // };
+  }, [isFocused, changeLog]);
 
+  const handleCurrentMove = (
+    google_book_id: string,
+    title: string,
+    authors: string[],
+    description: string,
+    number_of_pages: number,
+    categories: string[],
+    published_date: string,
+  ) => {
+    console.log("Current book moved");
+    const moveBook = {
+      google_book_id,
+      title,
+      authors,
+      description,
+      number_of_pages,
+      categories,
+      published_date,
+    };
+
+    // Call on api to move the book to currently a reading shelf
+    removeBookFromShelf("Want to Read", google_book_id);
+    addToShelf(moveBook, 0, 0, "Currently Reading");
+    setChangeLog(!changeLog);
+  };
+
+  const handleUpcomingSelection = (google_book_id: string) => {
+    console.log("Upcoming book selected");
+  };
   return (
     <SafeAreaView
       style={{
@@ -169,6 +150,20 @@ const Profile = () => {
               title={upcomingBook.title}
               author={upcomingBook.authors}
               coverUrl={upcomingBook.google_book_id}
+              onCurrentMove={() =>
+                handleCurrentMove(
+                  upcomingBook.google_book_id,
+                  upcomingBook.title,
+                  upcomingBook.authors,
+                  upcomingBook.description,
+                  upcomingBook.numOfPages,
+                  upcomingBook.categories,
+                  upcomingBook.publishedDate,
+                )
+              }
+              onImagePress={() =>
+                handleUpcomingSelection(upcomingBook.google_book_id)
+              }
             />
           ))}
         </ScrollView>
