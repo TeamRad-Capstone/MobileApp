@@ -1,3 +1,4 @@
+import select
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session
@@ -25,10 +26,163 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 def on_startup():
     database.init_db()
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Rad Reads"}
+from fastapi import FastAPI, Depends, HTTPException, Body
+from sqlmodel import Session
+from your_auth_file import get_current_user  # Import your auth dependency
+from your_database_file import get_db  # Import your database dependency
+import crud
+from models import End_User
 
+app = FastAPI()
+
+@app.put("/users/profile-image", response_model=models.EndUserRead)
+def update_profile_image(
+    image_data: dict,  # Changed from UploadFile to dict to handle base64
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    """
+    Update user profile image with base64 encoded image data
+    """
+    try:
+        # Extract base64 data (remove data:image/... prefix if present)
+        image_url = image_data.get("image_url", "")
+        if "," in image_url:
+            image_url = image_url.split(",", 1)[1]
+        
+        # You can store the base64 string directly or convert to a file URL
+        # For simplicity, we'll store the base64 string
+        # In production, you might want to save as a file and store the URL
+        
+        updated_user = crud.update_user_profile_image(
+            db, 
+            current_user.end_user_id, 
+            image_url
+        )
+        return updated_user
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating profile image: {str(e)}")
+
+@app.delete("/users/account")
+def delete_user_account(
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    """
+    Delete user account
+    """
+    return crud.delete_user_account_by_username(db, current_user.username)
+
+@app.get("/users/profile", response_model=models.EndUserRead)
+def get_user_profile(
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    """
+    Get current user's profile data including profile image
+    """
+    return crud.get_user_profile(db, current_user.end_user_id)
+
+@app.put("/users/username", response_model=models.EndUserRead)
+def update_username(
+    username_data: dict,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    """
+    Update username
+    """
+    new_username = username_data.get("new_username", "").strip()
+    if not new_username:
+        raise HTTPException(status_code=400, detail="Username cannot be empty")
+    
+    # Check if username already exists
+    existing_user = db.exec(
+        select(models.End_User).where(
+            models.End_User.username == new_username,
+            models.End_User.end_user_id != current_user.end_user_id
+        )
+    ).first()
+    
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    user = db.get(models.End_User, current_user.end_user_id)
+    user.username = new_username
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+# Delete Account Route using @app decorator
+@app.delete("/users/account", response_model=dict)
+async def delete_account(
+    current_user: End_User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete the current user's account and all associated data
+    """
+    # You'll need to create this function in crud.py
+    from crud import delete_user_account_by_username
+    return delete_user_account_by_username(db, current_user.username)
+
+@app.put("/users/profile-image", response_model=dict)
+async def update_profile_image(
+    image_data: dict = Body(...),
+    current_user: End_User = Depends(get_current_user),
+    db: Session = Depends(database.get_session)
+):
+    """
+    Update user's profile image
+    """
+    image_url = image_data.get("image_url")
+    if not image_url:
+        raise HTTPException(status_code=400, detail="Image URL is required")
+    
+    user = crud.update_user_profile_image(db, current_user.end_user_id, image_url)
+    return {"message": "Profile image updated successfully", "profile_image_url": image_url}
+
+@app.get("/users/profile", response_model=dict)
+async def get_user_profile(
+    current_user: models.End_User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's complete profile information
+    """
+    return crud.get_user_profile(db, current_user.end_user_id)
+
+@app.get("/users/profile-image", response_model=dict)
+async def get_profile_image(
+    current_user: End_User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's profile image URL
+    """
+    image_url = crud.get_user_profile_image(db, current_user.end_user_id)
+    return {"profile_image_url": image_url}
+
+@app.delete("/users/account", response_model=dict)
+async def delete_account(
+    password_data: dict = Body(..., embed=True),
+    current_user: End_User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete the current user's account with password confirmation
+    """
+    password = password_data.get("password")
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
+    
+    # Verify password
+    if not verify_password(password, current_user.password_hash):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    
+    return crud.delete_user_account_by_username(db, current_user.username)
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
