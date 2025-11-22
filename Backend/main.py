@@ -122,7 +122,7 @@ def add_book_to_current_shelf(
 ):
     shelf = crud.get_current_shelf(db, current_user.end_user_id)
     print("TEST THE THING TO ADD TO CURRENT SHELF: ", shelf.shelf_id)
-    return crud.book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
+    return crud.add_book_to_chosen_shelf(db, book_in, models.Current_Shelf(), shelf.shelf_id)
 
 
 @app.post("/shelves/read")
