@@ -221,5 +221,4 @@ class End_User(SQLModel, table=True):
     email: str = Field(unique=True, index=True)
     username: str
     password_hash: str
-    profile_image_url: Optional[str] = Field(default=None)  # Add this field
-    # ... rest of your existing fields
+    profile_image_url: Optional[str] = Field(default=None)

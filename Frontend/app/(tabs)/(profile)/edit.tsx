@@ -19,7 +19,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { AuthContext } from "@/contexts/AuthContext";
-import { apiCall } from "@/services/api";
+import { apiCall } from "../../../services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();

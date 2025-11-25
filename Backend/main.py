@@ -20,8 +20,92 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# Add these imports at the top of main.py
+import secrets
+from datetime import datetime, timedelta
+from sqlmodel import select
+
+# Add these endpoints to main.py
+
+# Password reset token storage (in production, use Redis or database)
+password_reset_tokens = {}
+
+@app.post("/auth/forgot-password")
+def forgot_password(request_data: dict, db: Session = Depends(database.get_session)):
+    """
+    Initiate password reset process
+    """
+    email = request_data.get("email", "").lower().strip()
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    # Check if user exists
+    user = crud.get_user_by_email(db, email)
+    if not user:
+        # For security, don't reveal whether email exists
+        return {"message": "If the email exists, reset instructions have been sent"}
+    
+    # Generate reset token (in production, use a more secure method)
+    reset_token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(hours=1)  # Token valid for 1 hour
+    
+    # Store token (in production, store in database with expiration)
+    password_reset_tokens[reset_token] = {
+        "email": email,
+        "expires_at": expires_at,
+        "used": False
+    }
+    
+    # In production, send email with reset link
+    # For now, we'll return the token for testing
+    print(f"Reset token for {email}: {reset_token}")  # Remove this in production
+    
+    return {
+        "message": "If the email exists, reset instructions have been sent",
+        "token": reset_token  # Remove this in production - only for testing
+    }
+
+@app.post("/auth/reset-password")
+def reset_password(request_data: dict, db: Session = Depends(database.get_session)):
+    """
+    Reset password using valid token
+    """
+    token = request_data.get("token", "").strip()
+    new_password = request_data.get("new_password", "").strip()
+    
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="Token and new password are required")
+    
+    # Validate token
+    token_data = password_reset_tokens.get(token)
+    if not token_data:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    if token_data["used"]:
+        raise HTTPException(status_code=400, detail="Reset token has already been used")
+    
+    if datetime.utcnow() > token_data["expires_at"]:
+        # Clean up expired token
+        del password_reset_tokens[token]
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    email = token_data["email"]
+    
+    # Update user's password
+    try:
+        updated_user = crud.update_user_password(db, email, new_password)
+        
+        # Mark token as used
+        token_data["used"] = True
+        
+        return {"message": "Password has been reset successfully"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to reset password")
+    
 @app.on_event("startup")
 def on_startup():
     database.init_db()

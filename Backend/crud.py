@@ -28,6 +28,17 @@ def update_user_profile_image(db: Session, user_id: int, image_url: str) -> End_
     db.refresh(user)
     return user
 
+def update_user_password(db: Session, email: str, new_password: str) -> End_User:
+    user = db.exec(select(End_User).where(End_User.email == email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.password_hash = get_password_hash(new_password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 def get_user_profile(db: Session, user_id: int) -> End_User:
     user = db.get(End_User, user_id)
     if not user:
