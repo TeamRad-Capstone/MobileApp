@@ -19,7 +19,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { AuthContext } from "@/contexts/AuthContext";
-import { apiCall } from "@/services/api";
+import { apiCall } from "../../../services/api";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -90,6 +90,52 @@ const Edit = () => {
     }
     setImagePickerVisible(false);
   };
+
+  const handleAccountDeletion = async () => {
+  try {
+    console.log("Account deletion button clicked");
+    
+    // Add confirmation dialog for safety
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await apiCall('/users/account', 'DELETE', {
+                username: username // using the username from state
+              });
+              
+              setAccountVisible(false);
+              Alert.alert(
+                'Success', 
+                'Account deleted successfully',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => signout()
+                  }
+                ]
+              );
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to delete account');
+            }
+          }
+        }
+      ]
+    );
+    
+  } catch (error: any) {
+    Alert.alert('Error', error.message || 'Failed to delete account');
+  }
+}
 
   const takePhotoWithCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -229,18 +275,6 @@ const Edit = () => {
       console.log("Error updating password:", error);
     }
   };
-
-  const handleAccountDeletion = async () => {
-    try {
-      console.log("Account deletion button clicked");
-      
-      
-      setAccountVisible(false);
-      Alert.alert('Success', 'Account deleted successfully');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to delete account');
-    }
-  }
 
   const handleLogout = async () => {
     console.log("Logout button clicked");

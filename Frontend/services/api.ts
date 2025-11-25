@@ -1,8 +1,7 @@
 import { getToken, setToken, TokenResponse } from "@/services/auth";
 
-const hostedUrl = "http://10.0.2.2:8000";
-// const hostedUrl = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
-// const hostedUrl = "http://10.0.0.135:8000";
+const hostedUrl = "https://radreads-fastapi-6ea5f70eee31.herokuapp.com";
+
 
 export type Shelf = {
   end_user_id: number;
@@ -594,7 +593,7 @@ const updateBookRating = async (book_id: number, rating: number) => {
   return data;
 };
 
-const removeBookFromShelf = async (shelfName: string, googleBookId: string) => {
+const removeBookFromShelf = async (shelfName: string, googleBookId: string) =>{
   let shelfType = "";
   switch (shelfName) {
     case "Want to Read":
@@ -618,148 +617,17 @@ const removeBookFromShelf = async (shelfName: string, googleBookId: string) => {
   const token = await getToken();
   if (!token) throw new Error("No token");
 
-  console.log("Attempting to remove book from shelf");
+  console.log('Attempting to remove book from shelf');
   const response = await fetch(endpoint, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-  });
-  console.log("Response status:", response.status);
-  console.log("Response status text:", response.statusText);
-};
-
-const removeBookUpcoming = async (googleBookId: string) => {
-  const endpoint = hostedUrl + `/shelves/upcoming/${googleBookId}`;
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-  console.log("Attempting to remove book from upcoming");
-
-  const response = await fetch(endpoint, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(response.statusText);
-  }
-};
-
-const getBookRating = async (googleBookId: string) => {
-  const endpoint = hostedUrl + `/shelves/rating/${googleBookId}`;
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-  console.log("Attempting to get rating for book:", googleBookId);
-
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(response.statusText);
-  }
-
-  const data = await response.json();
-  console.log("Returning rating " + data);
-  return data;
-};
-
-export type Log = {
-  log_id: number;
-  book_id: number;
-  title: string;
-  text: string;
-  created_at: string;
-};
-
-export type LogCreate = {
-  title: string;
-  text: string;
-};
-
-const getLogsForBook = async (book_id: number) => {
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const endpoint = `${hostedUrl}/logs/book/${book_id}`;
-  const response = await fetch(endpoint, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) throw new Error(response.statusText);
-  return await response.json();
-};
-
-const getLog = async (log_id: number) => {
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const endpoint = `${hostedUrl}/logs/${log_id}`;
-  const response = await fetch(endpoint, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) throw new Error(response.statusText);
-  return await response.json();
-};
-
-const createLog = async (book_id: number, log: LogCreate) => {
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const endpoint = `${hostedUrl}/logs/${book_id}`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(log),
-  });
-
-  if (!response.ok) throw new Error(response.statusText);
-  return await response.json();
-};
-
-const updateLog = async (log_id: number, log: LogCreate) => {
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const endpoint = `${hostedUrl}/logs/${log_id}`;
-  const response = await fetch(endpoint, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(log),
-  });
-
-  if (!response.ok) throw new Error(response.statusText);
-  return await response.json();
-};
-
-const deleteLog = async (log_id: number) => {
-  const token = await getToken();
-  if (!token) throw new Error("No token");
-
-  const endpoint = `${hostedUrl}/logs/${log_id}`;
-  const response = await fetch(endpoint, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) throw new Error(response.statusText);
-  return true;
-};
+  })
+    console.log('Response status:', response.status);
+    console.log('Response status text:', response.statusText);
+}
 
 export {
   testConnection,
@@ -784,8 +652,14 @@ export {
   getAllBooks,
   removeBookFromReadingGoal,
   getBooksFromGoal,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   updateBookRating, apiCall,
-  updateBookRating,
+=======
+=======
+>>>>>>> Stashed changes
+  updateBookRating, 
+  apiCall,
   removeBookUpcoming,
   getBookRating,
   getLogsForBook,
@@ -793,4 +667,5 @@ export {
   createLog,
   updateLog,
   deleteLog,
+>>>>>>> Stashed changes
 };

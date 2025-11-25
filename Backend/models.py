@@ -155,7 +155,7 @@ class Read_Shelf_Book(SQLModel, table=True):
     )
     book_id: int | None = Field(default=None, foreign_key="book.book_id")
     reading_goal_id: int | None = Field(default=None, foreign_key="reading_goal.reading_goal_id")
-    date_read: datetime | None
+    date_read: datetime
     rating: float | None
     __table_args__ = (UniqueConstraint("book_id", "read_shelf_id", name="unique_read_shelf_book"),)
 
@@ -213,22 +213,12 @@ class Reading_Goal_Book(SQLModel, table=True):
 class PasswordUpdate(SQLModel):
     current_password: str
     new_password: str
-class Log(SQLModel, table=True):
-    log_id: Optional[int] = Field(default=None, primary_key=True)
-    book_id: int
-    title: str
-    text: Optional[str] = None
-    created_at: datetime =Field(default=datetime.now())
 
-class LogCreate(SQLModel):
-    title: str
-    text: Optional[str] = None
-class LogUpdate(SQLModel):
-    title: Optional[str] = None
-    text: Optional[str] = None
-class LogRead(SQLModel):
-    log_id: int
-    book_id: int
-    title: str
-    text: Optional[str] = None
-    created_at: datetime
+class End_User(SQLModel, table=True):
+    __tablename__ = "end_user"
+    
+    end_user_id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True, index=True)
+    username: str
+    password_hash: str
+    profile_image_url: Optional[str] = Field(default=None)
