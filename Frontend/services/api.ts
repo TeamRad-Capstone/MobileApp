@@ -652,5 +652,17 @@ export {
   getAllBooks,
   removeBookFromReadingGoal,
   getBooksFromGoal,
+<<<<<<< Updated upstream
   updateBookRating, apiCall,
+=======
+  updateBookRating, 
+  apiCall,
+  removeBookUpcoming,
+  getBookRating,
+  getLogsForBook,
+  getLog,
+  createLog,
+  updateLog,
+  deleteLog,
+>>>>>>> Stashed changes
 };
