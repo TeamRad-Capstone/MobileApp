@@ -653,8 +653,11 @@ export {
   removeBookFromReadingGoal,
   getBooksFromGoal,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   updateBookRating, apiCall,
 =======
+=======
+>>>>>>> Stashed changes
   updateBookRating, 
   apiCall,
   removeBookUpcoming,
