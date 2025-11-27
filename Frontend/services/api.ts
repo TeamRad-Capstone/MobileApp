@@ -761,6 +761,110 @@ const deleteLog = async (log_id: number) => {
   return true;
 };
 
+const updateUsername = async (newUsername: string) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/username/me/${newUsername}`;
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+  return await response.json();
+};
+
+const updatePassword = async (oldPassword: string, newPassword: string) => {
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const endpoint = `${hostedUrl}/password/me/`;
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      old_password: oldPassword,
+      new_password: newPassword,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return await response.json();
+};
+
+const getProfileImage = async () => {
+  const endpoint = `${hostedUrl}/image/me`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return await response.json();
+};
+
+const updateProfileImage = async (imageKey: string) => {
+  const endpoint = `${hostedUrl}/image/me/${imageKey}`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return await response.json();
+};
+
+const deleteAccount = async (password: string) => {
+  const endpoint = `${hostedUrl}/user/me`;
+  const token = await getToken();
+  if (!token) throw new Error("No token");
+
+  const response = await fetch(endpoint, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: "example@example.com", password: password }),
+  });
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+
+  return await response.json();
+};
+
 export {
   testConnection,
   createUser,
@@ -784,8 +888,8 @@ export {
   getAllBooks,
   removeBookFromReadingGoal,
   getBooksFromGoal,
-  updateBookRating, apiCall,
   updateBookRating,
+  apiCall,
   removeBookUpcoming,
   getBookRating,
   getLogsForBook,
@@ -793,4 +897,9 @@ export {
   createLog,
   updateLog,
   deleteLog,
+  updateUsername,
+  updatePassword,
+  getProfileImage,
+  updateProfileImage,
+  deleteAccount,
 };

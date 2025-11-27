@@ -6,20 +6,22 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  ImageBackground,
   Modal,
-  Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { AuthContext } from "@/contexts/AuthContext";
-import { apiCall } from "@/services/api";
+import {
+  getUsername,
+  updateUsername,
+  updatePassword,
+  getProfileImage,
+  updateProfileImage,
+  deleteAccount,
+} from "@/services/api";
+import images from "@/data/profileImgManager";
 
 const Edit = () => {
   const tabBarHeight = useBottomTabBarHeight();
@@ -29,222 +31,101 @@ const Edit = () => {
   const [usernameVisible, setUsernameVisible] = useState(false);
   const [username, setUsername] = useState("");
   const [usernameChange, setUsernameChange] = useState("");
+  const [valueChanged, setValueChanged] = useState(false);
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const [accountVisible, setAccountVisible] = useState(false);
-  
+
   // New states for profile image
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
-  const [imagePickerVisible, setImagePickerVisible] = useState<boolean>(false);
+  const [imagePickerVisible, setImagePickerVisible] = useState(false);
 
   useEffect(() => {
-    const loadStatic = async () => {
-      // Prefer username from AuthContext user if available
-      setUsername((user as any)?.username ?? "");
-      // Load current profile image from backend
-      await loadProfileImage();
+    const retrieveUser = async () => {
+      await getUsername().then((retrievedUsername) => {
+        setUsername(retrievedUsername);
+      });
+
+      let profileImage = await getProfileImage();
+      console.log("Profile image: " + profileImage);
+
+      if (profileImage in images) {
+        console.log("Setting profile image from local images");
+        setProfileImage(images[profileImage as keyof typeof images]);
+      }
     };
-    loadStatic();
-  }, [user]);
-
-  // Load profile image from backend
-  const loadProfileImage = async () => {
-    try {
-      const data = await apiCall('/users/profile', 'GET');
-      if (data.profile_image_url) {
-        setProfileImage(data.profile_image_url);
-      }
-    } catch (error) {
-      console.log("Error loading profile image:", error);
-    }
-  };
-
-  // Profile Image Functions
-  const handleProfileImg = () => {
-    setImagePickerVisible(true);
-  };
-
-  const pickImageFromGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Please allow gallery access to change your profile image');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      await processAndUploadImage(result.assets[0].uri);
-    }
-    setImagePickerVisible(false);
-  };
-
-  const takePhotoWithCamera = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Please allow camera access to take photos');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      await processAndUploadImage(result.assets[0].uri);
-    }
-    setImagePickerVisible(false);
-  };
-
-  const processAndUploadImage = async (imageUri: string) => {
-    setUploadingImage(true);
-    
-    try {
-      // Optimize image before upload
-      const processedImage = await manipulateAsync(
-        imageUri,
-        [{ resize: { width: 300, height: 300 } }],
-        { compress: 0.7, format: SaveFormat.JPEG }
-      );
-
-      // Convert image to base64 for backend
-      const response = await fetch(processedImage.uri);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-        
-        try {
-          // Upload to backend API
-          await apiCall('/users/profile-image', 'PUT', {
-            image_url: base64data
-          });
-          
-          setProfileImage(processedImage.uri);
-          Alert.alert('Success', 'Profile image updated!');
-        } catch (error) {
-          Alert.alert('Upload Failed', 'Could not update profile image. Please try again.');
-        } finally {
-          setUploadingImage(false);
-        }
-      };
-      
-      reader.readAsDataURL(blob);
-      
-    } catch (error) {
-      Alert.alert('Upload Failed', 'Could not update profile image. Please try again.');
-      setUploadingImage(false);
-    }
-  };
-
-  // Existing functions 
-  const handleTransfer = () => {
-    console.log("Attempt to import historical data");
-    DocumentPicker.getDocumentAsync({}).then((doc) => {
-      if (!doc.canceled) {
-        const file = doc.assets.pop();
-        const fileName = file ? file.name : "";
-        console.log(fileName);
-        router.push("/(tabs)/(profile)/transferred");
-      } else {
-        console.log("No file picked");
-      }
-    });
-  };
-
-  const handleUsernameSave = async () => {
-    try {
-      console.log("Username Save button clicked");
-      
-      if (!usernameChange.trim()) {
-        Alert.alert('Error', 'Please enter a new username');
-        return;
-      }
-
-      await apiCall('/users/username', 'PUT', {
-        new_username: usernameChange
-      });
-
-      setUsername(usernameChange);
-      setUsernameVisible(false);
-      Alert.alert('Success', 'Username updated successfully!');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update username');
-    }
-  };
-
-  const handlePasswordSave = async () => {
-    // clear previous error
-    setPasswordError("");
-
-    console.log("Password Save button clicked");
-
-    const np = (newPassword || "").trim();
-    const cp = (confirmNewPassword || "").trim();
-
-    if (!np) {
-      setPasswordError("Please enter a new password.");
-      return;
-    }
-
-    if (!passwordRegex.test(np)) {
-      setPasswordError(
-        "Password must be at least 8 characters and include 1 uppercase letter, 1 lowercase letter and 1 number."
-      );
-      return;
-    }
-
-    if (np !== cp) {
-      setPasswordError("Passwords do not match.");
-      return;
-    }
-
-    try {
-      await apiCall('/users/password', 'POST', { 
-        new_password: np
-      });
-      console.log("Password updated successfully");
-      setNewPassword("");
-      setConfirmNewPassword("");
-      setPasswordVisible(false);
-      Alert.alert("Success", "Password changed successfully.");
-    } catch (error: any) {
-      setPasswordError(error.message || 'Failed to update password');
-      console.log("Error updating password:", error);
-    }
-  };
-
-  const handleAccountDeletion = async () => {
-    try {
-      console.log("Account deletion button clicked");
-      
-      
-      setAccountVisible(false);
-      Alert.alert('Success', 'Account deleted successfully');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to delete account');
-    }
-  }
+    retrieveUser();
+  }, [user, valueChanged]);
 
   const handleLogout = async () => {
     console.log("Logout button clicked");
     await signout();
+  };
+
+  const handleProfileImg = () => {
+    setImagePickerVisible(true);
+  };
+
+  const handleTransfer = () => {
+    console.log("Attempt to import historical data");
+  };
+
+  const handleUsernameSave = async () => {
+    // console.log("Username Save button clicked");
+    await updateUsername(usernameChange);
+    setValueChanged(!valueChanged);
+    setUsernameVisible(false);
+  };
+
+  const handlePasswordSave = async () => {
+    console.log("Password Save button clicked");
+
+    if (!oldPassword) {
+      setPasswordError("Please enter your old password");
+    } else if (!passwordRegex.test(newPassword)) {
+      setPasswordError(
+        "Your password must contain at least 1 uppercase letter, " +
+          "1 lowercase letter, and 1 number",
+      );
+    } else if (newPassword !== confirmNewPassword) {
+      setPasswordError("Passwords do not match");
+    } else {
+      try {
+        await updatePassword(oldPassword, newPassword);
+        setPasswordVisible(false);
+        alert("Password updated successfully");
+      } catch (error: any) {
+        setPasswordError(error.message || "Failed to update password");
+      }
+    }
+  };
+
+  const handleAccountDeletion = async () => {
+    console.log("Account deletion button clicked");
+    try {
+      // Call API to delete account
+      await deleteAccount(deletePassword);
+      setAccountVisible(false);
+    } catch (error: any) {
+      console.log(error.message || "Account deletion failed");
+    } finally {
+      router.replace("/");
+      signout();
+    }
+  };
+
+  const handleImgUpdate = async (imageKey: string) => {
+    console.log("Profile image updated to: " + imageKey);
+    updateProfileImage(imageKey);
+    setImagePickerVisible(false);
+    setValueChanged(!valueChanged);
   };
 
   return (
@@ -267,17 +148,11 @@ const Edit = () => {
             <Image
               style={styles.profileImage}
               source={
-                profileImage 
-                  ? { uri: profileImage } 
-                  : require("@/assets/images/profileImg.jpg")
+                profileImage
+                  ? profileImage
+                  : require("@/assets/images/profile-images/blue-vibes.jpg")
               }
             />
-            {uploadingImage && (
-              <View style={styles.uploadOverlay}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-                <Text style={styles.uploadText}>Uploading...</Text>
-              </View>
-            )}
           </View>
         </Pressable>
         <View style={styles.usernameView}>
@@ -294,7 +169,10 @@ const Edit = () => {
         </Pressable>
         <Pressable
           style={styles.buttons}
-          onPress={() => setPasswordVisible(true)}
+          onPress={() => {
+            setPasswordVisible(true);
+            setPasswordError("");
+          }}
         >
           <Text style={styles.buttonText}>Change Password</Text>
         </Pressable>
@@ -312,13 +190,22 @@ const Edit = () => {
       {/* Image Picker Modal */}
       <Modal transparent={true} visible={imagePickerVisible}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalText}>Change Profile Image</Text>
-          <Pressable style={styles.imageOptionBtn} onPress={pickImageFromGallery}>
-            <Text style={styles.btnText}>Choose from Gallery</Text>
-          </Pressable>
-          <Pressable style={styles.imageOptionBtn} onPress={takePhotoWithCamera}>
-            <Text style={styles.btnText}>Take Photo</Text>
-          </Pressable>
+          <Text style={styles.modalText}>Choose an Image</Text>
+          <ScrollView
+            horizontal={true}
+            contentContainerStyle={{
+              gap: 20,
+            }}
+          >
+            {Object.keys(images).map((key) => (
+              <Pressable key={key} onPress={() => handleImgUpdate(key)}>
+                <Image
+                  style={styles.profileImage}
+                  source={images[key as keyof typeof images]}
+                />
+              </Pressable>
+            ))}
+          </ScrollView>
           <Pressable
             style={styles.cancelBtn}
             onPress={() => setImagePickerVisible(false)}
@@ -335,8 +222,8 @@ const Edit = () => {
             <Text style={styles.modalText}>Current Username</Text>
             <TextInput style={styles.input} value={username} editable={false} />
             <Text style={styles.modalText}>New Username</Text>
-            <TextInput 
-              style={styles.input} 
+            <TextInput
+              style={styles.input}
               onChangeText={setUsernameChange}
               placeholder="Enter new username"
               autoCapitalize="none"
@@ -358,11 +245,18 @@ const Edit = () => {
       <Modal transparent={true} visible={passwordVisible}>
         <View style={styles.modalContainer}>
           <View>
+            <Text style={styles.modalText}>Old Password</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setOldPassword}
+              secureTextEntry
+              placeholder="Enter old password"
+              autoCapitalize="none"
+            />
             <Text style={styles.modalText}>New Password</Text>
-            <TextInput 
-              style={styles.input} 
+            <TextInput
+              style={styles.input}
               onChangeText={setNewPassword}
-              value={newPassword}
               secureTextEntry
               placeholder="Enter new password"
               autoCapitalize="none"
@@ -371,7 +265,6 @@ const Edit = () => {
             <TextInput
               style={styles.input}
               onChangeText={setConfirmNewPassword}
-              value={confirmNewPassword}
               secureTextEntry
               placeholder="Confirm new password"
               autoCapitalize="none"
@@ -396,13 +289,23 @@ const Edit = () => {
       <Modal transparent={true} visible={accountVisible}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalText}>Confirm Delete?</Text>
-          <Text style={[styles.modalText, {fontSize: 14, marginBottom: 20}]}>
+          <Text style={[styles.modalText, { fontSize: 14, marginBottom: 20 }]}>
             This action cannot be undone.
           </Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={setDeletePassword}
+            placeholder="Enter password to confirm"
+            secureTextEntry={true}
+            autoCapitalize="none"
+          />
           <Pressable style={styles.saveBtn} onPress={handleAccountDeletion}>
             <Text style={styles.btnText}>Delete</Text>
           </Pressable>
-          <Pressable style={styles.cancelBtn} onPress={() => setAccountVisible(false)}>
+          <Pressable
+            style={styles.cancelBtn}
+            onPress={() => setAccountVisible(false)}
+          >
             <Text style={styles.btnText}>Cancel</Text>
           </Pressable>
         </View>
@@ -420,7 +323,7 @@ const styles = StyleSheet.create({
     marginLeft: 30,
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
   },
   profileImage: {
     width: 250,
@@ -430,19 +333,19 @@ const styles = StyleSheet.create({
     marginHorizontal: "auto",
   },
   uploadOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 30,
-    left: '50%',
+    left: "50%",
     marginLeft: -125,
     width: 250,
     height: 250,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
     borderRadius: 200,
   },
   uploadText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     marginTop: 8,
     fontSize: 14,
     fontFamily: "Agbalumo",
@@ -530,7 +433,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     marginTop: 10,
-    width: '80%',
+    width: "80%",
   },
   cancelBtn: {
     backgroundColor: "#B92628",

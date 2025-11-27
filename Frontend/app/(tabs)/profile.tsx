@@ -8,20 +8,22 @@ import { useEffect, useState } from "react";
 import {
   addToShelf,
   getBooksFromShelf,
+  getProfileImage,
   getUpcomingBooks,
   getUsername,
   removeBookFromShelf,
 } from "@/services/api";
 import { useIsFocused } from "@react-navigation/core";
+import images from "@/data/profileImgManager";
 
 const Profile = () => {
   const tabBarHeight = useBottomTabBarHeight();
 
-  // Placeholder username until fetched from API
   const [username, setUsername] = useState("");
   const [currentBooks, setCurrentBooks] = useState<any[]>([]);
   const [upcomingBooks, setUpcomingBooks] = useState<any[]>([]);
 
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [changeLog, setChangeLog] = useState(false);
 
   const router = useRouter();
@@ -31,9 +33,9 @@ const Profile = () => {
     router.push("/(tabs)/(profile)/edit");
   };
 
-  const handleLog = () => {
-    console.log("Navigating to log for clicked book");
-  };
+  // const handleLog = () => {
+  //   console.log("Navigating to log for clicked book");
+  // };
 
   const isFocused = useIsFocused();
 
@@ -43,8 +45,18 @@ const Profile = () => {
         try {
           const retrievedUsername = await getUsername();
           setUsername(retrievedUsername);
+
+          let profileImage = await getProfileImage();
+          console.log("Profile image: " + profileImage);
+
+          if (profileImage in images) {
+            console.log("Setting profile image from local images");
+            setProfileImageUrl(images[profileImage as keyof typeof images]);
+          }
+
           const retrievedBooks = await getBooksFromShelf("Currently Reading");
           setCurrentBooks(retrievedBooks);
+
           console.log("Getting books");
           const retrievedUpcomingBooks = await getUpcomingBooks();
           setUpcomingBooks(retrievedUpcomingBooks);
@@ -65,7 +77,7 @@ const Profile = () => {
     description: string,
     number_of_pages: number,
     categories: string[],
-    published_date: string,
+    published_date: string
   ) => {
     console.log("Current book moved");
     const moveBook = {
@@ -87,6 +99,7 @@ const Profile = () => {
   const handleUpcomingSelection = (google_book_id: string) => {
     console.log("Upcoming book selected");
   };
+
   return (
     <SafeAreaView
       style={{
@@ -101,7 +114,11 @@ const Profile = () => {
         <Pressable style={styles.topContainer} onPress={handleProfile}>
           <Image
             style={styles.profileImage}
-            source={require("@/assets/images/profileImg.jpg")}
+            source={
+              profileImageUrl
+                ? profileImageUrl
+                : require("@/assets/images/profile-images/blue-vibes.jpg")
+            }
           />
           <Text numberOfLines={1} style={styles.textStyle}>
             {username}
@@ -130,7 +147,7 @@ const Profile = () => {
               title={currentBook.title}
               authors={currentBook.authors}
               googleBookId={currentBook.google_book_id}
-              progress={100}
+              progress={currentBook.progress}
               numOfPages={currentBook.number_of_pages}
               description={currentBook.description}
               categories={currentBook.categories}
@@ -158,7 +175,7 @@ const Profile = () => {
                   upcomingBook.description,
                   upcomingBook.numOfPages,
                   upcomingBook.categories,
-                  upcomingBook.publishedDate,
+                  upcomingBook.publishedDate
                 )
               }
               onImagePress={() =>

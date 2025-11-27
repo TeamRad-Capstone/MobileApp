@@ -43,11 +43,15 @@ def get_current_user(
     return user
 
 @app.post("/register", response_model=models.EndUserRead)
-def register(user_in: models.EndUserCreate, db: Session = Depends(database.get_session)):
+def register(
+    user_in: models.EndUserCreate, 
+    db: Session = Depends(database.get_session)
+):
     if crud.get_user_by_email(db, user_in.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     user = crud.create_user(db, user_in)
     return user
+
 
 @app.post("/login", response_model=models.Token)
 def login(
@@ -60,9 +64,11 @@ def login(
     token = security.create_access_token(user.email)
     return {"access_token": token, "token_type": "bearer"}
 
+
 @app.get("/users/me", response_model=models.EndUserRead)
 def read_users_me(current_user: models.End_User = Depends(get_current_user)):
     return current_user
+
 
 @app.post("/shelf/")
 def create_shelf(
@@ -72,6 +78,7 @@ def create_shelf(
 ):
     return crud.create_custom_shelf(db, current_user.end_user_id, shelf_in)
 
+
 @app.get("/shelves/me")
 def read_shelves(
         db: Session = Depends(database.get_session),
@@ -79,6 +86,7 @@ def read_shelves(
 ):
     shelves = crud.get_custom_shelves(db, current_user.end_user_id)
     return [shelf for shelf in shelves]
+
 
 @app.get("/defaultShelves/me")
 def read_all_default_shelves(
@@ -419,6 +427,7 @@ def get_rating_of_book(
 ):
     return crud.get_book_rating(db, current_user.end_user_id, google_book_id)
 
+
 @app.post("/logs/{book_id}", response_model=models.LogRead)
 def create_log(
     book_id: int,
@@ -448,6 +457,7 @@ def get_logs_for_book(
         raise HTTPException(status_code=404, detail="No logs found for this book")
     return logs
 
+
 @app.put("/logs/{log_id}", response_model=models.LogRead)
 def update_log_endpoint(
     log_id: int,
@@ -459,6 +469,7 @@ def update_log_endpoint(
         raise HTTPException(status_code=404, detail="Log not found")
     return updated_log
 
+
 @app.delete("/logs/{log_id}")
 def delete_log_endpoint(
     log_id: int,
@@ -466,3 +477,47 @@ def delete_log_endpoint(
 ):
     crud.delete_log(db, log_id)
     return {"message": "Log deleted successfully"}
+
+
+@app.put("/username/me/{new_username}")
+def update_username(
+    new_username: str,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.update_username(db, current_user.end_user_id, new_username)
+
+@app.put("/password/me")
+def update_password(
+    password_update: models.PasswordUpdate,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.update_password(db, current_user.end_user_id, password_update)
+
+
+@app.get("/image/me")
+def get_profile_image(
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.get_profile_image(db, current_user.end_user_id)
+
+
+@app.put("/image/me/{image_key}")
+def update_profile_image(
+    image_key: str,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    return crud.update_profile_image(db, current_user.end_user_id, image_key)
+
+
+@app.delete("/user/me")
+def delete_account(
+    user: models.EndUserLogin,
+    db: Session = Depends(database.get_session),
+    current_user: models.End_User = Depends(get_current_user)
+):
+    print("Received user:", user)
+    return crud.delete_account(db, current_user, current_user.end_user_id, user)

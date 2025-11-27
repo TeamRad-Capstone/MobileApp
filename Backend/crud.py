@@ -3,25 +3,20 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 import models
-from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, To_Read_Shelf, Dropped_Shelf, \
-    Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, Read_Shelf_Book, \
-    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book, Log, LogCreate, LogUpdate, LogRead
-from security import get_password_hash
+from models import End_User, EndUserCreate, Custom_Shelf, CustomShelfCreate, EndUserLogin, \
+    To_Read_Shelf, Dropped_Shelf, \
+    Current_Shelf, Read_Shelf, Book, To_Read_Shelf_Book, Dropped_Shelf_Book, \
+    Read_Shelf_Book, \
+    Current_Shelf_Book, Custom_Shelf_Book_Link, Reading_Goal, Reading_Goal_Book, Log, \
+    LogCreate, \
+    LogUpdate, LogRead, PasswordUpdate, Image_Url
+from security import get_password_hash, verify_password
+
 
 def get_user_by_email(db: Session, email: str):
     statement = select(End_User).where(End_User.email == email.lower())
     return db.exec(statement).first()
 
-def update_user_password(db: Session, email: str, new_password: str) -> End_User:
-    user = db.exec(select(End_User).where(End_User.email == email)).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user.password_hash = get_password_hash(new_password)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
 
 def create_user(db: Session, user_in: EndUserCreate) -> End_User:
     user = End_User(
@@ -123,7 +118,8 @@ def add_book_to_chosen_shelf(db: Session, book: Book, shelf, shelf_id) -> Book:
                 db.commit()
                 db.refresh(add_book)
             except IntegrityError as e:
-                raise HTTPException(status_code=500, detail="This book already exists in this shelf")
+                raise HTTPException(status_code=500,
+                                    detail="This book already exists in this shelf")
         case models.Current_Shelf:
             print("This is to be added to the current shelf")
             add_book = models.Current_Shelf_Book(
@@ -312,7 +308,7 @@ def get_custom_books(
 ):
     # Find the custom shelf by name and owner
     custom_shelf_statement = select(Custom_Shelf).where(
-        # Custom_Shelf.end_user_id == owner_id and
+        Custom_Shelf.end_user_id == owner_id).where(
         Custom_Shelf.shelf_name == shelf_name
     )
     custom_shelf = db.exec(custom_shelf_statement).first()
@@ -354,7 +350,8 @@ def create_reading_goal(db: Session, user_id: int, goal_in: models.ReadingGoalCr
 
 
 def get_reading_goals(db: Session, user_id: int):
-    return db.query(models.Reading_Goal).filter(models.Reading_Goal.end_user_id == user_id).all()
+    return db.query(models.Reading_Goal).filter(
+        models.Reading_Goal.end_user_id == user_id).all()
 
 
 def get_active_goals(db: Session, user_id: int):
@@ -371,7 +368,8 @@ def get_completed_goals(db: Session, user_id: int):
     ).all()
 
 
-def update_reading_goal(db: Session, user_id: int, goal_id: int, goal_in: models.ReadingGoalUpdate):
+def update_reading_goal(db: Session, user_id: int, goal_id: int,
+                        goal_in: models.ReadingGoalUpdate):
     goal = db.get(models.Reading_Goal, goal_id)
     if not goal:
         raise HTTPException(status_code=404, detail="Reading goal not found")
@@ -396,7 +394,8 @@ def delete_reading_goal(db: Session, user_id: int, goal_id: int):
     return {"message": "Goal deleted"}
 
 
-def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_shelf_name: str):
+def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str,
+                             new_shelf_name: str):
     statement = select(Custom_Shelf).where(
         Custom_Shelf.shelf_name == shelf_name).where(
         Custom_Shelf.end_user_id == user_id
@@ -407,7 +406,7 @@ def update_custom_shelf_name(db: Session, user_id: int, shelf_name: str, new_she
 
     shelf.shelf_name = new_shelf_name
     print("SHELF NEW NAME IS :", new_shelf_name)
-    try :
+    try:
         db.add(shelf)
         db.commit()
         db.refresh(shelf)
@@ -491,7 +490,6 @@ def get_upcoming_books(db: Session, user_id: int):
 
 
 def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_id):
-
     match type(shelf_type):
         case models.To_Read_Shelf:
             shelf_id_statement = select(To_Read_Shelf.shelf_id).where(
@@ -603,7 +601,7 @@ def delete_book(db: Session, user_id: int, shelf_type, shelf_name, google_book_i
         case _:
             print("I AM HERE")
             raise HTTPException(status_code=400, detail="Unknown shelf type")
-        
+
 
 def create_reading_goal_book(db: Session, reading_goal_id: int, book_id: int):
     new_link = models.Reading_Goal_Book(
@@ -642,7 +640,8 @@ def get_books_from_goal(db: Session, reading_goal_id: int):
     return books
 
 
-def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int, new_rating: int):
+def update_read_shelf_book_rating(db: Session, user_id: int, book_id: int,
+                                  new_rating: int):
     read_shelf = get_read_shelf(db, user_id)
     statement = select(models.Read_Shelf_Book).where(
         (models.Read_Shelf_Book.read_shelf_id == read_shelf.shelf_id) &
@@ -703,6 +702,7 @@ def get_book_rating(db, user_id, google_book_id):
     )
     return db.exec(statement).all()
 
+
 def create_log(db: Session, book_id: int, log_in: LogCreate):
     log_entry = Log(
         book_id=book_id,
@@ -715,15 +715,18 @@ def create_log(db: Session, book_id: int, log_in: LogCreate):
     db.refresh(log_entry)
     return log_entry
 
+
 def get_logs_by_book(db: Session, book_id: int):
     statement = select(Log).where(Log.book_id == book_id)
     return db.exec(statement).all()
+
 
 def get_log(db: Session, log_id: int):
     log_entry = db.get(Log, log_id)
     if not log_entry:
         raise HTTPException(status_code=404, detail="Log not found")
     return log_entry
+
 
 def update_log(db: Session, log_id: int, log_in: LogUpdate):
     log_entry = db.get(Log, log_id)
@@ -738,9 +741,92 @@ def update_log(db: Session, log_id: int, log_in: LogUpdate):
     db.refresh(log_entry)
     return log_entry
 
+
 def delete_log(db: Session, log_id: int):
     log_entry = db.get(Log, log_id)
     if not log_entry:
         raise HTTPException(status_code=404, detail="Log not found")
     db.delete(log_entry)
     db.commit()
+
+
+def update_username(db: Session, user_id: int, new_username: str):
+    user_statement = select(End_User).where(End_User.end_user_id == user_id)
+    user = db.exec(user_statement).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.username = new_username
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        raise Exception("Failed to update username: " + str(e))
+    return new_username
+
+
+def update_password(db: Session, user_id: int, password: PasswordUpdate):
+    user_statement = select(End_User).where(End_User.end_user_id == user_id)
+    user = db.exec(user_statement).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(password.old_password, user.password_hash):
+        raise HTTPException(status_code=403, detail="Current password is incorrect")
+
+    user.password_hash = get_password_hash(password.new_password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"message": "Password updated successfully"}
+
+
+def get_profile_image(db: Session, user_id: int):
+    user_statement = select(End_User).where(End_User.end_user_id == user_id)
+    user = db.exec(user_statement).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    image_statement = select(Image_Url).where(Image_Url.image_url_id == user.image_url_id)
+    image_url = db.exec(image_statement).first()
+    if not image_url:
+        raise HTTPException(status_code=404, detail="Image URL not found")
+    return image_url.url
+
+
+def update_profile_image(db: Session, user_id: int, image_url: str):
+    user_statement = select(End_User).where(End_User.end_user_id == user_id)
+    user = db.exec(user_statement).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    image_statement = select(Image_Url.image_url_id).where(Image_Url.url == image_url)
+    image_url_id = db.exec(image_statement).first()
+
+    if image_url_id:
+        user.image_url_id = image_url_id
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user.image_url_id
+    return None
+
+
+def delete_account(db: Session, user: End_User, user_id: int, password: EndUserLogin):
+    user_statement = select(End_User).where(End_User.end_user_id == user_id)
+    user = db.exec(user_statement).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(password.password, user.password_hash):
+        raise HTTPException(status_code=403, detail="Password is incorrect")
+
+    db.delete(user)
+    db.commit()
+    return {"message": "Account deleted successfully"}
